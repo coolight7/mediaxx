@@ -5,11 +5,16 @@ extern "C" {
 #include "libavutil/avutil.h"
 #include "libavutil/dict.h"
 #include "libavutil/log.h"
+#include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
+#include "libswscale/swscale.h"
+
 }
 
 #include "mediaxx.h"
 #include "util/ffmpeg_ext.h"
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -29,14 +34,12 @@ public:
     }
 
     bool openFile(const std::string& filename) {
-        // 设置最大分析时长（微秒）
-        av_dict_set(&options, "analyzeduration", "1000000", 0); // 1秒
-        // 设置最大分析字节数
-        // av_dict_set(&options, "probesize", "5000000", 0); // 5MB
         // 10秒超时（单位微秒）
         av_dict_set(&options, "timeout", "30000000", 0);
-        // 允许多次请求
-        // av_dict_set(&options, "multiple_requests", "1", 0);
+        av_dict_set(&options, "tls_verify", "0", 0);
+        av_dict_set(&options, "verify", "0", 0);
+        av_dict_set(&options, "max_redirects", "5", 0);
+        av_dict_set(&options, "follow_redirects", "1", 0);
         // 打开输入文件:cite[9]
         int ret = avformat_open_input(
             &fmt_ctx,
@@ -101,6 +104,7 @@ public:
             switch (codec_par->codec_type) {
             case AVMEDIA_TYPE_VIDEO:
                 printVideoInfo(stream, codec_par);
+                tryGetPicture(stream);
                 break;
             case AVMEDIA_TYPE_AUDIO:
                 printAudioInfo(stream, codec_par);
@@ -117,6 +121,8 @@ private:
 
     AVFormatContext* fmt_ctx = nullptr;
     AVDictionary*    options = nullptr;
+    std::string      userAgent
+        = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36";
 
     void cleanup() {
         if (fmt_ctx) {
@@ -124,6 +130,267 @@ private:
         }
         if (options) {
             av_dict_free(&options);
+        }
+    }
+
+    // 将AVFrame保存为JPEG文件
+    int save_frame_as_jpeg(AVFrame* frame, std::filesystem::path outputPath) {
+        const AVCodec*  encoder = NULL;
+        AVCodecContext* enc_ctx = NULL;
+        AVPacket*       pkt     = NULL;
+        int             ret     = 0;
+
+        do {
+            // 查找JPEG编码器
+            encoder = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
+            if (!encoder) {
+                fprintf(stderr, "未找到JPEG编码器\n");
+                return -1;
+            }
+
+            // 创建编码器上下文
+            enc_ctx = avcodec_alloc_context3(encoder);
+            if (!enc_ctx) {
+                fprintf(stderr, "无法创建编码器上下文\n");
+                return -1;
+            }
+
+            // 设置编码参数
+            enc_ctx->width   = frame->width;
+            enc_ctx->height  = frame->height;
+            enc_ctx->pix_fmt = AV_PIX_FMT_YUVJ420P; // JPEG使用的像素格式
+            enc_ctx->time_base = AVRational{1, 25}; // 对于单帧不重要
+            enc_ctx->framerate = AVRational{25, 1};
+
+            // 设置JPEG质量 (1-100, 越高越好)
+            av_opt_set_int(enc_ctx->priv_data, "qscale", 2, 0); // 2对应高质量
+
+            // 打开编码器
+            ret = avcodec_open2(enc_ctx, encoder, NULL);
+            if (ret < 0) {
+                fprintf(stderr, "无法打开JPEG编码器\n");
+                break;
+            }
+
+            // 创建包
+            pkt = av_packet_alloc();
+            if (!pkt) {
+                fprintf(stderr, "无法创建AVPacket\n");
+                break;
+            }
+
+            // 发送帧到编码器
+            ret = avcodec_send_frame(enc_ctx, frame);
+            if (ret < 0) {
+                fprintf(stderr, "发送帧到编码器失败\n");
+                break;
+            }
+
+            // 接收编码后的包
+            ret = avcodec_receive_packet(enc_ctx, pkt);
+            if (ret < 0) {
+                fprintf(stderr, "从编码器接收包失败\n");
+                break;
+            }
+
+            std::ofstream file{outputPath, std::ios::binary};
+            if (file.is_open()) {
+                file.write(reinterpret_cast<const char*>(pkt->data), pkt->size);
+                file.close();
+                std::cout << "成功提取封面到: " << outputPath << std::endl;
+            }
+            printf(
+                "成功保存JPEG图片: %s (大小: %d 字节)\n",
+                outputPath,
+                pkt->size
+            );
+        } while (false);
+
+        if (pkt) {
+            av_packet_free(&pkt);
+        }
+        if (enc_ctx) {
+            avcodec_free_context(&enc_ctx);
+        }
+
+        return ret;
+    } // 像素格式转换函数
+
+    AVFrame*
+        convert_frame_format(AVFrame* src_frame, AVPixelFormat dst_pix_fmt) {
+        struct SwsContext* sws_ctx   = NULL;
+        AVFrame*           dst_frame = NULL;
+
+        // 创建目标帧
+        dst_frame = av_frame_alloc();
+        if (!dst_frame) {
+            fprintf(stderr, "无法创建目标帧\n");
+            return NULL;
+        }
+
+        dst_frame->width  = src_frame->width;
+        dst_frame->height = src_frame->height;
+        dst_frame->format = dst_pix_fmt;
+
+        // 分配目标帧缓冲区
+        int ret = av_frame_get_buffer(dst_frame, 0);
+        if (ret < 0) {
+            fprintf(stderr, "无法为目标帧分配缓冲区\n");
+            av_frame_free(&dst_frame);
+            return NULL;
+        }
+
+        // 创建转换上下文
+        sws_ctx = sws_getContext(
+            src_frame->width,
+            src_frame->height,
+            (AVPixelFormat)src_frame->format,
+            dst_frame->width,
+            dst_frame->height,
+            (AVPixelFormat)dst_frame->format,
+            SWS_BILINEAR,
+            NULL,
+            NULL,
+            NULL
+        );
+
+        if (!sws_ctx) {
+            fprintf(stderr, "无法创建像素格式转换上下文\n");
+            av_frame_free(&dst_frame);
+            return NULL;
+        }
+
+        // 执行转换
+        sws_scale(
+            sws_ctx,
+            (const uint8_t* const*)src_frame->data,
+            src_frame->linesize,
+            0,
+            src_frame->height,
+            dst_frame->data,
+            dst_frame->linesize
+        );
+
+        sws_freeContext(sws_ctx);
+        return dst_frame;
+    }
+
+    void tryGetPicture(AVStream* stream) {
+        const AVCodec*        decoder = nullptr;
+        AVCodecContext*       dec_ctx = nullptr;
+        std::filesystem::path outputPath
+            = std::filesystem::path("./temp/tempicon.jpg");
+
+        do {
+            if (stream->disposition & AV_DISPOSITION_ATTACHED_PIC) {
+                std::cout << "1 - 找到附加图片流 #" << std::endl;
+                AVPacket pkt = stream->attached_pic;
+
+                std::ofstream file(outputPath, std::ios::binary);
+                if (file.is_open()) {
+                    file.write(
+                        reinterpret_cast<const char*>(pkt.data),
+                        pkt.size
+                    );
+                    file.close();
+                    std::cout << "成功提取封面到: " << outputPath << std::endl;
+                }
+                break;
+            }
+
+            // 方法2: 检查流类型和编码器
+            if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+                // 检查是否是封面图片（通常编码为MJPG、PNG等）
+                // 获取解码器并创建解码上下文
+                decoder = avcodec_find_decoder(stream->codecpar->codec_id);
+                if (!decoder) {
+                    fprintf(stderr, "未找到解码器\n");
+                    break;
+                }
+
+                dec_ctx = avcodec_alloc_context3(decoder);
+                avcodec_parameters_to_context(dec_ctx, stream->codecpar);
+
+                // 打开解码器
+                if (avcodec_open2(dec_ctx, decoder, NULL) < 0) {
+                    fprintf(stderr, "无法打开解码器\n");
+                    break;
+                }
+
+                // 定位到第1秒（这里以秒为单位，转换为流的时间基准）
+                int64_t target_ts = av_rescale_q(1, {1, 1}, stream->time_base);
+                if (av_seek_frame(
+                        fmt_ctx,
+                        stream->index,
+                        target_ts,
+                        AVSEEK_FLAG_BACKWARD
+                    )
+                    < 0) {
+                    fprintf(stderr, "定位失败\n");
+                }
+
+                // 解码帧
+                AVPacket* pkt        = av_packet_alloc();
+                AVFrame*  frame      = av_frame_alloc();
+                AVFrame*  jpeg_frame = nullptr;
+                int       ret        = 0;
+
+                AVFrame* target_frame = nullptr;
+                while (av_read_frame(fmt_ctx, pkt) >= 0) {
+                    if (pkt->stream_index == stream->index) {
+                        ret = avcodec_send_packet(dec_ctx, pkt);
+                        if (ret < 0) {
+                            break;
+                        }
+
+                        ret = avcodec_receive_frame(dec_ctx, frame);
+                        if (ret == 0) {
+                            target_frame = av_frame_clone(frame);
+                            av_frame_unref(frame);
+                            av_packet_unref(pkt);
+                            break;
+                        }
+                    }
+                    av_packet_unref(pkt);
+                }
+
+                if (target_frame) {
+
+                    // 如果像素格式不是YUVJ420P，进行转换
+                    if (target_frame->format != AV_PIX_FMT_YUVJ420P) {
+                        printf(
+                            "转换像素格式从 %d 到 YUVJ420P\n",
+                            target_frame->format
+                        );
+                        jpeg_frame = convert_frame_format(
+                            target_frame,
+                            AV_PIX_FMT_YUVJ420P
+                        );
+                        av_frame_free(&target_frame); // 释放原始帧
+
+                        if (!jpeg_frame) {
+                            fprintf(stderr, "像素格式转换失败\n");
+                            break;
+                        }
+                    }
+
+                    int ret = save_frame_as_jpeg(jpeg_frame, outputPath);
+                    if (ret == 0) {
+                        printf("成功提取并保存到: %s\n", outputPath);
+                    }
+                }
+
+                av_frame_free(&jpeg_frame);
+                jpeg_frame = nullptr;
+                av_frame_free(&frame);
+                frame = nullptr;
+                av_packet_free(&pkt);
+                pkt = nullptr;
+            }
+        } while (false);
+        if (dec_ctx) {
+            avcodec_free_context(&dec_ctx);
+            dec_ctx = nullptr;
         }
     }
 
