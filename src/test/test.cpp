@@ -11,6 +11,7 @@ void test() {
 int main(int argn, char** argv) {
     std::cout << "======= Test Start =======" << std::endl;
     test();
+    get_media_info("C:/0Acoolight/Music/VSinger/Great Voyage_洛天依.mp3");
     std::cout << "======= Test Done =======" << std::endl;
     std::cout << ">>>";
     int num = 0;

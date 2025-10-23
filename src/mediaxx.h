@@ -37,4 +37,6 @@ FFI_PLUGIN_EXPORT void* mediaxx_malloc(int size);
 FFI_PLUGIN_EXPORT void  mediaxx_free(void* ptr);
 
 FFI_PLUGIN_EXPORT void get_libav_version();
+
+FFI_PLUGIN_EXPORT void get_media_info(const char* filepath);
 }

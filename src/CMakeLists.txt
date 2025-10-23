@@ -22,6 +22,7 @@ else ()
 endif ()
 
 include_directories(${CMAKE_SOURCE_DIR}/)
+include_directories(${CMAKE_SOURCE_DIR}/third_part/ffmpeg/include/)
 
 set(EXE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/exec")
 message("EXE_INSTALL_PREFIX: ${EXE_INSTALL_PREFIX}")
@@ -32,12 +33,12 @@ add_library(mediaxx SHARED
 
 target_link_directories(mediaxx PUBLIC "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/")
 target_link_libraries(mediaxx PUBLIC
-  avcodec.lib
-  avdevice.lib
-  avformat.lib
-  avutil.lib
-  swresample.lib
-  swscale.lib
+  avcodec
+  avdevice
+  avformat
+  avutil
+  swresample
+  swscale
 )
 
 ADD_SUBDIRECTORY(test)
@@ -58,11 +59,18 @@ endif()
 
 install(TARGETS mediaxx RUNTIME DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
 
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avdevice.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avfilter.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avformat.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
 
-install(FILES "${CMAKE_SOURCE_DIR}\\third_part\\ffmpeg\\libs\\avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}\\third_part\\ffmpeg\\libs\\avdevice.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}\\third_part\\ffmpeg\\libs\\avfilter.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}\\third_part\\ffmpeg\\libs\\avformat.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}\\third_part\\ffmpeg\\libs\\avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}\\third_part\\ffmpeg\\libs\\swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}\\third_part\\ffmpeg\\libs\\swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "avcodec-61.dll" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avdevice.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avfilter.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avformat.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "avutil-59.dll" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "swresample-5.dll" COMPONENT Runtime)
+install(FILES "${CMAKE_SOURCE_DIR}/third_part/ffmpeg/libs/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
