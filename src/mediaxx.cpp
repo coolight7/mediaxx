@@ -4,12 +4,12 @@ extern "C" {
 #include "libavformat/avformat.h"
 #include "libavutil/avutil.h"
 #include "libavutil/dict.h"
-#include "libavutil/error.h"
 #include "libavutil/log.h"
 #include "libavutil/pixdesc.h"
 }
 
 #include "mediaxx.h"
+#include "util/ffmpeg_ext.h"
 #include <iostream>
 #include <memory>
 #include <string>
@@ -47,14 +47,14 @@ public:
         );
         if (ret < 0) {
             std::cerr << "无法打开文件: " << filename
-                      << ", 错误: " << av_err2str(ret) << std::endl;
+                      << ", 错误: " << Utilxx_c::av_err2str(ret) << std::endl;
             return false;
         }
 
         // 获取流信息:cite[9]
         ret = avformat_find_stream_info(fmt_ctx, nullptr);
         if (ret < 0) {
-            std::cerr << "无法获取流信息, 错误: " << av_err2str(ret)
+            std::cerr << "无法获取流信息, 错误: " << Utilxx_c::av_err2str(ret)
                       << std::endl;
             cleanup();
             return false;
