@@ -100,13 +100,11 @@
         "shared_mutex": "cpp",
         "cfenv": "cpp"
     },
-    "C_Cpp.default.cppStandard": "c++23",
-    "C_Cpp.intelliSenseEngine": "default",
-    "C_Cpp.enhancedColorization": "enabled",
-    "C_Cpp.intelliSenseMemoryLimit": 16384,
-    "C_Cpp.default.intelliSenseMode": "windows-msvc-x64",
     "editor.defaultFormatter": "xaver.clang-format",
     "editor.suggest.showClasses": true,
     "editor.suggest.showColors": true,
-    "terminal.integrated.suggest.enabled": true
+    "terminal.integrated.suggest.enabled": true,
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    }
 }

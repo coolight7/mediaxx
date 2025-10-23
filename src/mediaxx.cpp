@@ -18,8 +18,7 @@ extern "C" {
 class MediaInfoReader {
 public:
 
-    MediaInfoReader() :
-        fmt_ctx(nullptr) {
+    MediaInfoReader() {
         // 初始化FFmpeg网络库，支持HTTP协议:cite[8]
         avformat_network_init();
     }
