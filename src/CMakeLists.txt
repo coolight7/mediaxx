@@ -22,13 +22,18 @@ else ()
 endif ()
 
 include_directories(${CMAKE_SOURCE_DIR}/)
+include_directories(${CMAKE_SOURCE_DIR}/lib/)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/ffmpeg/include/)
 
 set(EXE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/exec")
 message("EXE_INSTALL_PREFIX: ${EXE_INSTALL_PREFIX}")
 
+aux_source_directory(./lib/util DIR_UTIL)
+aux_source_directory(./lib/analyse DIR_ANALYSE)
 add_library(mediaxx SHARED
   "mediaxx.cpp"
+  ${DIR_UTIL}
+  ${DIR_ANALYSE}
 )
 
 target_link_directories(mediaxx PUBLIC "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/")
@@ -48,7 +53,7 @@ set_target_properties(mediaxx PROPERTIES
   PUBLIC_HEADER mediaxx.h
   OUTPUT_NAME "mediaxx"
 )
-message(${CMAKE_BUILD_TYPE})
+message("Current Build Type: ${CMAKE_BUILD_TYPE}")
 
 target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 

@@ -4,7 +4,6 @@
 using namespace std;
 
 void test() {
-    cout << sum(1, 2) << endl;
     get_libav_version();
 }
 
