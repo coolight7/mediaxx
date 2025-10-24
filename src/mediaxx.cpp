@@ -8,7 +8,6 @@ extern "C" {
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libswscale/swscale.h"
-
 }
 
 #include "mediaxx.h"
@@ -134,7 +133,13 @@ private:
     }
 
     // 将AVFrame保存为JPEG文件
-    int save_frame_as_jpeg(AVFrame* frame, std::filesystem::path outputPath) {
+    int save_frame_as_jpeg(
+        AVFrame*                     frame,
+        const std::filesystem::path& outputPath,
+        int                          clipWidth = -1,
+        int                          clipHeight    = -1,
+        int                          quality   = 2
+    ) {
         const AVCodec*  encoder = NULL;
         AVCodecContext* enc_ctx = NULL;
         AVPacket*       pkt     = NULL;
@@ -156,14 +161,14 @@ private:
             }
 
             // 设置编码参数
-            enc_ctx->width   = frame->width;
-            enc_ctx->height  = frame->height;
+            enc_ctx->width   = (clipWidth > 0) ? clipWidth : frame->width;
+            enc_ctx->height  = (clipHeight > 0) ? clipHeight : frame->height;
             enc_ctx->pix_fmt = AV_PIX_FMT_YUVJ420P; // JPEG使用的像素格式
             enc_ctx->time_base = AVRational{1, 25}; // 对于单帧不重要
             enc_ctx->framerate = AVRational{25, 1};
-
             // 设置JPEG质量 (1-100, 越高越好)
-            av_opt_set_int(enc_ctx->priv_data, "qscale", 2, 0); // 2对应高质量
+            // 2对应高质量
+            av_opt_set_int(enc_ctx->priv_data, "qscale", quality, 0);
 
             // 打开编码器
             ret = avcodec_open2(enc_ctx, encoder, NULL);
@@ -178,32 +183,29 @@ private:
                 fprintf(stderr, "无法创建AVPacket\n");
                 break;
             }
-
             // 发送帧到编码器
             ret = avcodec_send_frame(enc_ctx, frame);
             if (ret < 0) {
                 fprintf(stderr, "发送帧到编码器失败\n");
                 break;
             }
-
             // 接收编码后的包
             ret = avcodec_receive_packet(enc_ctx, pkt);
             if (ret < 0) {
                 fprintf(stderr, "从编码器接收包失败\n");
                 break;
             }
-
+            // 写入文件
             std::ofstream file{outputPath, std::ios::binary};
             if (file.is_open()) {
                 file.write(reinterpret_cast<const char*>(pkt->data), pkt->size);
                 file.close();
-                std::cout << "成功提取封面到: " << outputPath << std::endl;
+                printf(
+                    "成功保存JPEG图片: %s (大小: %d 字节)\n",
+                    outputPath,
+                    pkt->size
+                );
             }
-            printf(
-                "成功保存JPEG图片: %s (大小: %d 字节)\n",
-                outputPath,
-                pkt->size
-            );
         } while (false);
 
         if (pkt) {
@@ -214,8 +216,120 @@ private:
         }
 
         return ret;
-    } // 像素格式转换函数
+    }
 
+    // 缩放并保存帧为JPEG
+    int save_frame_as_jpeg_with_scale(
+        AVFrame*                     frame,
+        const std::filesystem::path& outputPath,
+        int                          targetWidth,
+        int                          targetHeight,
+        int                          quality = 2
+    ) {
+        AVCodecContext*    enc_ctx     = NULL;
+        const AVCodec*     encoder     = NULL;
+        AVPacket*          pkt         = NULL;
+        FILE*              file        = NULL;
+        struct SwsContext* sws_ctx     = NULL;
+        AVFrame*           scaledFrame = NULL;
+        int                ret         = 0;
+
+        // 如果不需要缩放，直接保存
+        if (targetWidth <= 0 && targetHeight <= 0) {
+            return save_frame_as_jpeg(frame, outputPath, -1, -1, quality);
+        }
+
+        do {
+            // 计算缩放后的尺寸（保持宽高比）
+            int src_width = frame->width;
+            int srcHeight = frame->height;
+
+            if (targetWidth <= 0) {
+                // 只指定了高度，按比例计算宽度
+                targetWidth
+                    = (int)((float)src_width * targetHeight / srcHeight);
+            } else if (targetHeight <= 0) {
+                // 只指定了宽度，按比例计算高度
+                targetHeight
+                    = (int)((float)srcHeight * targetWidth / src_width);
+            }
+
+            printf(
+                "缩放图像: %dx%d -> %dx%d\n",
+                src_width,
+                srcHeight,
+                targetWidth,
+                targetHeight
+            );
+
+            // 创建缩放上下文
+            sws_ctx = sws_getContext(
+                src_width,
+                srcHeight,
+                (AVPixelFormat)frame->format,
+                targetWidth,
+                targetHeight,
+                AV_PIX_FMT_YUVJ420P,
+                SWS_BILINEAR, // 平衡速度和质量
+                NULL,
+                NULL,
+                NULL
+            );
+
+            if (!sws_ctx) {
+                fprintf(stderr, "无法创建缩放上下文\n");
+                ret = -1;
+                break;
+            }
+
+            // 创建缩放后的帧
+            scaledFrame = av_frame_alloc();
+            if (!scaledFrame) {
+                fprintf(stderr, "无法创建缩放帧\n");
+                ret = -1;
+                break;
+            }
+
+            scaledFrame->width  = targetWidth;
+            scaledFrame->height = targetHeight;
+            scaledFrame->format = AV_PIX_FMT_YUVJ420P;
+
+            // 为缩放帧分配缓冲区
+            ret = av_frame_get_buffer(scaledFrame, 0);
+            if (ret < 0) {
+                fprintf(stderr, "无法为缩放帧分配缓冲区\n");
+                break;
+            }
+
+            // 执行缩放
+            sws_scale(
+                sws_ctx,
+                (const uint8_t* const*)frame->data,
+                frame->linesize,
+                0,
+                srcHeight,
+                scaledFrame->data,
+                scaledFrame->linesize
+            );
+
+            ret = save_frame_as_jpeg(scaledFrame, outputPath, -1, -1, quality);
+        } while (false);
+
+        if (file)
+            fclose(file);
+        if (pkt)
+            av_packet_free(&pkt);
+        if (enc_ctx)
+            avcodec_free_context(&enc_ctx);
+        if (sws_ctx)
+            sws_freeContext(sws_ctx);
+        if (scaledFrame)
+            av_frame_free(&scaledFrame);
+
+        return ret;
+    }
+
+    // 像素格式转换函数
     AVFrame*
         convert_frame_format(AVFrame* src_frame, AVPixelFormat dst_pix_fmt) {
         struct SwsContext* sws_ctx   = NULL;
@@ -276,10 +390,10 @@ private:
     }
 
     void tryGetPicture(AVStream* stream) {
-        const AVCodec*        decoder = nullptr;
-        AVCodecContext*       dec_ctx = nullptr;
-        std::filesystem::path outputPath
-            = std::filesystem::path("./temp/tempicon.jpg");
+        const AVCodec*  decoder = nullptr;
+        AVCodecContext* dec_ctx = nullptr;
+        auto outputPath         = std::filesystem::path("./temp/tempicon.jpg");
+        auto outputPath96 = std::filesystem::path("./temp/tempicon96.jpg");
 
         do {
             if (stream->disposition & AV_DISPOSITION_ATTACHED_PIC) {
@@ -374,9 +488,23 @@ private:
                         }
                     }
 
-                    int ret = save_frame_as_jpeg(jpeg_frame, outputPath);
+                    int ret
+                        = save_frame_as_jpeg(jpeg_frame, outputPath, -1, -1, 2);
                     if (ret == 0) {
                         printf("成功提取并保存到: %s\n", outputPath);
+                        ret = save_frame_as_jpeg_with_scale(
+                            jpeg_frame,
+                            outputPath96,
+                            96,
+                            96,
+                            8
+                        );
+                        if (ret == 0) {
+                            printf(
+                                "成功提取缩略图96并保存到: %s\n",
+                                outputPath96
+                            );
+                        }
                     }
                 }
 
