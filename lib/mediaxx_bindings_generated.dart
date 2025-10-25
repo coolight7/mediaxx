@@ -15,55 +15,88 @@ import 'dart:ffi' as ffi;
 class MediaxxBindings {
   /// Holds the symbol lookup function.
   final ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
-      _lookup;
+  _lookup;
 
   /// The symbols are looked up in [dynamicLibrary].
   MediaxxBindings(ffi.DynamicLibrary dynamicLibrary)
-      : _lookup = dynamicLibrary.lookup;
+    : _lookup = dynamicLibrary.lookup;
 
   /// The symbols are looked up with [lookup].
   MediaxxBindings.fromLookup(
-      ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName)
-          lookup)
-      : _lookup = lookup;
+    ffi.Pointer<T> Function<T extends ffi.NativeType>(String symbolName) lookup,
+  ) : _lookup = lookup;
 
-  /// A very short-lived native function.
-  ///
-  /// For very short-lived functions, it is fine to call them on the main isolate.
-  /// They will block the Dart execution while running the native function, so
-  /// only do this for native functions which are guaranteed to be short-lived.
-  int sum(
-    int a,
-    int b,
-  ) {
-    return _sum(
-      a,
-      b,
-    );
+  ffi.Pointer<ffi.Void> mediaxx_malloc(int size) {
+    return _mediaxx_malloc(size);
   }
 
-  late final _sumPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>('sum');
-  late final _sum = _sumPtr.asFunction<int Function(int, int)>();
+  late final _mediaxx_mallocPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function(ffi.Int)>>(
+        'mediaxx_malloc',
+      );
+  late final _mediaxx_malloc = _mediaxx_mallocPtr
+      .asFunction<ffi.Pointer<ffi.Void> Function(int)>();
 
-  /// A longer lived native function, which occupies the thread calling it.
-  ///
-  /// Do not call these kind of native functions in the main isolate. They will
-  /// block Dart execution. This will cause dropped frames in Flutter applications.
-  /// Instead, call these native functions on a separate isolate.
-  int sum_long_running(
-    int a,
-    int b,
-  ) {
-    return _sum_long_running(
-      a,
-      b,
-    );
+  void mediaxx_free(ffi.Pointer<ffi.Void> ptr) {
+    return _mediaxx_free(ptr);
   }
 
-  late final _sum_long_runningPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function(ffi.Int, ffi.Int)>>(
-          'sum_long_running');
-  late final _sum_long_running =
-      _sum_long_runningPtr.asFunction<int Function(int, int)>();
+  late final _mediaxx_freePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'mediaxx_free',
+      );
+  late final _mediaxx_free = _mediaxx_freePtr
+      .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  int mediaxx_get_libav_version() {
+    return _mediaxx_get_libav_version();
+  }
+
+  late final _mediaxx_get_libav_versionPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function()>>(
+        'mediaxx_get_libav_version',
+      );
+  late final _mediaxx_get_libav_version = _mediaxx_get_libav_versionPtr
+      .asFunction<int Function()>();
+
+  ffi.Pointer<ffi.Char> mediaxx_get_label_malloc() {
+    return _mediaxx_get_label_malloc();
+  }
+
+  late final _mediaxx_get_label_mallocPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function()>>(
+        'mediaxx_get_label_malloc',
+      );
+  late final _mediaxx_get_label_malloc = _mediaxx_get_label_mallocPtr
+      .asFunction<ffi.Pointer<ffi.Char> Function()>();
+
+  void mediaxx_get_media_info(ffi.Pointer<ffi.Char> filepath) {
+    return _mediaxx_get_media_info(filepath);
+  }
+
+  late final _mediaxx_get_media_infoPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
+        'mediaxx_get_media_info',
+      );
+  late final _mediaxx_get_media_info = _mediaxx_get_media_infoPtr
+      .asFunction<void Function(ffi.Pointer<ffi.Char>)>();
+
+  int mediaxx_get_audio_visualization(
+    ffi.Pointer<ffi.Char> filepath,
+    ffi.Pointer<ffi.Char> output,
+  ) {
+    return _mediaxx_get_audio_visualization(filepath, output);
+  }
+
+  late final _mediaxx_get_audio_visualizationPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)
+        >
+      >('mediaxx_get_audio_visualization');
+  late final _mediaxx_get_audio_visualization =
+      _mediaxx_get_audio_visualizationPtr
+          .asFunction<
+            int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)
+          >();
 }

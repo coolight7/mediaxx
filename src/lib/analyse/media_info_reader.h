@@ -12,10 +12,12 @@ extern "C" {
 #include "libswscale/swscale.h"
 }
 
+#include "simdjson.h"
 #include "util/ffmpeg_ext.h"
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -84,6 +86,158 @@ public:
         }
 
         return true;
+    }
+
+    simdjson::builder::string_builder toInfoMap(AVFormatContext* fmtCtx) {
+        simdjson::builder::string_builder result{};
+
+        if (!fmtCtx) {
+            return result;
+        }
+        result.start_object();
+        result.append_key_value<"format">(
+            fmtCtx->iformat->name ? fmtCtx->iformat->name : ""
+        );
+        result.append_comma();
+        result.append_key_value<"duration">(
+            fmtCtx->duration != AV_NOPTS_VALUE
+                ? double(fmtCtx->duration) / AV_TIME_BASE
+                : 0
+        );
+        result.append_comma();
+        result.append_key_value<"bit_rate">(fmtCtx->bit_rate);
+        result.append_comma();
+
+        result.escape_and_append_with_quotes("streams");
+        result.append_colon();
+        result.start_array();
+
+        for (unsigned int i = 0; i < fmtCtx->nb_streams; i++) {
+            result.start_object();
+            AVStream*          stream   = fmtCtx->streams[i];
+            AVCodecParameters* codecPar = stream->codecpar;
+
+            result.append_key_value<"codec_type">(
+                av_get_media_type_string(codecPar->codec_type)
+            );
+            result.append_comma();
+
+            result.append_key_value<"codec_id">(
+                avcodec_get_name(codecPar->codec_id)
+            );
+            result.append_comma();
+
+            result.escape_and_append_with_quotes("metadata");
+            result.append_colon();
+            result.start_object();
+            {
+                auto               metadata = stream->metadata;
+                AVDictionaryEntry* tag      = nullptr;
+                auto               isFirst  = true;
+                while ((
+                    tag = av_dict_get(metadata, "", tag, AV_DICT_IGNORE_SUFFIX)
+                )) {
+                    if (false == isFirst) {
+                        result.append_comma();
+                    }
+                    isFirst = false;
+                    result.append_key_value(tag->key, tag->value);
+                }
+            }
+            result.end_object();
+
+            switch (codecPar->codec_type) {
+            case AVMEDIA_TYPE_VIDEO:
+                {
+                    result.append_comma();
+                    result.escape_and_append_with_quotes("video");
+                    result.append_colon();
+                    result.start_object();
+
+                    result.append_key_value<"width">(codecPar->width);
+                    result.append_comma();
+                    result.append_key_value<"height">(codecPar->height);
+                    result.append_comma();
+                    result.append_key_value<"format">(
+                        av_get_pix_fmt_name((AVPixelFormat)codecPar->format)
+                    );
+
+                    if (stream->avg_frame_rate.den
+                        && stream->avg_frame_rate.num) {
+                        // 计算帧率
+                        result.append_comma();
+                        double fps = av_q2d(stream->avg_frame_rate);
+                        result.append_key_value<"fps">(fps);
+                    }
+
+                    if (stream->time_base.den && stream->time_base.num) {
+                        result.append_comma();
+                        result.append_key_value<"duration">(
+                            (stream->duration * av_q2d(stream->time_base))
+                        );
+                        // result.append_comma();
+                    }
+
+                    result.end_object();
+                }
+                break;
+            case AVMEDIA_TYPE_AUDIO:
+                {
+                    result.append_comma();
+                    result.escape_and_append_with_quotes("audio");
+                    result.append_colon();
+                    result.start_object();
+
+                    result.append_key_value<"sample_rate">(codecPar->sample_rate
+                    );
+                    result.append_comma();
+                    result.append_key_value<"channels">(
+                        codecPar->ch_layout.nb_channels
+                    );
+                    result.append_comma();
+                    result.append_key_value<"format">(
+                        av_get_sample_fmt_name((AVSampleFormat)codecPar->format)
+                    );
+                    if (stream->time_base.den && stream->time_base.num) {
+                        // 秒
+                        result.append_comma();
+                        result.append_key_value<"duration">(
+                            (stream->duration * av_q2d(stream->time_base))
+                        );
+                        // result.append_comma();
+                    }
+
+                    result.end_object();
+                }
+                break;
+            default:
+                break;
+            }
+
+            result.end_object();
+            if (i < fmtCtx->nb_streams - 1) {
+                result.append_comma();
+            }
+        }
+        result.end_array();
+
+        result.end_object();
+        return result;
+    }
+
+    bool savePicture(AVFormatContext* fmtCtx, AVStream* stream) {
+        for (unsigned int i = 0; i < fmtCtx->nb_streams; i++) {
+            AVStream*          stream   = fmtCtx->streams[i];
+            AVCodecParameters* codecPar = stream->codecpar;
+            switch (codecPar->codec_type) {
+            case AVMEDIA_TYPE_VIDEO:
+                return tryGetPicture(fmtCtx, stream);
+            case AVMEDIA_TYPE_AUDIO:
+            default:
+                break;
+            }
+        }
+        return false;
     }
 
     void printMediaInfo(AVFormatContext* fmtCtx) {
@@ -379,7 +533,7 @@ public:
         return dstFrame;
     }
 
-    void tryGetPicture(AVFormatContext* fmtCtx, AVStream* stream) {
+    bool tryGetPicture(AVFormatContext* fmtCtx, AVStream* stream) {
         const AVCodec*  decoder   = nullptr;
         AVCodecContext* decodeCtx = nullptr;
         auto outputPath   = std::filesystem::path("./temp/tempicon.jpg");
@@ -495,6 +649,7 @@ public:
         } while (false);
 
         avcodec_free_context(&decodeCtx);
+        return true;
     }
 
     void printMetadata(AVDictionary* metadata, const std::string& prefix) {

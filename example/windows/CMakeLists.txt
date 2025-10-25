@@ -106,3 +106,12 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# ffmpeg
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../resource/ffmpeg/avcodec.dll" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../resource/ffmpeg/avdevice.dll" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../resource/ffmpeg/avfilter.dll" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../resource/ffmpeg/avformat.dll" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../resource/ffmpeg/avutil.dll" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../resource/ffmpeg/swresample.dll" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/../resource/ffmpeg/swscale.dll" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}" COMPONENT Runtime)

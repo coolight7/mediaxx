@@ -2,6 +2,7 @@
 # installed. You should not increase this version, as doing so will cause
 # the plugin to fail to compile for some customers of the plugin.
 cmake_minimum_required(VERSION 3.10)
+cmake_policy(SET CMP0097 NEW)
 project(mediaxx_library VERSION 0.0.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -21,23 +22,39 @@ else ()
     endif ()
 endif ()
 
-include_directories(${CMAKE_SOURCE_DIR}/)
-include_directories(${CMAKE_SOURCE_DIR}/lib/)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/ffmpeg/include/)
-
 set(EXE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/exec")
-message("EXE_INSTALL_PREFIX: ${EXE_INSTALL_PREFIX}")
+message("[mediaxx] CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+message("[mediaxx] EXE_INSTALL_PREFIX: ${EXE_INSTALL_PREFIX}")
+message("[mediaxx] CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include/)
+
+include(ExternalProject)
+include(FetchContent)
+FetchContent_Declare(
+  simdjson
+  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
+  GIT_SHALLOW TRUE
+  GIT_TAG tags/v4.0.7
+  
+)
+
+FetchContent_MakeAvailable(simdjson)
 
 aux_source_directory(./lib/util DIR_UTIL)
 aux_source_directory(./lib/analyse DIR_ANALYSE)
+
 add_library(mediaxx SHARED
   "mediaxx.cpp"
   ${DIR_UTIL}
   ${DIR_ANALYSE}
 )
 
-target_link_directories(mediaxx PUBLIC "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/")
+target_link_directories(mediaxx PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/")
 target_link_libraries(mediaxx PUBLIC
+  simdjson
   avcodec
   avdevice
   avformat
@@ -62,20 +79,22 @@ if (ANDROID)
   target_link_options(mediaxx PRIVATE "-Wl,-z,max-page-size=16384")
 endif()
 
-install(TARGETS mediaxx RUNTIME DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+if (DEFINED LUMENXX_BUILD_TYPE)
+  install(TARGETS mediaxx RUNTIME DESTINATION "${EXE_INSTALL_PREFIX}")
 
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avdevice.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avfilter.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avformat.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avdevice.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avfilter.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avformat.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
 
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "avcodec-61.dll" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avdevice.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avfilter.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avformat.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "avutil-59.dll" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "swresample-5.dll" COMPONENT Runtime)
-install(FILES "${CMAKE_SOURCE_DIR}/third_party/ffmpeg/libs/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}" COMPONENT Runtime)
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "avcodec-61.dll")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avdevice.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avfilter.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avformat.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "avutil-59.dll")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "swresample-5.dll")
+  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+endif()
