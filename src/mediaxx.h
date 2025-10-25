@@ -21,4 +21,7 @@ FFI_PLUGIN_EXPORT void  mediaxx_free(void* ptr);
 FFI_PLUGIN_EXPORT int get_libav_version();
 
 FFI_PLUGIN_EXPORT void get_media_info(const char* filepath);
+
+FFI_PLUGIN_EXPORT bool
+    get_audio_visualization(const char* filepath, const char* output);
 }

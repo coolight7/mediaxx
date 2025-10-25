@@ -31,14 +31,8 @@ public:
     AVFormatContext*  fmtCtx  = nullptr;
     AVDictionary*     options = nullptr;
 
-    MediaInfoItem_c(
-        std::string_view in_filepath,
-        AVFormatContext* in_fmtCtx,
-        AVDictionary*    in_options
-    ) :
-        filepath(in_filepath),
-        fmtCtx(in_fmtCtx),
-        options(in_options) {}
+    MediaInfoItem_c(std::string_view in_filepath) :
+        filepath(in_filepath) {}
 
     void setOptions() {
         av_dict_set(&options, "timeout", "30000000", 0);
@@ -61,7 +55,6 @@ public:
     static MediaInfoReader_c instance;
 
     MediaInfoReader_c() {
-        // 初始化FFmpeg网络库，支持HTTP协议:cite[8]
         avformat_network_init();
     }
 
@@ -71,7 +64,6 @@ public:
 
     bool openFile(MediaInfoItem_c& item) {
         item.setOptions();
-        // 打开输入文件:cite[9]
         int ret = avformat_open_input(
             &item.fmtCtx,
             item.filepath.c_str(),
@@ -84,7 +76,6 @@ public:
             return false;
         }
 
-        // 获取流信息:cite[9]
         ret = avformat_find_stream_info(item.fmtCtx, nullptr);
         if (ret < 0) {
             std::cerr << "无法获取流信息, 错误: " << Utilxx_c::av_err2str(ret)
@@ -115,10 +106,8 @@ public:
                   << std::endl;
         std::cout << "流数量: " << fmtCtx->nb_streams << std::endl;
 
-        // 打印元数据
         printMetadata(fmtCtx->metadata, "文件");
 
-        // 遍历所有流:cite[1]
         for (unsigned int i = 0; i < fmtCtx->nb_streams; i++) {
             AVStream*          stream   = fmtCtx->streams[i];
             AVCodecParameters* codecPar = stream->codecpar;
@@ -198,18 +187,21 @@ public:
                 fprintf(stderr, "无法创建AVPacket\n");
                 break;
             }
+
             // 发送帧到编码器
             ret = avcodec_send_frame(encodeCtx, frame);
             if (ret < 0) {
                 fprintf(stderr, "发送帧到编码器失败\n");
                 break;
             }
+
             // 接收编码后的包
             ret = avcodec_receive_packet(encodeCtx, pkt);
             if (ret < 0) {
                 fprintf(stderr, "从编码器接收包失败\n");
                 break;
             }
+
             // 写入文件
             std::ofstream file{outputPath, std::ios::binary};
             if (file.is_open()) {
@@ -274,7 +266,7 @@ public:
                 (AVPixelFormat)frame->format,
                 targetWidth,
                 targetHeight,
-                AV_PIX_FMT_YUVJ420P,
+                AV_PIX_FMT_YUV420P,
                 SWS_BILINEAR, // 平衡速度和质量
                 NULL,
                 NULL,
@@ -339,9 +331,10 @@ public:
             return NULL;
         }
 
-        dstFrame->width  = srcFrame->width;
-        dstFrame->height = srcFrame->height;
-        dstFrame->format = dstPixFmt;
+        dstFrame->width       = srcFrame->width;
+        dstFrame->height      = srcFrame->height;
+        dstFrame->format      = dstPixFmt;
+        dstFrame->color_range = AVColorRange::AVCOL_RANGE_JPEG;
 
         // 分配目标帧缓冲区
         int ret = av_frame_get_buffer(dstFrame, 0);
@@ -374,7 +367,7 @@ public:
         // 执行转换
         sws_scale(
             swsCtx,
-            (const uint8_t* const*)srcFrame->data,
+            srcFrame->data,
             srcFrame->linesize,
             0,
             srcFrame->height,
@@ -454,14 +447,14 @@ public:
 
                 if (targetFrame) {
                     // 如果像素格式不是YUVJ420P，进行转换
-                    if (targetFrame->format != AV_PIX_FMT_YUVJ420P) {
+                    if (targetFrame->format != AV_PIX_FMT_YUV420P) {
                         printf(
                             "转换像素格式从 %d 到 YUVJ420P\n",
                             targetFrame->format
                         );
                         jpegFrame = convertFramePixelFormat(
                             targetFrame,
-                            AV_PIX_FMT_YUVJ420P
+                            AV_PIX_FMT_YUV420P
                         );
 
                         if (!jpegFrame) {
