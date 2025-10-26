@@ -98,7 +98,9 @@
         "unordered_set": "cpp",
         "complex": "cpp",
         "shared_mutex": "cpp",
-        "cfenv": "cpp"
+        "cfenv": "cpp",
+        "queue": "cpp",
+        "stack": "cpp"
     },
     "editor.defaultFormatter": "xaver.clang-format",
     "editor.suggest.showClasses": true,

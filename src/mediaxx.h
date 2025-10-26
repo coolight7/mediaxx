@@ -17,17 +17,45 @@
 extern "C" {
 #endif
 
-FFI_PLUGIN_EXPORT void* mediaxx_malloc(int size);
+FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size);
 FFI_PLUGIN_EXPORT void  mediaxx_free(void* ptr);
 
 FFI_PLUGIN_EXPORT int mediaxx_get_libav_version();
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_label_malloc();
 
+/// # 获取音视频的信息和封面
+///
+/// ## Args:
+/// - [filepath] 必要，音视频文件路径
+/// - [pictureOutputPath] 可选，完整图片保存本地路径；指定才会提取图片
+/// - [picture96OutputPath] 可选，缩略图保存本地路径; 指定 [pictureOutputPath]
+/// 后这个参数才有效
+///
+/// ## Return:
+/// - 返回 json 格式的音视频信息
 FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
     const char* filepath,
-    const char* savePicture,
-    const char* savePicture96
+    const char* headers,
+    const char* pictureOutputPath,
+    const char* picture96OutputPath
+);
+
+/// # 获取音视频的封面
+///
+/// ## Args:
+/// - [filepath] 必要，音视频文件路径
+/// - [pictureOutputPath] 必要，完整图片保存本地路径
+/// - [picture96OutputPath] 可选，缩略图保存本地路径; 指定 [pictureOutputPath]
+/// 后这个参数才有效
+///
+/// ## Return:
+/// - 返回操作是否成功
+FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
+    const char* filepath,
+    const char* headers,
+    const char* pictureOutputPath,
+    const char* picture96OutputPath
 );
 
 FFI_PLUGIN_EXPORT int

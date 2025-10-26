@@ -31,9 +31,9 @@ class MediaxxBindings {
   }
 
   late final _mediaxx_mallocPtr =
-      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Void> Function(ffi.Int)>>(
-        'mediaxx_malloc',
-      );
+      _lookup<
+        ffi.NativeFunction<ffi.Pointer<ffi.Void> Function(ffi.UnsignedLongLong)>
+      >('mediaxx_malloc');
   late final _mediaxx_malloc = _mediaxx_mallocPtr
       .asFunction<ffi.Pointer<ffi.Void> Function(int)>();
 
@@ -70,16 +70,95 @@ class MediaxxBindings {
   late final _mediaxx_get_label_malloc = _mediaxx_get_label_mallocPtr
       .asFunction<ffi.Pointer<ffi.Char> Function()>();
 
-  void mediaxx_get_media_info(ffi.Pointer<ffi.Char> filepath) {
-    return _mediaxx_get_media_info(filepath);
+  /// # 获取音视频的信息和封面
+  ///
+  /// ## Args:
+  /// - [filepath] 必要，音视频文件路径
+  /// - [pictureOutputPath] 可选，完整图片保存本地路径；指定才会提取图片
+  /// - [picture96OutputPath] 可选，缩略图保存本地路径; 指定 [pictureOutputPath]
+  /// 后这个参数才有效
+  ///
+  /// ## Return:
+  /// - 返回 json 格式的音视频信息
+  ffi.Pointer<ffi.Char> mediaxx_get_media_info_malloc(
+    ffi.Pointer<ffi.Char> filepath,
+    ffi.Pointer<ffi.Char> headers,
+    ffi.Pointer<ffi.Char> pictureOutputPath,
+    ffi.Pointer<ffi.Char> picture96OutputPath,
+  ) {
+    return _mediaxx_get_media_info_malloc(
+      filepath,
+      headers,
+      pictureOutputPath,
+      picture96OutputPath,
+    );
   }
 
-  late final _mediaxx_get_media_infoPtr =
-      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Char>)>>(
-        'mediaxx_get_media_info',
-      );
-  late final _mediaxx_get_media_info = _mediaxx_get_media_infoPtr
-      .asFunction<void Function(ffi.Pointer<ffi.Char>)>();
+  late final _mediaxx_get_media_info_mallocPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<ffi.Char> Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+          )
+        >
+      >('mediaxx_get_media_info_malloc');
+  late final _mediaxx_get_media_info_malloc = _mediaxx_get_media_info_mallocPtr
+      .asFunction<
+        ffi.Pointer<ffi.Char> Function(
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+        )
+      >();
+
+  /// # 获取音视频的封面
+  ///
+  /// ## Args:
+  /// - [filepath] 必要，音视频文件路径
+  /// - [pictureOutputPath] 必要，完整图片保存本地路径
+  /// - [picture96OutputPath] 可选，缩略图保存本地路径; 指定 [pictureOutputPath]
+  /// 后这个参数才有效
+  ///
+  /// ## Return:
+  /// - 返回操作是否成功
+  int mediaxx_get_media_picture(
+    ffi.Pointer<ffi.Char> filepath,
+    ffi.Pointer<ffi.Char> headers,
+    ffi.Pointer<ffi.Char> pictureOutputPath,
+    ffi.Pointer<ffi.Char> picture96OutputPath,
+  ) {
+    return _mediaxx_get_media_picture(
+      filepath,
+      headers,
+      pictureOutputPath,
+      picture96OutputPath,
+    );
+  }
+
+  late final _mediaxx_get_media_picturePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+          )
+        >
+      >('mediaxx_get_media_picture');
+  late final _mediaxx_get_media_picture = _mediaxx_get_media_picturePtr
+      .asFunction<
+        int Function(
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+        )
+      >();
 
   int mediaxx_get_audio_visualization(
     ffi.Pointer<ffi.Char> filepath,

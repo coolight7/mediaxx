@@ -36,12 +36,16 @@ public:
     MediaInfoItem_c(std::string_view in_filepath) :
         filepath(in_filepath) {}
 
-    void setOptions() {
+    void setOptions(const std::string_view headers) {
         av_dict_set(&options, "timeout", "30000000", 0);
         av_dict_set(&options, "tls_verify", "0", 0);
         av_dict_set(&options, "verify", "0", 0);
         av_dict_set(&options, "max_redirects", "5", 0);
         av_dict_set(&options, "follow_redirects", "1", 0);
+        av_dict_set(&options, "chunked_post", "0", 0);
+        if (false == headers.empty()) {
+            av_dict_set(&options, "headers", headers.data(), 0);
+        }
     }
 
     void dispose() {
@@ -64,15 +68,20 @@ public:
         avformat_network_deinit();
     }
 
-    bool openFile(MediaInfoItem_c& item) {
-        item.setOptions();
+    bool openFile(MediaInfoItem_c& item, std::string_view headers) {
+        if (item.filepath.empty()) {
+            std::cerr << "缺少文件路径" << std::endl;
+            return false;
+        }
+
+        item.setOptions(headers);
         int ret = avformat_open_input(
             &item.fmtCtx,
             item.filepath.c_str(),
             nullptr,
             &item.options
         );
-        if (ret < 0) {
+        if (ret != 0) {
             std::cerr << "无法打开文件: " << item.filepath
                       << ", 错误: " << Utilxx_c::av_err2str(ret) << std::endl;
             return false;
@@ -237,7 +246,7 @@ public:
         return result;
     }
 
-    bool savePicture(
+    int savePicture(
         AVFormatContext* fmtCtx,
         std::string_view outputStr,
         std::string_view output96Str
@@ -253,7 +262,7 @@ public:
                 break;
             }
         }
-        return false;
+        return 0;
     }
 
     void printMediaInfo(AVFormatContext* fmtCtx) {
@@ -312,7 +321,7 @@ public:
     }
 
     // 将AVFrame保存为JPEG文件
-    int saveFrameAsJPEG(
+    bool saveFrameAsJPEG(
         AVFrame*                     frame,
         const std::filesystem::path& outputPath,
         int                          clipWidth  = -1,
@@ -322,21 +331,21 @@ public:
         const AVCodec*  encoder   = NULL;
         AVCodecContext* encodeCtx = NULL;
         AVPacket*       pkt       = NULL;
-        int             ret       = 0;
+        bool            result    = false;
 
         do {
             // 查找JPEG编码器
             encoder = avcodec_find_encoder(AV_CODEC_ID_MJPEG);
             if (!encoder) {
                 fprintf(stderr, "未找到JPEG编码器\n");
-                return -1;
+                return false;
             }
 
             // 创建编码器上下文
             encodeCtx = avcodec_alloc_context3(encoder);
             if (!encodeCtx) {
                 fprintf(stderr, "无法创建编码器上下文\n");
-                return -1;
+                return false;
             }
 
             // 设置编码参数
@@ -350,9 +359,9 @@ public:
             av_opt_set_int(encodeCtx->priv_data, "qscale", quality, 0);
 
             // 打开编码器
-            ret = avcodec_open2(encodeCtx, encoder, NULL);
-            if (ret < 0) {
+            if (avcodec_open2(encodeCtx, encoder, NULL) != 0) {
                 fprintf(stderr, "无法打开JPEG编码器\n");
+                result = false;
                 break;
             }
 
@@ -360,20 +369,21 @@ public:
             pkt = av_packet_alloc();
             if (!pkt) {
                 fprintf(stderr, "无法创建AVPacket\n");
+                result = false;
                 break;
             }
 
             // 发送帧到编码器
-            ret = avcodec_send_frame(encodeCtx, frame);
-            if (ret < 0) {
+            if (avcodec_send_frame(encodeCtx, frame) != 0) {
                 fprintf(stderr, "发送帧到编码器失败\n");
+                result = false;
                 break;
             }
 
             // 接收编码后的包
-            ret = avcodec_receive_packet(encodeCtx, pkt);
-            if (ret < 0) {
+            if (avcodec_receive_packet(encodeCtx, pkt) != 0) {
                 fprintf(stderr, "从编码器接收包失败\n");
+                result = false;
                 break;
             }
 
@@ -382,22 +392,21 @@ public:
             if (file.is_open()) {
                 file.write(reinterpret_cast<const char*>(pkt->data), pkt->size);
                 file.close();
-                printf(
-                    "成功保存JPEG图片: %s (大小: %d 字节)\n",
-                    outputPath,
-                    pkt->size
-                );
+                result = true;
+            } else {
+                fprintf(stderr, "输出文件打开失败\n");
+                result = true;
             }
         } while (false);
 
         av_packet_free(&pkt);
         avcodec_free_context(&encodeCtx);
 
-        return ret;
+        return result;
     }
 
     // 缩放并保存帧为JPEG
-    int saveFrameAsJPEGWithScale(
+    bool saveFrameAsJPEGWithScale(
         AVFrame*                     frame,
         const std::filesystem::path& outputPath,
         int                          targetWidth,
@@ -406,7 +415,7 @@ public:
     ) {
         struct SwsContext* swsCtx      = NULL;
         AVFrame*           scaledFrame = NULL;
-        int                ret         = 0;
+        bool               result      = false;
 
         // 如果不需要缩放，直接保存
         if (targetWidth <= 0 && targetHeight <= 0) {
@@ -426,14 +435,6 @@ public:
                 targetHeight = (int)((float)srcHeight * targetWidth / srcWidth);
             }
 
-            printf(
-                "缩放图像: %dx%d -> %dx%d\n",
-                srcWidth,
-                srcHeight,
-                targetWidth,
-                targetHeight
-            );
-
             // 创建缩放上下文
             swsCtx = sws_getContext(
                 srcWidth,
@@ -450,7 +451,7 @@ public:
 
             if (!swsCtx) {
                 fprintf(stderr, "无法创建缩放上下文\n");
-                ret = -1;
+                result = false;
                 break;
             }
 
@@ -458,7 +459,7 @@ public:
             scaledFrame = av_frame_alloc();
             if (!scaledFrame) {
                 fprintf(stderr, "无法创建缩放帧\n");
-                ret = -1;
+                result = false;
                 break;
             }
 
@@ -467,8 +468,7 @@ public:
             scaledFrame->format = AV_PIX_FMT_YUVJ420P;
 
             // 为缩放帧分配缓冲区
-            ret = av_frame_get_buffer(scaledFrame, 0);
-            if (ret < 0) {
+            if (0 != av_frame_get_buffer(scaledFrame, 0)) {
                 fprintf(stderr, "无法为缩放帧分配缓冲区\n");
                 break;
             }
@@ -484,13 +484,13 @@ public:
                 scaledFrame->linesize
             );
 
-            ret = saveFrameAsJPEG(scaledFrame, outputPath, -1, -1, quality);
+            result = saveFrameAsJPEG(scaledFrame, outputPath, -1, -1, quality);
         } while (false);
 
         sws_freeContext(swsCtx);
         av_frame_free(&scaledFrame);
 
-        return ret;
+        return result;
     }
 
     // 像素格式转换函数
@@ -512,8 +512,7 @@ public:
         dstFrame->color_range = AVColorRange::AVCOL_RANGE_JPEG;
 
         // 分配目标帧缓冲区
-        int ret = av_frame_get_buffer(dstFrame, 0);
-        if (ret < 0) {
+        if (0 != av_frame_get_buffer(dstFrame, 0)) {
             fprintf(stderr, "无法为目标帧分配缓冲区\n");
             av_frame_free(&dstFrame);
             return NULL;
@@ -554,17 +553,97 @@ public:
         return dstFrame;
     }
 
-    bool tryGetPicture(
+    bool savePictureScaleByStream(
+        AVPacket*                    pkt,
+        AVStream*                    stream,
+        const std::filesystem::path& outputPath,
+        int                          targetWidth,
+        int                          targetHeight,
+        int                          quality = 2
+    ) {
+        bool            result  = false;
+        AVCodecContext* dec_ctx = nullptr;
+        AVFrame*        frame   = nullptr;
+        do {
+            // 查找解码器
+            const AVCodec* decoder
+                = avcodec_find_decoder(stream->codecpar->codec_id);
+            if (!decoder) {
+                fprintf(stderr, "找不到解码器\n");
+                result = false;
+                break;
+            }
+
+            // 初始化解码器上下文
+            dec_ctx = avcodec_alloc_context3(decoder);
+            if (!dec_ctx) {
+                fprintf(stderr, "无法分配解码器上下文\n");
+                result = false;
+                break;
+            }
+
+            // 复制流参数到解码器上下文
+            if (avcodec_parameters_to_context(dec_ctx, stream->codecpar) < 0) {
+                fprintf(stderr, "复制流参数失败\n");
+                result = false;
+                break;
+            }
+
+            // 打开解码器
+            if (avcodec_open2(dec_ctx, decoder, nullptr) != 0) {
+                fprintf(stderr, "无法打开解码器\n");
+                result = false;
+                break;
+            }
+
+            // 分配解码帧
+            frame = av_frame_alloc();
+            if (!frame) {
+                fprintf(stderr, "无法分配解码帧\n");
+                result = false;
+                break;
+            }
+
+            // 发送数据包到解码器
+            if (avcodec_send_packet(dec_ctx, pkt) != 0) {
+                fprintf(stderr, "发送数据包到解码器失败\n");
+                result = false;
+                break;
+            }
+
+            // 接收解码后的帧（封面通常只有一帧）
+            if (avcodec_receive_frame(dec_ctx, frame) != 0) {
+                fprintf(stderr, "接收解码帧失败\n");
+                result = false;
+                break;
+            }
+
+            result = saveFrameAsJPEGWithScale(
+                frame,
+                outputPath,
+                targetWidth,
+                targetHeight,
+                quality
+            );
+        } while (false);
+
+        avcodec_free_context(&dec_ctx);
+        av_frame_free(&frame);
+        return result;
+    }
+
+    int tryGetPicture(
         AVFormatContext*       fmtCtx,
         AVStream*              stream,
         const std::string_view outputStr,
         const std::string_view output96Str
     ) {
         if (outputStr.empty()) {
-            return false;
+            fprintf(stderr, "缺少输出路径\n");
+            return 0;
         }
 
-        int             ret          = 0;
+        int             result       = 0;
         const AVCodec*  decoder      = nullptr;
         AVCodecContext* decodeCtx    = nullptr;
         auto            outputPath   = std::filesystem::path(outputStr);
@@ -573,17 +652,30 @@ public:
         do {
             // 提取图片封面
             if (stream->disposition & AV_DISPOSITION_ATTACHED_PIC) {
-                std::cout << "1 - 找到附加图片流 #" << std::endl;
                 AVPacket pkt = stream->attached_pic;
 
-                std::ofstream file(outputPath, std::ios::binary);
+                std::ofstream file{outputPath, std::ios::binary};
                 if (file.is_open()) {
                     file.write(
                         reinterpret_cast<const char*>(pkt.data),
                         pkt.size
                     );
                     file.close();
-                    std::cout << "成功提取封面到: " << outputPath << std::endl;
+                    result = 1;
+                    if (false == output96Str.empty()
+                        && savePictureScaleByStream(
+                            &pkt,
+                            stream,
+                            outputPath96,
+                            96,
+                            96,
+                            8
+                        )) {
+                        result = 2;
+                    }
+                } else {
+                    fprintf(stderr, "输出文件打开失败\n");
+                    result = 0;
                 }
                 break;
             }
@@ -600,7 +692,7 @@ public:
                 avcodec_parameters_to_context(decodeCtx, stream->codecpar);
 
                 // 打开解码器
-                if (avcodec_open2(decodeCtx, decoder, NULL) < 0) {
+                if (avcodec_open2(decodeCtx, decoder, NULL) != 0) {
                     fprintf(stderr, "无法打开解码器\n");
                     break;
                 }
@@ -611,15 +703,13 @@ public:
                 AVFrame*  jpegFrame   = nullptr;
                 AVFrame*  targetFrame = nullptr;
 
-                while (av_read_frame(fmtCtx, pkt) >= 0) {
+                while (av_read_frame(fmtCtx, pkt) == 0) {
                     if (pkt->stream_index == stream->index) {
-                        ret = avcodec_send_packet(decodeCtx, pkt);
-                        if (ret < 0) {
+                        if (avcodec_send_packet(decodeCtx, pkt) != 0) {
                             break;
                         }
 
-                        ret = avcodec_receive_frame(decodeCtx, frame);
-                        if (ret == 0) {
+                        if (avcodec_receive_frame(decodeCtx, frame) == 0) {
                             targetFrame = av_frame_clone(frame);
                             av_frame_unref(frame);
                             av_packet_unref(pkt);
@@ -652,17 +742,18 @@ public:
                         useFrame = jpegFrame;
                     }
 
-                    int ret = saveFrameAsJPEG(useFrame, outputPath, -1, -1, 2);
-                    if (ret == 0) {
-                        printf("成功提取并保存到: %s\n", outputPath);
+                    if (saveFrameAsJPEG(useFrame, outputPath, -1, -1, 2)) {
+                        result = 1;
                         if (false == output96Str.empty()) {
-                            ret = saveFrameAsJPEGWithScale(
-                                useFrame,
-                                outputPath96,
-                                96,
-                                96,
-                                8
-                            );
+                            if (saveFrameAsJPEGWithScale(
+                                    useFrame,
+                                    outputPath96,
+                                    96,
+                                    96,
+                                    8
+                                )) {
+                                result = 2;
+                            }
                         }
                     }
                 }
@@ -675,10 +766,7 @@ public:
         } while (false);
 
         avcodec_free_context(&decodeCtx);
-        if (0 == ret) {
-            return true;
-        }
-        return false;
+        return result;
     }
 
     void printMetadata(AVDictionary* metadata, const std::string& prefix) {
