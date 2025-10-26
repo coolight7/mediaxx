@@ -22,22 +22,35 @@ FFI_PLUGIN_EXPORT int mediaxx_get_libav_version() {
 }
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_label_malloc() {
-    auto str = (char*)mediaxx_malloc(128);
-    strcpy(str, "libmediaxx by coolight");
+    auto       str    = (char*)mediaxx_malloc(128);
+    const auto target = std::string_view{"libmediaxx by coolight"};
+    memcpy(str, target.data(), target.length() + 1);
     return str;
 }
 
-FFI_PLUGIN_EXPORT void mediaxx_get_media_info(const char* filepath) {
-    auto item = MediaInfoItem_c{std::string_view{filepath}};
+FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
+    const char* filepath,
+    const char* pictureOutputPath,
+    const char* picture96OutputPath
+) {
+    auto  item   = MediaInfoItem_c{std::string_view{filepath}};
+    char* result = nullptr;
     if (MediaInfoReader_c::instance.openFile(item)) {
-        std::cout << "读取文件成功" << std::endl;
-        auto sb            = MediaInfoReader_c::instance.toInfoMap(item.fmtCtx);
-        std::string_view p = sb.view();
-        std::cout << "info json:" << std::endl << p << std::endl;
+        auto jsonsb = MediaInfoReader_c::instance.toInfoMap(item.fmtCtx);
+        std::string_view json = jsonsb.view();
+        result                = (char*)mediaxx_malloc(json.size() + 1);
+        memcpy(result, json.data(), json.length() + 1);
+        auto pOutput   = std::string_view{pictureOutputPath};
+        auto p96Output = std::string_view{picture96OutputPath};
+        if (false == pOutput.empty()) {
+            MediaInfoReader_c::instance
+                .savePicture(item.fmtCtx, pOutput, p96Output);
+        }
     } else {
-        std::cout << "读取文件失败" << std::endl;
+        result = nullptr;
     }
     item.dispose();
+    return result;
 }
 
 FFI_PLUGIN_EXPORT int

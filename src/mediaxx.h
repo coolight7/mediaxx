@@ -24,7 +24,11 @@ FFI_PLUGIN_EXPORT int mediaxx_get_libav_version();
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_label_malloc();
 
-FFI_PLUGIN_EXPORT void mediaxx_get_media_info(const char* filepath);
+FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
+    const char* filepath,
+    const char* savePicture,
+    const char* savePicture96
+);
 
 FFI_PLUGIN_EXPORT int
     mediaxx_get_audio_visualization(const char* filepath, const char* output);
