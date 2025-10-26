@@ -3,6 +3,7 @@
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:mediaxx/ffi/allocation.dart';
 import 'package:mediaxx/ffi/utf8.dart';
 
 import 'mediaxx_bindings_generated.dart';
@@ -24,6 +25,62 @@ int mediaxx_get_libav_version() {
 (String, Pointer<Utf8>) mediaxx_get_label_malloc() {
   final ptr = _bindings.mediaxx_get_label_malloc().cast<Utf8>();
   return (ptr.toDartString(), ptr);
+}
+
+(String, Pointer<Utf8>) mediaxx_get_media_info_malloc(
+  String filepath,
+  String headers,
+  String pictureOutputPath,
+  String picture96OutputPath,
+) {
+  final filepathPtr = filepath.toNativeUtf8().cast<Char>();
+  final headersPtr = headers.toNativeUtf8().cast<Char>();
+  final pictureOutputPathPtr = pictureOutputPath.toNativeUtf8().cast<Char>();
+  final picture96OutputPathPtr = picture96OutputPath
+      .toNativeUtf8()
+      .cast<Char>();
+
+  final ptr = _bindings
+      .mediaxx_get_media_info_malloc(
+        filepathPtr,
+        headersPtr,
+        pictureOutputPathPtr,
+        picture96OutputPathPtr,
+      )
+      .cast<Utf8>();
+
+  malloc.free(filepathPtr);
+  malloc.free(headersPtr);
+  malloc.free(pictureOutputPathPtr);
+  malloc.free(picture96OutputPathPtr);
+  return (ptr.toDartString(), ptr);
+}
+
+int mediaxx_get_media_picture(
+  String filepath,
+  String headers,
+  String pictureOutputPath,
+  String picture96OutputPath,
+) {
+  final filepathPtr = filepath.toNativeUtf8().cast<Char>();
+  final headersPtr = headers.toNativeUtf8().cast<Char>();
+  final pictureOutputPathPtr = pictureOutputPath.toNativeUtf8().cast<Char>();
+  final picture96OutputPathPtr = picture96OutputPath
+      .toNativeUtf8()
+      .cast<Char>();
+
+  final result = _bindings.mediaxx_get_media_picture(
+    filepathPtr,
+    headersPtr,
+    pictureOutputPathPtr,
+    picture96OutputPathPtr,
+  );
+
+  malloc.free(filepathPtr);
+  malloc.free(headersPtr);
+  malloc.free(pictureOutputPathPtr);
+  malloc.free(picture96OutputPathPtr);
+  return result;
 }
 
 const String _libName = 'mediaxx';

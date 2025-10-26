@@ -79,9 +79,9 @@ extension StringUtf8Pointer on String {
   /// the UTF-8 encoded result. See [Utf8Encoder] for details on encoding.
   ///
   /// Returns an [allocator]-allocated pointer to the result.
-  Pointer<Utf8> toNativeUtf8({Allocator allocator = malloc}) {
+  Pointer<Utf8> toNativeUtf8() {
     final units = utf8.encode(this);
-    final Pointer<Uint8> result = allocator<Uint8>(units.length + 1);
+    final Pointer<Uint8> result = malloc<Uint8>(units.length + 1);
     final Uint8List nativeString = result.asTypedList(units.length + 1);
     nativeString.setAll(0, units);
     nativeString[units.length] = 0;
