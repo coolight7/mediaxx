@@ -164,11 +164,11 @@ Future<SendPort> _helperIsolateSendPort = () async {
         completer.complete(data);
         return;
       }
-      if (data is _AsyncxxResponseMediaInfo) {
-        // The helper isolate sent us a response to a request we sent.
+      if (data is _AsyncxxResponseMediaInfo ||
+          data is _AsyncxxResponseMediaPicture) {
         final Completer<dynamic> completer = _asyncxxRequests[data.id]!;
         _asyncxxRequests.remove(data.id);
-        completer.complete((data.result, data.log));
+        completer.complete(data);
         return;
       }
       throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
