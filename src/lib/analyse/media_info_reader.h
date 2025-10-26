@@ -13,6 +13,8 @@ extern "C" {
 }
 
 #include "simdjson.h"
+#include "util/json_helper.h"
+#include "util/log.h"
 #include "util/string_util.h"
 #include "util/utilxx.h"
 #include <filesystem>
@@ -98,6 +100,7 @@ public:
         }
 
         item.setOptions(headers);
+        LXX_DEBEG("openFile ...... : {}", item.filepath);
         int ret = avformat_open_input(
             &item.fmtCtx,
             item.filepath.c_str(),
@@ -113,6 +116,7 @@ public:
             return false;
         }
 
+        LXX_DEBEG("openFile | find info ...... : {}", item.filepath);
         ret = avformat_find_stream_info(item.fmtCtx, nullptr);
         if (ret < 0) {
             item.setLog(std::format(
@@ -123,10 +127,12 @@ public:
             return false;
         }
 
+        LXX_DEBEG("openFile success: {}", item.filepath);
         return true;
     }
 
     simdjson::builder::string_builder toInfoMap(AVFormatContext* fmtCtx) {
+        LXX_DEBEG("toInfoMap ......");
         simdjson::builder::string_builder result{};
 
         if (!fmtCtx) {
@@ -155,12 +161,16 @@ public:
                 AVStream*          stream   = fmtCtx->streams[i];
                 AVCodecParameters* codecPar = stream->codecpar;
 
-                result.append_key_value<"codec_type">(
+                strBuilderAppendFixdKeyVPtr_d(
+                    result,
+                    "codec_type",
                     av_get_media_type_string(codecPar->codec_type)
                 );
                 result.append_comma();
 
-                result.append_key_value<"codec_id">(
+                strBuilderAppendFixdKeyVPtr_d(
+                    result,
+                    "codec_id",
                     avcodec_get_name(codecPar->codec_id)
                 );
                 result.append_comma();
@@ -176,15 +186,22 @@ public:
                         tag
                         = av_dict_get(metadata, "", tag, AV_DICT_IGNORE_SUFFIX)
                     )) {
-                        if (false == isFirst) {
-                            result.append_comma();
+                        if (nullptr != tag && nullptr != tag->key
+                            && nullptr != tag->value) {
+                            if (false == isFirst) {
+                                result.append_comma();
+                            }
+                            isFirst = false;
+                            result.append_key_value(tag->key, tag->value);
                         }
-                        isFirst = false;
-                        result.append_key_value(tag->key, tag->value);
                     }
                     result.end_object();
                 }
 
+                LXX_DEBEG(
+                    "toInfoMap | append stream/metadata: {} ......",
+                    int(codecPar->codec_type)
+                );
                 switch (codecPar->codec_type) {
                 case AVMEDIA_TYPE_VIDEO:
                     {
@@ -198,7 +215,9 @@ public:
                             result.append_comma();
                             result.append_key_value<"height">(codecPar->height);
                             result.append_comma();
-                            result.append_key_value<"format">(
+                            strBuilderAppendFixdKeyVPtr_d(
+                                result,
+                                "format",
                                 av_get_pix_fmt_name((AVPixelFormat
                                 )codecPar->format)
                             );
@@ -240,7 +259,9 @@ public:
                                 codecPar->ch_layout.nb_channels
                             );
                             result.append_comma();
-                            result.append_key_value<"format">(
+                            strBuilderAppendFixdKeyVPtr_d(
+                                result,
+                                "format",
                                 av_get_sample_fmt_name((AVSampleFormat
                                 )codecPar->format)
                             );
@@ -280,6 +301,7 @@ public:
         const std::string_view outputStr,
         const std::string_view output96Str
     ) {
+        LXX_DEBEG("savePicture: {}", item.filepath);
         auto const fmtCtx = item.fmtCtx;
         for (unsigned int i = 0; i < fmtCtx->nb_streams; i++) {
             AVStream*          stream   = fmtCtx->streams[i];
@@ -293,62 +315,6 @@ public:
             }
         }
         return 0;
-    }
-
-    void printMediaInfo(MediaInfoItem_c& item) {
-        auto const fmtCtx = item.fmtCtx;
-        if (!fmtCtx) {
-            item.setLog(std::format("文件未打开: {}", item.filepath));
-            return;
-        }
-
-        // 打印格式信息
-        std::cout << "=== 媒体文件信息 ===" << std::endl;
-        std::cout << "格式: "
-                  << (fmtCtx->iformat->name ? fmtCtx->iformat->name : "未知")
-                  << std::endl;
-        std::cout << "时长: "
-                  << (fmtCtx->duration != AV_NOPTS_VALUE
-                          ? fmtCtx->duration / AV_TIME_BASE
-                          : 0)
-                  << " 秒" << std::endl;
-        std::cout << "比特率: " << fmtCtx->bit_rate / 1000 << " kb/s"
-                  << std::endl;
-        std::cout << "流数量: " << fmtCtx->nb_streams << std::endl;
-
-        printMetadata(fmtCtx->metadata, "文件");
-
-        for (unsigned int i = 0; i < fmtCtx->nb_streams; i++) {
-            AVStream*          stream   = fmtCtx->streams[i];
-            AVCodecParameters* codecPar = stream->codecpar;
-
-            std::cout << "\n--- 流 #" << i << " ---" << std::endl;
-            std::cout << "类型: "
-                      << av_get_media_type_string(codecPar->codec_type)
-                      << std::endl;
-            std::cout << "编码: " << avcodec_get_name(codecPar->codec_id)
-                      << std::endl;
-
-            // 根据流类型打印具体信息
-            switch (codecPar->codec_type) {
-            case AVMEDIA_TYPE_VIDEO:
-                printVideoInfo(stream, codecPar);
-                tryGetPicture(
-                    item,
-                    stream,
-                    "./temp/output.jpg",
-                    "./temp/output96.jpg"
-                );
-                break;
-            case AVMEDIA_TYPE_AUDIO:
-                printAudioInfo(stream, codecPar);
-                break;
-            default:
-                break;
-            }
-
-            printMetadata(stream->metadata, "流");
-        }
     }
 
     // 将AVFrame保存为JPEG文件
@@ -613,6 +579,10 @@ public:
         AVFrame*        frame   = nullptr;
         do {
             // 查找解码器
+            LXX_DEBEG(
+                "savePictureScaleByStream: find decoder: {}",
+                int(stream->codecpar->codec_id)
+            );
             const AVCodec* decoder
                 = avcodec_find_decoder(stream->codecpar->codec_id);
             if (!decoder) {
@@ -697,10 +667,10 @@ public:
         AVCodecContext* decodeCtx    = nullptr;
         auto            outputPath   = std::filesystem::path(outputStr);
         auto            outputPath96 = std::filesystem::path(output96Str);
-
         do {
             // 提取图片封面
             if (stream->disposition & AV_DISPOSITION_ATTACHED_PIC) {
+                LXX_DEBEG("tryGetPicture: ATTACHED_PIC");
                 AVPacket pkt = stream->attached_pic;
 
                 std::ofstream file{outputPath, std::ios::binary};
@@ -711,17 +681,19 @@ public:
                     );
                     file.close();
                     result = 1;
-                    if (false == output96Str.empty()
-                        && savePictureScaleByStream(
-                            item,
-                            &pkt,
-                            stream,
-                            outputPath96,
-                            96,
-                            96,
-                            8
-                        )) {
-                        result = 2;
+                    if (false == output96Str.empty()) {
+                        LXX_DEBEG("tryGetPicture: savePictureScaleByStream-96");
+                        if (savePictureScaleByStream(
+                                item,
+                                &pkt,
+                                stream,
+                                outputPath96,
+                                96,
+                                96,
+                                8
+                            )) {
+                            result = 2;
+                        }
                     }
                 } else {
                     item.setLog(std::format("输出文件打开失败: {}", outputStr));
@@ -732,6 +704,7 @@ public:
 
             // 提取视频封面
             if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+                LXX_DEBEG("tryGetPicture: VIDEO");
                 decoder = avcodec_find_decoder(stream->codecpar->codec_id);
                 if (!decoder) {
                     item.setLog("未找到解码器");
@@ -825,48 +798,5 @@ public:
 
         avcodec_free_context(&decodeCtx);
         return result;
-    }
-
-    void printMetadata(AVDictionary* metadata, const std::string& prefix) {
-        AVDictionaryEntry* tag = nullptr;
-        while ((tag = av_dict_get(metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
-            std::cout << prefix << "元数据 - " << tag->key << ": " << tag->value
-                      << std::endl;
-        }
-    }
-
-    void printVideoInfo(AVStream* stream, AVCodecParameters* codec_par) {
-        std::cout << "分辨率: " << codec_par->width << "x" << codec_par->height
-                  << std::endl;
-        std::cout << "像素格式: "
-                  << av_get_pix_fmt_name((AVPixelFormat)codec_par->format)
-                  << std::endl;
-
-        // 计算帧率
-        if (stream->avg_frame_rate.den && stream->avg_frame_rate.num) {
-            double fps = av_q2d(stream->avg_frame_rate);
-            std::cout << "帧率: " << fps << " fps" << std::endl;
-        }
-
-        if (stream->time_base.den && stream->time_base.num) {
-            std::cout << "时长: "
-                      << (stream->duration * av_q2d(stream->time_base)) << " 秒"
-                      << std::endl;
-        }
-    }
-
-    void printAudioInfo(AVStream* stream, AVCodecParameters* codec_par) {
-        std::cout << "采样率: " << codec_par->sample_rate << " Hz" << std::endl;
-        std::cout << "声道数: " << codec_par->ch_layout.nb_channels
-                  << std::endl;
-        std::cout << "采样格式: "
-                  << av_get_sample_fmt_name((AVSampleFormat)codec_par->format)
-                  << std::endl;
-
-        if (stream->time_base.den && stream->time_base.num) {
-            std::cout << "时长: "
-                      << (stream->duration * av_q2d(stream->time_base)) << " 秒"
-                      << std::endl;
-        }
     }
 };

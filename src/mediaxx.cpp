@@ -8,7 +8,6 @@
 #include <string>
 #include <string_view>
 
-
 FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size) {
     return malloc(size);
 }
