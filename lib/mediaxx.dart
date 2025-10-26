@@ -44,11 +44,11 @@ Future<(String? result, String? log)> mediaxx_get_media_info_malloc(
     pictureOutputPath: pictureOutputPath,
     picture96OutputPath: picture96OutputPath,
   );
-  final Completer<(String? result, String? log)> completer =
-      Completer<(String? result, String? log)>();
+  final completer = Completer<_AsyncxxResponseMediaInfo>();
   _asyncxxRequests[requestId] = completer;
   helperIsolateSendPort.send(request);
-  return completer.future;
+  final result = await completer.future;
+  return (result.result, result.log);
 }
 
 Future<(int result, String? log)> mediaxx_get_media_picture(
@@ -66,11 +66,11 @@ Future<(int result, String? log)> mediaxx_get_media_picture(
     pictureOutputPath: pictureOutputPath,
     picture96OutputPath: picture96OutputPath,
   );
-  final Completer<(int result, String? log)> completer =
-      Completer<(int result, String? log)>();
+  final completer = Completer<_AsyncxxResponseMediaPicture>();
   _asyncxxRequests[requestId] = completer;
   helperIsolateSendPort.send(request);
-  return completer.future;
+  final result = await completer.future;
+  return (result.result, result.log);
 }
 
 const String _libName = 'mediaxx';
@@ -92,28 +92,15 @@ final DynamicLibrary _dylib = () {
 /// The bindings to the native functions in [_dylib].
 final MediaxxBindings _bindings = MediaxxBindings(_dylib);
 
-/// Typically sent from one isolate to another.
-abstract class _AsyncxxRequest {
+class _AsyncxxRequestMediaInfo {
   final int id;
-
-  const _AsyncxxRequest(this.id);
-}
-
-/// Typically sent from one isolate to another.
-abstract class _AsyncResponsexx {
-  final int id;
-
-  const _AsyncResponsexx(this.id);
-}
-
-class _AsyncxxRequestMediaInfo extends _AsyncxxRequest {
   final String filepath;
   final String headers;
   final String pictureOutputPath;
   final String picture96OutputPath;
 
   const _AsyncxxRequestMediaInfo(
-    super.id, {
+    this.id, {
     required this.filepath,
     required this.headers,
     required this.pictureOutputPath,
@@ -121,21 +108,23 @@ class _AsyncxxRequestMediaInfo extends _AsyncxxRequest {
   });
 }
 
-class _AsyncxxResponseMediaInfo extends _AsyncResponsexx {
+class _AsyncxxResponseMediaInfo {
+  final int id;
   final String? result;
   final String? log;
 
-  _AsyncxxResponseMediaInfo(super.id, {this.result, this.log});
+  const _AsyncxxResponseMediaInfo(this.id, {this.result, this.log});
 }
 
-class _AsyncxxRequestMediaPicture extends _AsyncxxRequest {
+class _AsyncxxRequestMediaPicture {
+  final int id;
   final String filepath;
   final String headers;
   final String pictureOutputPath;
   final String picture96OutputPath;
 
   const _AsyncxxRequestMediaPicture(
-    super.id, {
+    this.id, {
     required this.filepath,
     required this.headers,
     required this.pictureOutputPath,
@@ -143,11 +132,12 @@ class _AsyncxxRequestMediaPicture extends _AsyncxxRequest {
   });
 }
 
-class _AsyncxxResponseMediaPicture extends _AsyncResponsexx {
+class _AsyncxxResponseMediaPicture {
+  final int id;
   final int result;
   final String? log;
 
-  _AsyncxxResponseMediaPicture(super.id, {required this.result, this.log});
+  _AsyncxxResponseMediaPicture(this.id, {required this.result, this.log});
 }
 
 /// Counter to identify [_SumRequest]s and [_SumResponse]s.

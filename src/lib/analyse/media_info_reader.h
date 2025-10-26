@@ -63,6 +63,9 @@ public:
         av_dict_set(&options, "max_redirects", "5", 0);
         av_dict_set(&options, "follow_redirects", "1", 0);
         av_dict_set(&options, "chunked_post", "0", 0);
+        // 微秒，限制分析时长
+        av_dict_set(&options, "analyzeduration", "1000000", 0);
+        av_dict_set(&options, "probesize", "5000000", 0);
         if (false == headers.empty()) {
             av_dict_set(&options, "headers", headers.data(), 0);
         }
