@@ -99,21 +99,36 @@ class _AsyncxxRequestMediaInfo {
   final String pictureOutputPath;
   final String picture96OutputPath;
 
-  const _AsyncxxRequestMediaInfo(
+  late Pointer<Char> filepathPtr;
+  late Pointer<Char> headersPtr;
+  late Pointer<Char> pictureOutputPathPtr;
+  late Pointer<Char> picture96OutputPathPtr;
+
+  bool isDispose = false;
+
+  _AsyncxxRequestMediaInfo(
     this.id, {
     required this.filepath,
     required this.headers,
     required this.pictureOutputPath,
     required this.picture96OutputPath,
-  });
+  }) {
+    filepathPtr = filepath.toNativeUtf8().cast<Char>();
+    headersPtr = headers.toNativeUtf8().cast<Char>();
+    pictureOutputPathPtr = pictureOutputPath.toNativeUtf8().cast<Char>();
+    picture96OutputPathPtr = picture96OutputPath.toNativeUtf8().cast<Char>();
+  }
 }
 
 class _AsyncxxResponseMediaInfo {
   final int id;
-  final String? result;
-  final String? log;
+  final Pointer<Char>? resultPtr;
+  final Pointer<Char>? logPtr;
 
-  const _AsyncxxResponseMediaInfo(this.id, {this.result, this.log});
+  String? result;
+  String? log;
+
+  _AsyncxxResponseMediaInfo(this.id, {this.resultPtr, this.logPtr});
 }
 
 class _AsyncxxRequestMediaPicture {
@@ -123,21 +138,35 @@ class _AsyncxxRequestMediaPicture {
   final String pictureOutputPath;
   final String picture96OutputPath;
 
-  const _AsyncxxRequestMediaPicture(
+  late Pointer<Char> filepathPtr;
+  late Pointer<Char> headersPtr;
+  late Pointer<Char> pictureOutputPathPtr;
+  late Pointer<Char> picture96OutputPathPtr;
+
+  bool isDispose = false;
+
+  _AsyncxxRequestMediaPicture(
     this.id, {
     required this.filepath,
     required this.headers,
     required this.pictureOutputPath,
     required this.picture96OutputPath,
-  });
+  }) {
+    filepathPtr = filepath.toNativeUtf8().cast<Char>();
+    headersPtr = headers.toNativeUtf8().cast<Char>();
+    pictureOutputPathPtr = pictureOutputPath.toNativeUtf8().cast<Char>();
+    picture96OutputPathPtr = picture96OutputPath.toNativeUtf8().cast<Char>();
+  }
 }
 
 class _AsyncxxResponseMediaPicture {
   final int id;
   final int result;
-  final String? log;
+  final Pointer<Char>? logPtr;
 
-  _AsyncxxResponseMediaPicture(this.id, {required this.result, this.log});
+  String? log;
+
+  _AsyncxxResponseMediaPicture(this.id, {required this.result, this.logPtr});
 }
 
 /// Counter to identify [_SumRequest]s and [_SumResponse]s.
@@ -149,88 +178,91 @@ final Map<int, Completer<dynamic>> _asyncxxRequests =
 
 /// The SendPort belonging to the helper isolate.
 Future<SendPort> _helperIsolateSendPort = () async {
-  // The helper isolate is going to send us back a SendPort, which we want to
-  // wait for.
   final Completer<SendPort> completer = Completer<SendPort>();
 
-  // Receive port on the main isolate to receive messages from the helper.
-  // We receive two types of messages:
-  // 1. A port to send messages on.
-  // 2. Responses to requests we sent.
+  /// App
   final ReceivePort receivePort = ReceivePort()
     ..listen((dynamic data) {
       if (data is SendPort) {
-        // The helper isolate sent us the port on which we can sent it requests.
         completer.complete(data);
         return;
       }
-      if (data is _AsyncxxResponseMediaInfo ||
-          data is _AsyncxxResponseMediaPicture) {
+
+      // App接收数据，在这里才转 dartStr，减少拷贝
+      if (data is _AsyncxxResponseMediaInfo) {
         final Completer<dynamic> completer = _asyncxxRequests[data.id]!;
         _asyncxxRequests.remove(data.id);
+
+        data.result = data.resultPtr?.cast<Utf8>().tryToDartString();
+        data.log = data.logPtr?.cast<Utf8>().tryToDartString();
         completer.complete(data);
+
+        if (null != data.resultPtr) {
+          malloc.free(data.resultPtr!);
+        }
+        if (null != data.logPtr) {
+          malloc.free(data.logPtr!);
+        }
+        return;
+      } else if (data is _AsyncxxResponseMediaPicture) {
+        final Completer<dynamic> completer = _asyncxxRequests[data.id]!;
+        _asyncxxRequests.remove(data.id);
+
+        data.log = data.logPtr?.cast<Utf8>().tryToDartString();
+        completer.complete(data);
+
+        if (null != data.logPtr) {
+          malloc.free(data.logPtr!);
+        }
         return;
       }
       throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
     });
 
-  // Start the helper isolate.
+  /// Isolate
+  /// 在 App主线程 将数据转 Ptr，然后发送到这个线程，直接将指针转给c++，减少拷贝
+  /// 返回时保留指针到 App主线程 才转回 string
   await Isolate.spawn((SendPort sendPort) async {
     final ReceivePort helperReceivePort = ReceivePort()
       ..listen((dynamic data) {
-        // On the helper isolate listen to requests and respond to them.
         if (data is _AsyncxxRequestMediaInfo) {
+          assert(false == data.isDispose);
           // MediaInfo
-          final filepathPtr = data.filepath.toNativeUtf8().cast<Char>();
-          final headersPtr = data.headers.toNativeUtf8().cast<Char>();
-          final pictureOutputPathPtr = data.pictureOutputPath
-              .toNativeUtf8()
-              .cast<Char>();
-          final picture96OutputPathPtr = data.picture96OutputPath
-              .toNativeUtf8()
-              .cast<Char>();
+          final filepathPtr = data.filepathPtr;
+          final headersPtr = data.headersPtr;
+          final pictureOutputPathPtr = data.pictureOutputPathPtr;
+          final picture96OutputPathPtr = data.picture96OutputPathPtr;
           final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
           log.value = nullptr;
 
-          final ptr = _bindings
-              .mediaxx_get_media_info_malloc(
-                filepathPtr,
-                headersPtr,
-                pictureOutputPathPtr,
-                picture96OutputPathPtr,
-                log,
-              )
-              .cast<Utf8>();
+          final resultPtr = _bindings.mediaxx_get_media_info_malloc(
+            filepathPtr,
+            headersPtr,
+            pictureOutputPathPtr,
+            picture96OutputPathPtr,
+            log,
+          );
 
-          final result = ptr.tryToDartString();
-          String? logStr;
-          if (nullptr != log.value) {
-            logStr = log.value.cast<Utf8>().tryToDartString();
-          }
-          malloc.free(ptr);
           malloc.free(filepathPtr);
           malloc.free(headersPtr);
           malloc.free(pictureOutputPathPtr);
           malloc.free(picture96OutputPathPtr);
-          malloc.free(log.value);
           malloc.free(log);
+          data.isDispose = true;
+
           final response = _AsyncxxResponseMediaInfo(
             data.id,
-            result: result,
-            log: logStr,
+            resultPtr: resultPtr,
+            logPtr: (nullptr != log.value) ? log.value : null,
           );
           sendPort.send(response);
           return;
         } else if (data is _AsyncxxRequestMediaPicture) {
           // MediaPicture
-          final filepathPtr = data.filepath.toNativeUtf8().cast<Char>();
-          final headersPtr = data.headers.toNativeUtf8().cast<Char>();
-          final pictureOutputPathPtr = data.pictureOutputPath
-              .toNativeUtf8()
-              .cast<Char>();
-          final picture96OutputPathPtr = data.picture96OutputPath
-              .toNativeUtf8()
-              .cast<Char>();
+          final filepathPtr = data.filepathPtr;
+          final headersPtr = data.headersPtr;
+          final pictureOutputPathPtr = data.pictureOutputPathPtr;
+          final picture96OutputPathPtr = data.picture96OutputPathPtr;
           final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
           log.value = nullptr;
 
@@ -242,20 +274,15 @@ Future<SendPort> _helperIsolateSendPort = () async {
             log,
           );
 
-          String? logStr;
-          if (nullptr != log.value) {
-            logStr = log.value.cast<Utf8>().tryToDartString();
-          }
           malloc.free(filepathPtr);
           malloc.free(headersPtr);
           malloc.free(pictureOutputPathPtr);
           malloc.free(picture96OutputPathPtr);
-          malloc.free(log.value);
           malloc.free(log);
           final response = _AsyncxxResponseMediaPicture(
             data.id,
             result: result,
-            log: logStr,
+            logPtr: (nullptr != log.value) ? log.value : null,
           );
           sendPort.send(response);
           return;
