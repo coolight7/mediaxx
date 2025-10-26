@@ -27,7 +27,7 @@ int mediaxx_get_libav_version() {
   return (ptr.toDartString(), ptr);
 }
 
-(String, Pointer<Utf8>) mediaxx_get_media_info_malloc(
+(String? result, String? log) mediaxx_get_media_info_malloc(
   String filepath,
   String headers,
   String pictureOutputPath,
@@ -39,6 +39,8 @@ int mediaxx_get_libav_version() {
   final picture96OutputPathPtr = picture96OutputPath
       .toNativeUtf8()
       .cast<Char>();
+  final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+  log.value = nullptr;
 
   final ptr = _bindings
       .mediaxx_get_media_info_malloc(
@@ -46,17 +48,26 @@ int mediaxx_get_libav_version() {
         headersPtr,
         pictureOutputPathPtr,
         picture96OutputPathPtr,
+        log,
       )
       .cast<Utf8>();
 
+  final result = ptr.tryToDartString();
+  String? logStr;
+  if (nullptr != log.value) {
+    logStr = log.value.cast<Utf8>().tryToDartString();
+  }
+  malloc.free(ptr);
   malloc.free(filepathPtr);
   malloc.free(headersPtr);
   malloc.free(pictureOutputPathPtr);
   malloc.free(picture96OutputPathPtr);
-  return (ptr.toDartString(), ptr);
+  malloc.free(log.value);
+  malloc.free(log);
+  return (result, logStr);
 }
 
-int mediaxx_get_media_picture(
+(int result, String? log) mediaxx_get_media_picture(
   String filepath,
   String headers,
   String pictureOutputPath,
@@ -68,19 +79,28 @@ int mediaxx_get_media_picture(
   final picture96OutputPathPtr = picture96OutputPath
       .toNativeUtf8()
       .cast<Char>();
+  final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+  log.value = nullptr;
 
   final result = _bindings.mediaxx_get_media_picture(
     filepathPtr,
     headersPtr,
     pictureOutputPathPtr,
     picture96OutputPathPtr,
+    log,
   );
 
+  String? logStr;
+  if (nullptr != log.value) {
+    logStr = log.value.cast<Utf8>().tryToDartString();
+  }
   malloc.free(filepathPtr);
   malloc.free(headersPtr);
   malloc.free(pictureOutputPathPtr);
   malloc.free(picture96OutputPathPtr);
-  return result;
+  malloc.free(log.value);
+  malloc.free(log);
+  return (result, logStr);
 }
 
 const String _libName = 'mediaxx';

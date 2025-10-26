@@ -15,7 +15,7 @@ extern "C" {
 #include <fstream>
 #include <iostream>
 #include <stdint.h>
-#include <util/ffmpeg_ext.h>
+#include <util/utilxx.h>
 #include <vector>
 
 AudioVisualization_c AudioVisualization_c::instance = AudioVisualization_c();

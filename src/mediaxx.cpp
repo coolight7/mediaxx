@@ -2,10 +2,12 @@
 #include "analyse/audio_visualization.h"
 #include "analyse/media_info_reader.h"
 #include "simdjson.h"
-#include "util/ffmpeg_ext.h"
+#include "util/string_util.h"
+#include "util/utilxx.h"
 #include <iostream>
 #include <string>
 #include <string_view>
+
 
 FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size) {
     return malloc(size);
@@ -31,27 +33,25 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
     const char* filepath,
     const char* headers,
     const char* pictureOutputPath,
-    const char* picture96OutputPath
+    const char* picture96OutputPath,
+    char**      log
 ) {
     assert(nullptr != filepath);
     assert(nullptr != headers);
     assert(nullptr != pictureOutputPath);
     assert(nullptr != picture96OutputPath);
-    auto  item   = MediaInfoItem_c{std::string_view{filepath}};
+    auto  item   = MediaInfoItem_c{std::string_view{filepath}, log};
     char* result = nullptr;
     if (MediaInfoReader_c::instance.openFile(item, headers)) {
-        auto jsonsb = MediaInfoReader_c::instance.toInfoMap(item.fmtCtx);
+        // 读取信息
+        auto jsonsb    = MediaInfoReader_c::instance.toInfoMap(item.fmtCtx);
+        auto pOutput   = std::string_view{pictureOutputPath};
+        auto p96Output = std::string_view{picture96OutputPath};
         std::string_view json = jsonsb.view();
-        auto             size = json.size() + 1;
-        result                = (char*)mediaxx_malloc(size);
-        memcpy(result, json.data(), json.size());
-        result[size - 1] = '\0';
-        auto pOutput     = std::string_view{pictureOutputPath};
-        auto p96Output   = std::string_view{picture96OutputPath};
+        result                = StringUtilxx_c::stringCopyMalloc(json);
         if (false == pOutput.empty()) {
-            auto ret = MediaInfoReader_c::instance
-                           .savePicture(item.fmtCtx, pOutput, p96Output);
-            std::cout << ret << std::endl;
+            // 读取图片
+            MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
         }
     } else {
         result = nullptr;
@@ -64,21 +64,22 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     const char* filepath,
     const char* headers,
     const char* pictureOutputPath,
-    const char* picture96OutputPath
+    const char* picture96OutputPath,
+    char**      log
 ) {
     assert(nullptr != filepath);
     assert(nullptr != headers);
     assert(nullptr != pictureOutputPath);
     assert(nullptr != picture96OutputPath);
-    auto item   = MediaInfoItem_c{std::string_view{filepath}};
+    auto item   = MediaInfoItem_c{std::string_view{filepath}, log};
     int  result = 0;
     // 完整封面路径必须非空
     auto pOutput   = std::string_view{pictureOutputPath};
     auto p96Output = std::string_view{picture96OutputPath};
     if (false == pOutput.empty()
         && MediaInfoReader_c::instance.openFile(item, headers)) {
-        result = MediaInfoReader_c::instance
-                     .savePicture(item.fmtCtx, pOutput, p96Output);
+        result
+            = MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
     } else {
         result = 0;
     }

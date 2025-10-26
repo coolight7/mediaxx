@@ -27,6 +27,8 @@ message("[mediaxx] CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message("[mediaxx] EXE_INSTALL_PREFIX: ${EXE_INSTALL_PREFIX}")
 message("[mediaxx] CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 
+add_definitions(-D__STDC_CONSTANT_MACROS)
+
 include(ExternalProject)
 include(FetchContent)
 ExternalProject_Add(

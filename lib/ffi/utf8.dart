@@ -49,6 +49,13 @@ extension Utf8Pointer on Pointer<Utf8> {
     return result;
   }
 
+  String? tryToDartString({int? length}) {
+    if (0 == address) {
+      return null;
+    }
+    return toDartString(length: length);
+  }
+
   static int _length(Pointer<Uint8> codeUnits) {
     var length = 0;
     while (codeUnits[length] != 0) {

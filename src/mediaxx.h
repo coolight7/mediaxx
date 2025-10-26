@@ -38,7 +38,8 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
     const char* filepath,
     const char* headers,
     const char* pictureOutputPath,
-    const char* picture96OutputPath
+    const char* picture96OutputPath,
+    char**      log
 );
 
 /// # 获取音视频的封面
@@ -55,7 +56,8 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     const char* filepath,
     const char* headers,
     const char* pictureOutputPath,
-    const char* picture96OutputPath
+    const char* picture96OutputPath,
+    char**      log
 );
 
 FFI_PLUGIN_EXPORT int

@@ -85,12 +85,14 @@ class MediaxxBindings {
     ffi.Pointer<ffi.Char> headers,
     ffi.Pointer<ffi.Char> pictureOutputPath,
     ffi.Pointer<ffi.Char> picture96OutputPath,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> log,
   ) {
     return _mediaxx_get_media_info_malloc(
       filepath,
       headers,
       pictureOutputPath,
       picture96OutputPath,
+      log,
     );
   }
 
@@ -102,6 +104,7 @@ class MediaxxBindings {
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
           )
         >
       >('mediaxx_get_media_info_malloc');
@@ -112,6 +115,7 @@ class MediaxxBindings {
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Pointer<ffi.Char>>,
         )
       >();
 
@@ -130,12 +134,14 @@ class MediaxxBindings {
     ffi.Pointer<ffi.Char> headers,
     ffi.Pointer<ffi.Char> pictureOutputPath,
     ffi.Pointer<ffi.Char> picture96OutputPath,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> log,
   ) {
     return _mediaxx_get_media_picture(
       filepath,
       headers,
       pictureOutputPath,
       picture96OutputPath,
+      log,
     );
   }
 
@@ -147,6 +153,7 @@ class MediaxxBindings {
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
           )
         >
       >('mediaxx_get_media_picture');
@@ -157,6 +164,7 @@ class MediaxxBindings {
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Pointer<ffi.Char>>,
         )
       >();
 

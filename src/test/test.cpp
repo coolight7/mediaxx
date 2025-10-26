@@ -26,14 +26,17 @@ int main(int argn, char** argv) {
 
     std::cout << "Generated JSON: " << p << std::endl;
 
-    auto result = mediaxx_get_media_info_malloc(
+    char* log    = nullptr;
+    auto  result = mediaxx_get_media_info_malloc(
         "C:/0Acoolight/Music/VSinger/Great Voyage_洛天依.mp3",
         "",
         "./temp/output.jpg",
-        "./temp/output96.jpg"
+        "./temp/output96.jpg",
+        &log
     );
     std::cout << "mediaxx info result: " << std::endl;
-    std::cout << result << std::endl;
+    std::cout << ((nullptr != result) ? result : "nullptr") << std::endl;
+    std::cout << "log: " << ((nullptr != log) ? log : "nullptr") << std::endl;
     // get_media_info("C:/0Acoolight/Music/VSinger/Great Voyage_洛天依.mp3");
     std::cout << "======= Test Done =======" << std::endl;
     std::cout << ">>>";
