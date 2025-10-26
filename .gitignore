@@ -31,6 +31,7 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 /build/
 /build_bin/
+/build_rel/
 /coverage/
 /src/out/
 /src/third_party/ffmpeg/libs/

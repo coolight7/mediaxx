@@ -26,6 +26,24 @@ extern "C" {
 #include <string>
 #include <string_view>
 
+// 常见图片格式的文件签名
+struct SignatureInfo {
+    const uint8_t* signature;
+    size_t         length;
+    AVCodecID      codec_id;
+    const char*    description;
+};
+
+inline static const SignatureInfo cImgSignatureTable[] = {
+    {(const uint8_t*)"\xFF\xD8\xFF",      3, AV_CODEC_ID_MJPEG, "JPEG"                },
+    {(const uint8_t*)"\x89PNG\r\n\x1A\n", 8, AV_CODEC_ID_PNG,   "PNG"                 },
+    {(const uint8_t*)"GIF8",              4, AV_CODEC_ID_GIF,   "GIF"                 },
+    {(const uint8_t*)"BM",                2, AV_CODEC_ID_BMP,   "BMP"                 },
+    {(const uint8_t*)"II*\x00",           4, AV_CODEC_ID_TIFF,  "TIFF (little endian)"},
+    {(const uint8_t*)"MM\x00*",           4, AV_CODEC_ID_TIFF,  "TIFF (big endian)"   },
+    {nullptr,                             0, AV_CODEC_ID_NONE,  nullptr               }  // 结束标记
+};
+
 class MediaInfoItem_c {
 public:
 
@@ -570,46 +588,71 @@ public:
         AVPacket*                    pkt,
         AVStream*                    stream,
         const std::filesystem::path& outputPath,
-        int                          targetWidth,
-        int                          targetHeight,
-        int                          quality = 2
+        const int                    targetWidth,
+        const int                    targetHeight,
+        const int                    quality    = 2,
+        AVCodecID                    useCodecId = AVCodecID::AV_CODEC_ID_NONE
     ) {
-        bool            result  = false;
-        AVCodecContext* dec_ctx = nullptr;
-        AVFrame*        frame   = nullptr;
+        bool       result         = false;
+        const bool hasSetCodecId  = (AVCodecID::AV_CODEC_ID_NONE != useCodecId);
+        bool       retryByCodecId = false;
+        AVCodecContext* decCtx    = nullptr;
+        AVFrame*        frame     = nullptr;
         do {
             // 查找解码器
+            if (AVCodecID::AV_CODEC_ID_NONE == useCodecId) {
+                useCodecId = stream->codecpar->codec_id;
+            }
             LXX_DEBEG(
-                "savePictureScaleByStream: find decoder: {}",
-                int(stream->codecpar->codec_id)
+                "savePictureScaleByStream: try decoder: {}",
+                int(useCodecId)
             );
-            const AVCodec* decoder
-                = avcodec_find_decoder(stream->codecpar->codec_id);
+            const AVCodec* decoder = avcodec_find_decoder(useCodecId);
             if (!decoder) {
-                item.setLog("找不到解码器");
-                result = false;
+                item.setLog(std::format("找不到解码器: {}", int(useCodecId)));
+                retryByCodecId = true;
+                result         = false;
                 break;
             }
 
             // 初始化解码器上下文
-            dec_ctx = avcodec_alloc_context3(decoder);
-            if (!dec_ctx) {
-                item.setLog("无法分配解码器上下文");
+            decCtx = avcodec_alloc_context3(decoder);
+            if (!decCtx) {
+                item.setLog(
+                    std::format("无法分配解码器上下文: {}", int(useCodecId))
+                );
                 result = false;
                 break;
             }
 
             // 复制流参数到解码器上下文
-            if (avcodec_parameters_to_context(dec_ctx, stream->codecpar) < 0) {
-                item.setLog("复制流参数失败");
+            int ret = avcodec_parameters_to_context(decCtx, stream->codecpar);
+            if (ret < 0) {
+                item.setLog(std::format(
+                    "复制流参数失败: {}/{}",
+                    ret,
+                    Utilxx_c::av_err2str(ret)
+                ));
                 result = false;
                 break;
             }
+            if (hasSetCodecId) {
+                // 明确指定解码器时
+                // [decCtx] 从 [stream] 拷贝来的参数可能是错误的
+                // 重置为解码器的参数
+                decCtx->codec_id = decoder->id;
+            }
 
             // 打开解码器
-            if (avcodec_open2(dec_ctx, decoder, nullptr) != 0) {
-                item.setLog("无法打开解码器");
-                result = false;
+            ret = avcodec_open2(decCtx, decoder, nullptr);
+            if (ret != 0) {
+                item.setLog(std::format(
+                    "无法打开解码器: {}/{}",
+                    ret,
+                    Utilxx_c::av_err2str(ret)
+                ));
+                retryByCodecId = true;
+                result         = false;
                 break;
             }
 
@@ -622,16 +665,28 @@ public:
             }
 
             // 发送数据包到解码器
-            if (avcodec_send_packet(dec_ctx, pkt) != 0) {
-                item.setLog("发送数据包到解码器失败");
-                result = false;
+            ret = avcodec_send_packet(decCtx, pkt);
+            if (ret != 0) {
+                item.setLog(std::format(
+                    "发送数据包到解码器失败: {}/{}",
+                    ret,
+                    Utilxx_c::av_err2str(ret)
+                ));
+                retryByCodecId = true;
+                result         = false;
                 break;
             }
 
             // 接收解码后的帧（封面通常只有一帧）
-            if (avcodec_receive_frame(dec_ctx, frame) != 0) {
-                item.setLog("接收解码帧失败");
-                result = false;
+            ret = avcodec_receive_frame(decCtx, frame);
+            if (ret != 0) {
+                item.setLog(std::format(
+                    "接收解码帧失败: {}/{}",
+                    ret,
+                    Utilxx_c::av_err2str(ret)
+                ));
+                retryByCodecId = true;
+                result         = false;
                 break;
             }
 
@@ -645,8 +700,25 @@ public:
             );
         } while (false);
 
-        avcodec_free_context(&dec_ctx);
+        avcodec_free_context(&decCtx);
         av_frame_free(&frame);
+
+        if (false == result && false == hasSetCodecId && retryByCodecId) {
+            // 尝试寻找其他编码器
+            const auto newId = findDecoderBySignature(pkt->data, pkt->size);
+            if (AVCodecID::AV_CODEC_ID_NONE != newId && newId != useCodecId) {
+                return savePictureScaleByStream(
+                    item,
+                    pkt,
+                    stream,
+                    outputPath,
+                    targetWidth,
+                    targetHeight,
+                    quality,
+                    newId
+                );
+            }
+        }
         return result;
     }
 
@@ -798,5 +870,30 @@ public:
 
         avcodec_free_context(&decodeCtx);
         return result;
+    }
+
+public:
+
+    AVCodecID findDecoderBySignature(const uint8_t* data, size_t size) {
+        LXX_DEBEG("尝试根据数据头特征[signature]寻找解码器");
+        if (!data || size < 8) {
+            return AVCodecID::AV_CODEC_ID_NONE;
+        }
+
+        for (const SignatureInfo* info = cImgSignatureTable;
+             info->signature != nullptr;
+             ++info) {
+            if (size >= info->length
+                && memcmp(data, info->signature, info->length) == 0) {
+                LXX_DEBEG(
+                    "检测到文件签名匹配，尝试使用解码器: {}/{}",
+                    info->description,
+                    int(info->codec_id)
+                );
+                return info->codec_id;
+            }
+        }
+
+        return AVCodecID::AV_CODEC_ID_NONE;
     }
 };

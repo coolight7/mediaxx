@@ -1,3 +1,7 @@
+extern "C" {
+#include "libavutil/log.h"
+}
+
 #include "mediaxx.h"
 #include "simdjson.h"
 #include <iostream>
@@ -10,6 +14,7 @@ void test() {
 }
 
 int main(int argn, char** argv) {
+    av_log_set_level(AV_LOG_TRACE);
     std::cout << "======= Test Start =======" << std::endl;
     test();
 
@@ -28,7 +33,8 @@ int main(int argn, char** argv) {
 
     char* log    = nullptr;
     auto  result = mediaxx_get_media_info_malloc(
-        "C:/0Acoolight/Music/only/安静的午后_Pianoboy高至豪.flac",
+        "C:/0Acoolight/Music/English/Animals.flac",
+        // "C:/0Acoolight/Music/only/安静的午后_Pianoboy高至豪.flac",
         "",
         "./temp/output.jpg",
         "./temp/output96.jpg",
