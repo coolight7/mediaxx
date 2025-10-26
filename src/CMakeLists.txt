@@ -27,21 +27,30 @@ message("[mediaxx] CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message("[mediaxx] EXE_INSTALL_PREFIX: ${EXE_INSTALL_PREFIX}")
 message("[mediaxx] CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 
+include(ExternalProject)
+include(FetchContent)
+ExternalProject_Add(
+  simdjson_repo
+  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
+  GIT_SHALLOW TRUE
+  GIT_TAG v4.0.7
+  UPDATE_COMMAND ""
+  CONFIGURE_COMMAND ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> 
+      -DCMAKE_BUILD_TYPE=Release 
+      -DBUILD_SHARED_LIBS=OFF
+      -DSIMDJSON_BUILD_STATIC_LIB=ON
+  INSTALL_COMMAND ""
+)
+ExternalProject_Get_Property(simdjson_repo SOURCE_DIR)
+set(simdjson_SOURCE_DIR ${SOURCE_DIR})
+ExternalProject_Get_Property(simdjson_repo BINARY_DIR)
+set(simdjson_BINARY_DIR ${BINARY_DIR})
+message("simdjson_BINARY_DIR: ${simdjson_BINARY_DIR}")
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include/)
-
-include(ExternalProject)
-include(FetchContent)
-FetchContent_Declare(
-  simdjson
-  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
-  GIT_SHALLOW TRUE
-  GIT_TAG tags/v4.0.7
-  
-)
-
-FetchContent_MakeAvailable(simdjson)
+include_directories(${simdjson_SOURCE_DIR}/include/)
 
 aux_source_directory(./lib/util DIR_UTIL)
 aux_source_directory(./lib/analyse DIR_ANALYSE)
@@ -52,7 +61,10 @@ add_library(mediaxx SHARED
   ${DIR_ANALYSE}
 )
 
-target_link_directories(mediaxx PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/")
+target_link_directories(mediaxx PUBLIC 
+  "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/"
+  ${simdjson_BINARY_DIR}
+)
 target_link_libraries(mediaxx PUBLIC
   simdjson
   avcodec
