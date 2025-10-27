@@ -43,11 +43,11 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
     char* result = nullptr;
     if (MediaInfoReader_c::instance.openFile(item, headers)) {
         // 读取信息
-        auto jsonsb    = MediaInfoReader_c::instance.toInfoMap(item.fmtCtx);
-        auto pOutput   = std::string_view{pictureOutputPath};
-        auto p96Output = std::string_view{picture96OutputPath};
-        std::string_view json = jsonsb.view();
-        result                = StringUtilxx_c::stringCopyMalloc(json);
+        auto             jsonsb    = MediaInfoReader_c::instance.toInfoMap(item);
+        auto             pOutput   = std::string_view{pictureOutputPath};
+        auto             p96Output = std::string_view{picture96OutputPath};
+        std::string_view json      = jsonsb.view();
+        result                     = StringUtilxx_c::stringCopyMalloc(json);
         if (false == pOutput.empty()) {
             // 读取图片
             MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
@@ -75,10 +75,8 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     // 完整封面路径必须非空
     auto pOutput   = std::string_view{pictureOutputPath};
     auto p96Output = std::string_view{picture96OutputPath};
-    if (false == pOutput.empty()
-        && MediaInfoReader_c::instance.openFile(item, headers)) {
-        result
-            = MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
+    if (false == pOutput.empty() && MediaInfoReader_c::instance.openFile(item, headers)) {
+        result = MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
     } else {
         result = 0;
     }
@@ -86,8 +84,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     return result;
 }
 
-FFI_PLUGIN_EXPORT int
-    mediaxx_get_audio_visualization(const char* filepath, const char* output) {
+FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(const char* filepath, const char* output) {
     assert(nullptr != filepath);
     assert(nullptr != output);
     auto ret = AudioVisualization_c::instance.analyse(filepath, output);

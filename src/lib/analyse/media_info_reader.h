@@ -5,6 +5,7 @@ extern "C" {
 #include "libavcodec/codec_par.h"
 #include "libavformat/avformat.h"
 #include "libavutil/avutil.h"
+#include "libavutil/bprint.h"
 #include "libavutil/dict.h"
 #include "libavutil/log.h"
 #include "libavutil/opt.h"
@@ -119,29 +120,19 @@ public:
 
         item.setOptions(headers);
         LXX_DEBEG("openFile ...... : {}", item.filepath);
-        int ret = avformat_open_input(
-            &item.fmtCtx,
-            item.filepath.c_str(),
-            nullptr,
-            &item.options
-        );
+        int ret = avformat_open_input(&item.fmtCtx, item.filepath.c_str(), nullptr, &item.options);
         if (ret != 0) {
-            item.setLog(std::format(
-                "无法打开文件: {}, 错误: {}",
-                item.filepath,
-                Utilxx_c::av_err2str(ret)
-            ));
+            item.setLog(
+                std::format("无法打开文件: {}, 错误: {}", item.filepath, Utilxx_c::av_err2str(ret))
+            );
             return false;
         }
 
         LXX_DEBEG("openFile | find info ...... : {}", item.filepath);
         ret = avformat_find_stream_info(item.fmtCtx, nullptr);
         if (ret < 0) {
-            item.setLog(std::format(
-                "无法获取流信息: {}",
-                item.filepath,
-                Utilxx_c::av_err2str(ret)
-            ));
+            item.setLog(std::format("无法获取流信息: {}", item.filepath, Utilxx_c::av_err2str(ret))
+            );
             return false;
         }
 
@@ -149,25 +140,65 @@ public:
         return true;
     }
 
-    simdjson::builder::string_builder toInfoMap(AVFormatContext* fmtCtx) {
+    simdjson::builder::string_builder toInfoMap(MediaInfoItem_c& item) {
         LXX_DEBEG("toInfoMap ......");
         simdjson::builder::string_builder result{};
 
+        auto const fmtCtx = item.fmtCtx;
         if (!fmtCtx) {
+            item.setLog("未打开文件");
             return result;
         }
         result.start_object();
-        result.append_key_value<"format">(
-            fmtCtx->iformat->name ? fmtCtx->iformat->name : ""
-        );
-        result.append_comma();
-        result.append_key_value<"duration">(
-            fmtCtx->duration != AV_NOPTS_VALUE
-                ? double(fmtCtx->duration) / AV_TIME_BASE
-                : 0
-        );
-        result.append_comma();
-        result.append_key_value<"bit_rate">(fmtCtx->bit_rate);
+
+        result.escape_and_append_with_quotes("format");
+        result.append_colon();
+        {
+            result.start_object();
+
+            result.append_key_value<"filename">(item.filepath);
+            result.append_comma();
+            strBuilderAppendFixdKeyVPtr_d(result, "format_name", fmtCtx->iformat->name);
+            result.append_key_value<"nb_streams">(fmtCtx->nb_streams);
+            result.append_comma();
+            result.append_key_value<"nb_programs">(fmtCtx->nb_programs);
+            result.append_comma();
+            result.append_key_value<"nb_stream_groups">(fmtCtx->nb_stream_groups);
+            result.append_comma();
+            result.append_key_value<"start_time">(fmtCtx->start_time);
+            result.append_comma();
+            result.append_key_value<"duration">(
+                fmtCtx->duration != AV_NOPTS_VALUE ? double(fmtCtx->duration) / AV_TIME_BASE : 0
+            );
+            result.append_comma();
+            result.append_key_value<"size">(fmtCtx->packet_size);
+            result.append_comma();
+            result.append_key_value<"bit_rate">(fmtCtx->bit_rate);
+            result.append_comma();
+            result.append_key_value<"probe_score">(fmtCtx->probe_score);
+            result.append_comma();
+
+            result.escape_and_append_with_quotes("tags");
+            result.append_colon();
+            {
+                result.start_object();
+                auto               metadata = fmtCtx->metadata;
+                AVDictionaryEntry* tag      = nullptr;
+                auto               isFirst  = true;
+                while ((tag = av_dict_get(metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
+                    if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
+                        if (false == isFirst) {
+                            result.append_comma();
+                        }
+                        isFirst = false;
+                        result.append_key_value(tag->key, tag->value);
+                    }
+                }
+                result.end_object();
+            }
+
+            result.end_object();
+        }
         result.append_comma();
 
         result.escape_and_append_with_quotes("streams");
@@ -179,33 +210,60 @@ public:
                 AVStream*          stream   = fmtCtx->streams[i];
                 AVCodecParameters* codecPar = stream->codecpar;
 
+                result.append_key_value<"index">(i);
+                result.append_comma();
+                result.append_key_value<"codec_id">(int(codecPar->codec_id));
+                result.append_comma();
+                strBuilderAppendFixdKeyVPtr_d(
+                    result,
+                    "codec_name",
+                    avcodec_get_name(codecPar->codec_id)
+                );
+                auto avdesc = avcodec_descriptor_get(codecPar->codec_id);
+                if (nullptr != avdesc) {
+                    strBuilderAppendFixdKeyVPtr_d(result, "codec_long_name", avdesc->long_name);
+                }
                 strBuilderAppendFixdKeyVPtr_d(
                     result,
                     "codec_type",
                     av_get_media_type_string(codecPar->codec_type)
                 );
+                result.append_key_value<"codec_tag">(codecPar->codec_tag);
                 result.append_comma();
-
-                strBuilderAppendFixdKeyVPtr_d(
-                    result,
-                    "codec_id",
-                    avcodec_get_name(codecPar->codec_id)
+                result.append_key_value<"bit_rate">(codecPar->bit_rate);
+                result.append_comma();
+                result.append_key_value<"bits_per_sample">(codecPar->bits_per_raw_sample);
+                result.append_comma();
+                result.append_key_value<"start_time">(stream->start_time);
+                result.append_comma();
+                result.append_key_value<"r_frame_rate">(
+                    std::format("{}/{}", stream->r_frame_rate.num, stream->r_frame_rate.den)
                 );
                 result.append_comma();
-
-                result.escape_and_append_with_quotes("metadata");
+                result.append_key_value<"avg_frame_rate">(
+                    std::format("{}/{}", stream->avg_frame_rate.num, stream->avg_frame_rate.den)
+                );
+                result.append_comma();
+                result.append_key_value<"time_base">(
+                    std::format("{}/{}", stream->time_base.num, stream->time_base.den)
+                );
+                result.append_comma();
+                if (stream->time_base.den && stream->time_base.num) {
+                    // 秒
+                    result.append_key_value<"duration">(
+                        (stream->duration * av_q2d(stream->time_base))
+                    );
+                    result.append_comma();
+                }
+                result.escape_and_append_with_quotes("tags");
                 result.append_colon();
                 {
                     result.start_object();
                     auto               metadata = stream->metadata;
                     AVDictionaryEntry* tag      = nullptr;
                     auto               isFirst  = true;
-                    while ((
-                        tag
-                        = av_dict_get(metadata, "", tag, AV_DICT_IGNORE_SUFFIX)
-                    )) {
-                        if (nullptr != tag && nullptr != tag->key
-                            && nullptr != tag->value) {
+                    while ((tag = av_dict_get(metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
+                        if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
                             if (false == isFirst) {
                                 result.append_comma();
                             }
@@ -224,77 +282,86 @@ public:
                 case AVMEDIA_TYPE_VIDEO:
                     {
                         result.append_comma();
-                        result.escape_and_append_with_quotes("video");
-                        result.append_colon();
-                        {
-                            result.start_object();
+                        result.append_key_value<"width">(codecPar->width);
+                        result.append_comma();
+                        result.append_key_value<"height">(codecPar->height);
+                        result.append_comma();
+                        result.append_key_value<"framerate">(
+                            std::format("{}/{}", codecPar->framerate.num, codecPar->framerate.den)
+                        );
+                        result.append_comma();
+                        result.append_key_value<"sample_aspect_ratio">(std::format(
+                            "{}/{}",
+                            stream->sample_aspect_ratio.num,
+                            stream->sample_aspect_ratio.den
+                        ));
+                        result.append_comma();
+                        strBuilderAppendFixdKeyVPtr_d(
+                            result,
+                            "color_range",
+                            av_color_range_name(codecPar->color_range)
+                        );
+                        strBuilderAppendFixdKeyVPtr_d(
+                            result,
+                            "color_space",
+                            av_color_space_name(codecPar->color_space)
+                        );
+                        strBuilderAppendFixdKeyVPtr_d(
+                            result,
+                            "chroma_location",
+                            av_chroma_location_name(codecPar->chroma_location)
+                        );
+                        strBuilderAppendFixdKeyVPtr_d(
+                            result,
+                            "pix_fmt",
+                            av_get_pix_fmt_name((AVPixelFormat)codecPar->format)
+                        );
+                        strBuilderAppendFixdKeyVPtr_d(
+                            result,
+                            "format",
+                            av_get_pix_fmt_name((AVPixelFormat)codecPar->format)
+                        );
 
-                            result.append_key_value<"width">(codecPar->width);
+                        if (stream->avg_frame_rate.den && stream->avg_frame_rate.num) {
+                            // 计算帧率
+                            double fps = av_q2d(stream->avg_frame_rate);
+                            result.append_key_value<"fps">(fps);
                             result.append_comma();
-                            result.append_key_value<"height">(codecPar->height);
-                            result.append_comma();
-                            strBuilderAppendFixdKeyVPtr_d(
-                                result,
-                                "format",
-                                av_get_pix_fmt_name((AVPixelFormat
-                                )codecPar->format)
-                            );
-
-                            if (stream->avg_frame_rate.den
-                                && stream->avg_frame_rate.num) {
-                                // 计算帧率
-                                result.append_comma();
-                                double fps = av_q2d(stream->avg_frame_rate);
-                                result.append_key_value<"fps">(fps);
-                            }
-
-                            if (stream->time_base.den
-                                && stream->time_base.num) {
-                                result.append_comma();
-                                result.append_key_value<"duration">((
-                                    stream->duration * av_q2d(stream->time_base)
-                                ));
-                                // result.append_comma();
-                            }
-
-                            result.end_object();
                         }
+                        // if 块不能结尾，否则可能多余逗号 [result.append_comma()]
+                        result.append_key_value<"level">(codecPar->level);
                     }
                     break;
                 case AVMEDIA_TYPE_AUDIO:
                     {
                         result.append_comma();
-                        result.escape_and_append_with_quotes("audio");
-                        result.append_colon();
+                        result.append_key_value<"sample_rate">(codecPar->sample_rate);
+                        result.append_comma();
+                        result.append_key_value<"channels">(codecPar->ch_layout.nb_channels);
+                        result.append_comma();
                         {
-                            result.start_object();
-
-                            result.append_key_value<"sample_rate">(
-                                codecPar->sample_rate
-                            );
-                            result.append_comma();
-                            result.append_key_value<"channels">(
-                                codecPar->ch_layout.nb_channels
-                            );
-                            result.append_comma();
-                            strBuilderAppendFixdKeyVPtr_d(
-                                result,
-                                "format",
-                                av_get_sample_fmt_name((AVSampleFormat
-                                )codecPar->format)
-                            );
-                            if (stream->time_base.den
-                                && stream->time_base.num) {
-                                // 秒
-                                result.append_comma();
-                                result.append_key_value<"duration">((
-                                    stream->duration * av_q2d(stream->time_base)
-                                ));
-                                // result.append_comma();
-                            }
-
-                            result.end_object();
+                            AVBPrint bp{};
+                            av_bprint_init(&bp, 0, AV_BPRINT_SIZE_UNLIMITED);
+                            av_channel_layout_describe_bprint(&codecPar->ch_layout, &bp);
+                            char* channel_name = nullptr;
+                            av_bprint_finalize(&bp, &channel_name);
+                            strBuilderAppendFixdKeyVPtr_d(result, "channel_layout", channel_name);
+                            av_free(channel_name);
                         }
+                        strBuilderAppendFixdKeyVPtr_d(
+                            result,
+                            "sample_fmt",
+                            av_get_sample_fmt_name((AVSampleFormat)codecPar->format)
+                        );
+                        strBuilderAppendFixdKeyVPtr_d(
+                            result,
+                            "format",
+                            av_get_sample_fmt_name((AVSampleFormat)codecPar->format)
+                        );
+                        result.append_key_value<"initial_padding">(codecPar->initial_padding);
+                        result.append_comma();
+                        result.append_key_value<"trailing_padding">(codecPar->trailing_padding);
+                        // result.append_comma();
                     }
                     break;
                 default:
@@ -321,6 +388,10 @@ public:
     ) {
         LXX_DEBEG("savePicture: {}", item.filepath);
         auto const fmtCtx = item.fmtCtx;
+        if (!fmtCtx) {
+            item.setLog("未打开文件");
+            return 0;
+        }
         for (unsigned int i = 0; i < fmtCtx->nb_streams; i++) {
             AVStream*          stream   = fmtCtx->streams[i];
             AVCodecParameters* codecPar = stream->codecpar;
@@ -365,10 +436,10 @@ public:
             }
 
             // 设置编码参数
-            encodeCtx->width  = (clipWidth > 0) ? clipWidth : frame->width;
-            encodeCtx->height = (clipHeight > 0) ? clipHeight : frame->height;
-            encodeCtx->pix_fmt = AV_PIX_FMT_YUVJ420P; // JPEG使用的像素格式
-            encodeCtx->time_base = AVRational{1, 25}; // 对于单帧不重要
+            encodeCtx->width     = (clipWidth > 0) ? clipWidth : frame->width;
+            encodeCtx->height    = (clipHeight > 0) ? clipHeight : frame->height;
+            encodeCtx->pix_fmt   = AV_PIX_FMT_YUVJ420P; // JPEG使用的像素格式
+            encodeCtx->time_base = AVRational{1, 25};   // 对于单帧不重要
             encodeCtx->framerate = AVRational{25, 1};
             // 设置JPEG质量 (1-100, 越高越好)
             // 2对应高质量
@@ -410,10 +481,7 @@ public:
                 file.close();
                 result = true;
             } else {
-                item.setLog(std::format(
-                    "输出文件打开失败: {}",
-                    outputPath.generic_string()
-                ));
+                item.setLog(std::format("输出文件打开失败: {}", outputPath.generic_string()));
                 result = true;
             }
         } while (false);
@@ -504,14 +572,7 @@ public:
                 scaledFrame->linesize
             );
 
-            result = saveFrameAsJPEG(
-                item,
-                scaledFrame,
-                outputPath,
-                -1,
-                -1,
-                quality
-            );
+            result = saveFrameAsJPEG(item, scaledFrame, outputPath, -1, -1, quality);
         } while (false);
 
         sws_freeContext(swsCtx);
@@ -521,11 +582,8 @@ public:
     }
 
     // 像素格式转换函数
-    AVFrame* convertFramePixelFormat(
-        MediaInfoItem_c& item,
-        AVFrame*         srcFrame,
-        AVPixelFormat    dstPixFmt
-    ) {
+    AVFrame*
+        convertFramePixelFormat(MediaInfoItem_c& item, AVFrame* srcFrame, AVPixelFormat dstPixFmt) {
         struct SwsContext* swsCtx   = NULL;
         AVFrame*           dstFrame = NULL;
 
@@ -593,20 +651,17 @@ public:
         const int                    quality    = 2,
         AVCodecID                    useCodecId = AVCodecID::AV_CODEC_ID_NONE
     ) {
-        bool       result         = false;
-        const bool hasSetCodecId  = (AVCodecID::AV_CODEC_ID_NONE != useCodecId);
-        bool       retryByCodecId = false;
-        AVCodecContext* decCtx    = nullptr;
-        AVFrame*        frame     = nullptr;
+        bool            result         = false;
+        const bool      hasSetCodecId  = (AVCodecID::AV_CODEC_ID_NONE != useCodecId);
+        bool            retryByCodecId = false;
+        AVCodecContext* decCtx         = nullptr;
+        AVFrame*        frame          = nullptr;
         do {
             // 查找解码器
             if (AVCodecID::AV_CODEC_ID_NONE == useCodecId) {
                 useCodecId = stream->codecpar->codec_id;
             }
-            LXX_DEBEG(
-                "savePictureScaleByStream: try decoder: {}",
-                int(useCodecId)
-            );
+            LXX_DEBEG("savePictureScaleByStream: try decoder: {}", int(useCodecId));
             const AVCodec* decoder = avcodec_find_decoder(useCodecId);
             if (!decoder) {
                 item.setLog(std::format("找不到解码器: {}", int(useCodecId)));
@@ -618,9 +673,7 @@ public:
             // 初始化解码器上下文
             decCtx = avcodec_alloc_context3(decoder);
             if (!decCtx) {
-                item.setLog(
-                    std::format("无法分配解码器上下文: {}", int(useCodecId))
-                );
+                item.setLog(std::format("无法分配解码器上下文: {}", int(useCodecId)));
                 result = false;
                 break;
             }
@@ -628,11 +681,7 @@ public:
             // 复制流参数到解码器上下文
             int ret = avcodec_parameters_to_context(decCtx, stream->codecpar);
             if (ret < 0) {
-                item.setLog(std::format(
-                    "复制流参数失败: {}/{}",
-                    ret,
-                    Utilxx_c::av_err2str(ret)
-                ));
+                item.setLog(std::format("复制流参数失败: {}/{}", ret, Utilxx_c::av_err2str(ret)));
                 result = false;
                 break;
             }
@@ -646,11 +695,7 @@ public:
             // 打开解码器
             ret = avcodec_open2(decCtx, decoder, nullptr);
             if (ret != 0) {
-                item.setLog(std::format(
-                    "无法打开解码器: {}/{}",
-                    ret,
-                    Utilxx_c::av_err2str(ret)
-                ));
+                item.setLog(std::format("无法打开解码器: {}/{}", ret, Utilxx_c::av_err2str(ret)));
                 retryByCodecId = true;
                 result         = false;
                 break;
@@ -667,11 +712,9 @@ public:
             // 发送数据包到解码器
             ret = avcodec_send_packet(decCtx, pkt);
             if (ret != 0) {
-                item.setLog(std::format(
-                    "发送数据包到解码器失败: {}/{}",
-                    ret,
-                    Utilxx_c::av_err2str(ret)
-                ));
+                item.setLog(
+                    std::format("发送数据包到解码器失败: {}/{}", ret, Utilxx_c::av_err2str(ret))
+                );
                 retryByCodecId = true;
                 result         = false;
                 break;
@@ -680,11 +723,7 @@ public:
             // 接收解码后的帧（封面通常只有一帧）
             ret = avcodec_receive_frame(decCtx, frame);
             if (ret != 0) {
-                item.setLog(std::format(
-                    "接收解码帧失败: {}/{}",
-                    ret,
-                    Utilxx_c::av_err2str(ret)
-                ));
+                item.setLog(std::format("接收解码帧失败: {}/{}", ret, Utilxx_c::av_err2str(ret)));
                 retryByCodecId = true;
                 result         = false;
                 break;
@@ -747,23 +786,12 @@ public:
 
                 std::ofstream file{outputPath, std::ios::binary};
                 if (file.is_open()) {
-                    file.write(
-                        reinterpret_cast<const char*>(pkt.data),
-                        pkt.size
-                    );
+                    file.write(reinterpret_cast<const char*>(pkt.data), pkt.size);
                     file.close();
                     result = 1;
                     if (false == output96Str.empty()) {
                         LXX_DEBEG("tryGetPicture: savePictureScaleByStream-96");
-                        if (savePictureScaleByStream(
-                                item,
-                                &pkt,
-                                stream,
-                                outputPath96,
-                                96,
-                                96,
-                                8
-                            )) {
+                        if (savePictureScaleByStream(item, &pkt, stream, outputPath96, 96, 96, 8)) {
                             result = 2;
                         }
                     }
@@ -817,11 +845,7 @@ public:
                 if (targetFrame) {
                     // 如果像素格式不是YUVJ420P，进行转换
                     if (targetFrame->format != AV_PIX_FMT_YUV420P) {
-                        jpegFrame = convertFramePixelFormat(
-                            item,
-                            targetFrame,
-                            AV_PIX_FMT_YUV420P
-                        );
+                        jpegFrame = convertFramePixelFormat(item, targetFrame, AV_PIX_FMT_YUV420P);
 
                         if (!jpegFrame) {
                             item.setLog(std::format(
@@ -837,24 +861,10 @@ public:
                         useFrame = jpegFrame;
                     }
 
-                    if (saveFrameAsJPEG(
-                            item,
-                            useFrame,
-                            outputPath,
-                            -1,
-                            -1,
-                            2
-                        )) {
+                    if (saveFrameAsJPEG(item, useFrame, outputPath, -1, -1, 2)) {
                         result = 1;
                         if (false == output96Str.empty()) {
-                            if (saveFrameAsJPEGWithScale(
-                                    item,
-                                    useFrame,
-                                    outputPath96,
-                                    96,
-                                    96,
-                                    8
-                                )) {
+                            if (saveFrameAsJPEGWithScale(item, useFrame, outputPath96, 96, 96, 8)) {
                                 result = 2;
                             }
                         }
@@ -880,11 +890,8 @@ public:
             return AVCodecID::AV_CODEC_ID_NONE;
         }
 
-        for (const SignatureInfo* info = cImgSignatureTable;
-             info->signature != nullptr;
-             ++info) {
-            if (size >= info->length
-                && memcmp(data, info->signature, info->length) == 0) {
+        for (const SignatureInfo* info = cImgSignatureTable; info->signature != nullptr; ++info) {
+            if (size >= info->length && memcmp(data, info->signature, info->length) == 0) {
                 LXX_DEBEG(
                     "检测到文件签名匹配，尝试使用解码器: {}/{}",
                     info->description,

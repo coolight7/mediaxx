@@ -20,9 +20,6 @@ extern "C" {
 
 AudioVisualization_c AudioVisualization_c::instance = AudioVisualization_c();
 
-bool AudioVisualization_c::analyse(
-    const char* input_filename,
-    const char* output_filename
-) {
+bool AudioVisualization_c::analyse(const char* input_filename, const char* output_filename) {
     return true;
 }
