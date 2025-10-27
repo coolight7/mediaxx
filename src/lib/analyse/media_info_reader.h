@@ -171,7 +171,7 @@ public:
                 fmtCtx->duration != AV_NOPTS_VALUE ? double(fmtCtx->duration) / AV_TIME_BASE : 0
             );
             result.append_comma();
-            result.append_key_value<"size">(fmtCtx->packet_size);
+            result.append_key_value<"size">(avio_size(fmtCtx->pb));
             result.append_comma();
             result.append_key_value<"bit_rate">(fmtCtx->bit_rate);
             result.append_comma();
