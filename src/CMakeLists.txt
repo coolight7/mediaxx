@@ -71,6 +71,7 @@ target_link_libraries(mediaxx PUBLIC
   simdjson
   avcodec
   avdevice
+  avfilter
   avformat
   avutil
   swresample
@@ -102,13 +103,5 @@ if (DEFINED LUMENXX_BUILD_TYPE)
   install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avformat.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
   install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
   install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
-
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "avcodec-61.dll")
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avdevice.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avfilter.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avformat.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "avutil-59.dll")
-  install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}" RENAME "swresample-5.dll")
   install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
 endif()

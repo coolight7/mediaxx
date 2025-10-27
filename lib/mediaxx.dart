@@ -12,6 +12,10 @@ import 'mediaxx_bindings_generated.dart';
 
 const mediaxx_label = "libmediaxx by coolight";
 
+/// 常见错误
+/// - windows debug 运行时固定返回指针值 123 / 0x0000007B
+///     - 调用动态库失败，很可能缺失依赖的其他动态库
+
 Pointer<Void> mediaxx_malloc(int size) {
   return _bindings.mediaxx_malloc(size);
 }
@@ -190,7 +194,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
 
       // App接收数据，在这里才转 dartStr，减少拷贝
       if (data is _AsyncxxResponseMediaInfo) {
-        final Completer<dynamic> completer = _asyncxxRequests[data.id]!;
+        final completer = _asyncxxRequests[data.id]!;
         _asyncxxRequests.remove(data.id);
 
         data.result = data.resultPtr?.cast<Utf8>().tryToDartString();
@@ -249,7 +253,6 @@ Future<SendPort> _helperIsolateSendPort = () async {
           malloc.free(picture96OutputPathPtr);
           malloc.free(log);
           data.isDispose = true;
-
           final response = _AsyncxxResponseMediaInfo(
             data.id,
             resultPtr: resultPtr,

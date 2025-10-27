@@ -171,30 +171,34 @@ public:
                 fmtCtx->duration != AV_NOPTS_VALUE ? double(fmtCtx->duration) / AV_TIME_BASE : 0
             );
             result.append_comma();
-            result.append_key_value<"size">(avio_size(fmtCtx->pb));
-            result.append_comma();
+            if (nullptr != fmtCtx->pb) {
+                result.append_key_value<"size">(avio_size(fmtCtx->pb));
+                result.append_comma();
+            }
             result.append_key_value<"bit_rate">(fmtCtx->bit_rate);
             result.append_comma();
             result.append_key_value<"probe_score">(fmtCtx->probe_score);
             result.append_comma();
 
-            result.escape_and_append_with_quotes("tags");
-            result.append_colon();
-            {
-                result.start_object();
-                auto               metadata = fmtCtx->metadata;
-                AVDictionaryEntry* tag      = nullptr;
-                auto               isFirst  = true;
-                while ((tag = av_dict_get(metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
-                    if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
-                        if (false == isFirst) {
-                            result.append_comma();
+            auto ctxMetadata = fmtCtx->metadata;
+            if (nullptr != ctxMetadata) {
+                result.escape_and_append_with_quotes("tags");
+                result.append_colon();
+                {
+                    result.start_object();
+                    AVDictionaryEntry* tag     = nullptr;
+                    auto               isFirst = true;
+                    while ((tag = av_dict_get(ctxMetadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
+                        if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
+                            if (false == isFirst) {
+                                result.append_comma();
+                            }
+                            isFirst = false;
+                            result.append_key_value(tag->key, tag->value);
                         }
-                        isFirst = false;
-                        result.append_key_value(tag->key, tag->value);
                     }
+                    result.end_object();
                 }
-                result.end_object();
             }
 
             result.end_object();

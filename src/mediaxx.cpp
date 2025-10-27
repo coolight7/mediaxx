@@ -39,6 +39,7 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
     assert(nullptr != headers);
     assert(nullptr != pictureOutputPath);
     assert(nullptr != picture96OutputPath);
+    LXX_DEBEG("mediaxx_get_media_info_malloc : {} ......", filepath);
     auto  item   = MediaInfoItem_c{std::string_view{filepath}, log};
     char* result = nullptr;
     if (MediaInfoReader_c::instance.openFile(item, headers)) {
@@ -55,6 +56,7 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
     } else {
         result = nullptr;
     }
+    LXX_DEBEG("mediaxx_get_media_info_malloc done: {}", (void*)(result));
     item.dispose();
     return result;
 }
