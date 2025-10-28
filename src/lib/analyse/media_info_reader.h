@@ -18,6 +18,7 @@ extern "C" {
 #include "util/log.h"
 #include "util/string_util.h"
 #include "util/utilxx.h"
+#include <algorithm>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -451,7 +452,7 @@ public:
             encodeCtx->width  = (clipWidth > 0) ? clipWidth : frame->width;
             encodeCtx->height = (clipHeight > 0) ? clipHeight : frame->height;
             {
-                auto maxLine = max(encodeCtx->width, encodeCtx->height);
+                auto maxLine = std::max(encodeCtx->width, encodeCtx->height);
                 if (maxLine <= 0) {
                     item.setLog(std::format(
                         "saveFrameAsJPEG: encodeCtx/maxLine <= 0: {}, reset to 96",
@@ -555,7 +556,7 @@ public:
         // 计算缩放后的尺寸（保持宽高比）
         int srcWidth   = frame->width;
         int srcHeight  = frame->height;
-        int srcMinLine = min(srcWidth, srcHeight);
+        int srcMinLine = std::min(srcWidth, srcHeight);
         if (srcMinLine <= 0) {
             item.setLog(std::format(
                 "saveFrameAsJPEGWithScale: src 最小宽度 <=0 : w {} / h {}",

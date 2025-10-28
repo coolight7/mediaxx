@@ -47,7 +47,7 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
         auto             jsonsb    = MediaInfoReader_c::instance.toInfoMap(item);
         auto             pOutput   = std::string_view{pictureOutputPath};
         auto             p96Output = std::string_view{picture96OutputPath};
-        std::string_view json      = jsonsb.view();
+        std::string_view json      = jsonsb.view().value_unsafe();
         result                     = StringUtilxx_c::stringCopyMalloc(json);
         if (false == pOutput.empty()) {
             // 读取图片

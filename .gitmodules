@@ -1,0 +1,4 @@
+[submodule "src/third_party/simdjson"]
+	path = src/third_party/simdjson
+	url = https://github.com/simdjson/simdjson.git
+	branch = v4.0.7

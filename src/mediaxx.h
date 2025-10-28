@@ -1,5 +1,7 @@
 #if _WIN32
 #include <windows.h>
+#undef max
+#undef min
 #else
 #include <pthread.h>
 #include <unistd.h>
@@ -60,8 +62,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     char**      log
 );
 
-FFI_PLUGIN_EXPORT int
-    mediaxx_get_audio_visualization(const char* filepath, const char* output);
+FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(const char* filepath, const char* output);
 
 #if __cplusplus
 }

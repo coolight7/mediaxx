@@ -5,11 +5,12 @@ cmake_minimum_required(VERSION 3.10)
 cmake_policy(SET CMP0097 NEW)
 project(mediaxx_library VERSION 0.0.1 LANGUAGES C CXX)
 
+set(CMAKE_C_STANDARD 23)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_GENERATOR_PLATFORM x64)
 
-if (WIN32)
+if (DEFINED WIN32)
+    set(CMAKE_GENERATOR_PLATFORM x64)
 		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   /utf-8 /wd4200 /std:c17")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4200 /Zc:__cplusplus /std:c++23preview")
 else ()
@@ -29,15 +30,21 @@ message("[mediaxx] CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 add_definitions(-D__STDC_CONSTANT_MACROS)
 
 include(ExternalProject)
-include(FetchContent)
+
 ExternalProject_Add(
   simdjson_repo
-  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
-  GIT_SHALLOW TRUE
-  GIT_TAG v4.0.7
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/simdjson/"
   UPDATE_COMMAND ""
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -S <SOURCE_DIR> -B <BINARY_DIR> 
-      -DCMAKE_BUILD_TYPE=Release 
+  CMAKE_ARGS 
+      -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+      -DANDROID_PLATFORM=${ANDROID_PLATFORM}
+      -DANDROID_ABI=${ANDROID_ABI}
+      -DANDROID_NDK=${ANDROID_NDK}
+      -DANDROID_STL=${ANDROID_STL}
+      -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+      -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+
       -DBUILD_SHARED_LIBS=OFF
       -DSIMDJSON_BUILD_STATIC_LIB=ON
   INSTALL_COMMAND ""
@@ -45,8 +52,7 @@ ExternalProject_Add(
 ExternalProject_Get_Property(simdjson_repo SOURCE_DIR)
 set(simdjson_SOURCE_DIR ${SOURCE_DIR})
 ExternalProject_Get_Property(simdjson_repo BINARY_DIR)
-set(simdjson_BINARY_DIR ${BINARY_DIR})
-message("simdjson_BINARY_DIR: ${simdjson_BINARY_DIR}")
+set(simdjson_INSTALL_DIR "${BINARY_DIR}/")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
@@ -62,9 +68,19 @@ add_library(mediaxx SHARED
   ${DIR_ANALYSE}
 )
 
+add_dependencies(mediaxx simdjson_repo)
+
+set(ffmpeg_BINARY_DIR ".")
+if (DEFINED WIN32)
+  set(ffmpeg_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/win-libs/")
+elseif (DEFINED ANDROID)
+  message("=== build mediaxx for android | ANDROID_ABI: ${ANDROID_ABI}")
+  set(ffmpeg_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/android-libs/${ANDROID_ABI}/")
+endif ()
+
 target_link_directories(mediaxx PUBLIC 
-  "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs/"
-  ${simdjson_BINARY_DIR}
+  ${ffmpeg_BINARY_DIR}
+  ${simdjson_INSTALL_DIR}
 )
 target_link_libraries(mediaxx PUBLIC
   simdjson
@@ -77,8 +93,10 @@ target_link_libraries(mediaxx PUBLIC
   swscale
 )
 
-ADD_SUBDIRECTORY(test)
-add_dependencies(test mediaxx)
+if (DEFINED LUMENXX_BUILD_TYPE)
+  ADD_SUBDIRECTORY(test)
+  add_dependencies(test mediaxx)
+endif()
 
 set_target_properties(mediaxx PROPERTIES
   PUBLIC_HEADER mediaxx.h

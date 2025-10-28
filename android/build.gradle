@@ -1,6 +1,6 @@
 // The Android Gradle Plugin builds the native code with the Android NDK.
 
-group = "com.example.mediaxx"
+group = "run.bool.mediaxx"
 version = "1.0"
 
 buildscript {
@@ -25,7 +25,7 @@ rootProject.allprojects {
 apply plugin: "com.android.library"
 
 android {
-    namespace = "com.example.mediaxx"
+    namespace = "run.bool.mediaxx"
 
     // Bumping the plugin compileSdk version requires all clients of this plugin
     // to bump the version in their app.
@@ -35,7 +35,7 @@ android {
     // declared in /android/app/build.gradle file of the Flutter project.
     // Replace it with a version number if this plugin requires a specific NDK version.
     // (e.g. ndkVersion "23.1.7779620")
-    ndkVersion = android.ndkVersion
+    ndkVersion = "27.3.13750724"
 
     // Invoke the shared CMake build with the Android Gradle Plugin.
     externalNativeBuild {
