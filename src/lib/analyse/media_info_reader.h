@@ -385,6 +385,14 @@ public:
         return result;
     }
 
+    int convertQualityToQscale(int quality) {
+        if (quality < 0)
+            quality = 0;
+        if (quality > 100)
+            quality = 100;
+        return (int)(2 + (100 - quality) * 29 / 100.0 + 0.5);
+    }
+
     int savePicture(
         MediaInfoItem_c&       item,
         const std::string_view outputStr,
@@ -440,18 +448,50 @@ public:
             }
 
             // 设置编码参数
-            encodeCtx->width     = (clipWidth > 0) ? clipWidth : frame->width;
-            encodeCtx->height    = (clipHeight > 0) ? clipHeight : frame->height;
-            encodeCtx->pix_fmt   = AV_PIX_FMT_YUVJ420P; // JPEG使用的像素格式
-            encodeCtx->time_base = AVRational{1, 25};   // 对于单帧不重要
-            encodeCtx->framerate = AVRational{25, 1};
-            // 设置JPEG质量 (1-100, 越高越好)
-            // 2对应高质量
-            av_opt_set_int(encodeCtx->priv_data, "qscale", quality, 0);
+            encodeCtx->width  = (clipWidth > 0) ? clipWidth : frame->width;
+            encodeCtx->height = (clipHeight > 0) ? clipHeight : frame->height;
+            {
+                auto maxLine = max(encodeCtx->width, encodeCtx->height);
+                if (maxLine <= 0) {
+                    item.setLog(std::format(
+                        "saveFrameAsJPEG: encodeCtx/maxLine <= 0: {}, reset to 96",
+                        maxLine
+                    ));
+                    maxLine = 96;
+                }
+                if (encodeCtx->width <= 0) {
+                    item.setLog(std::format(
+                        "saveFrameAsJPEG: encodeCtx->width <= 0: {}, reset to maxLine: {}",
+                        encodeCtx->width,
+                        maxLine
+                    ));
+                    encodeCtx->width = maxLine;
+                }
+                if (encodeCtx->height <= 0) {
+                    item.setLog(std::format(
+                        "saveFrameAsJPEG: encodeCtx->height <= 0: {}, reset to maxLine: {}",
+                        encodeCtx->height,
+                        maxLine
+                    ));
+                    encodeCtx->height = maxLine;
+                }
+            }
+
+            encodeCtx->codec_type  = AVMediaType ::AVMEDIA_TYPE_VIDEO;
+            encodeCtx->pix_fmt     = AVPixelFormat::AV_PIX_FMT_YUV420P;
+            encodeCtx->color_range = AVColorRange::AVCOL_RANGE_JPEG;
+            encodeCtx->time_base   = AVRational{1, 25}; // 对于单帧不重要
+            encodeCtx->framerate   = AVRational{25, 1};
+            // 设置JPEG质量
+            encodeCtx->global_quality = quality;
+            // 启用固定质量模式
+            encodeCtx->flags |= AV_CODEC_FLAG_QSCALE;
 
             // 打开编码器
-            if (avcodec_open2(encodeCtx, encoder, NULL) != 0) {
-                item.setLog("无法打开JPEG编码器");
+            auto ret = avcodec_open2(encodeCtx, encoder, NULL);
+            if (ret != 0) {
+                item.setLog(std::format("无法打开JPEG编码器: {}/{}", ret, Utilxx_c::av_err2str(ret))
+                );
                 result = false;
                 break;
             }
@@ -465,15 +505,19 @@ public:
             }
 
             // 发送帧到编码器
-            if (avcodec_send_frame(encodeCtx, frame) != 0) {
-                item.setLog("发送帧到编码器失败");
+            ret = avcodec_send_frame(encodeCtx, frame);
+            if (ret != 0) {
+                item.setLog(std::format("发送帧到编码器失败: {}/{}", ret, Utilxx_c::av_err2str(ret))
+                );
                 result = false;
                 break;
             }
 
             // 接收编码后的包
-            if (avcodec_receive_packet(encodeCtx, pkt) != 0) {
-                item.setLog("从编码器接收包失败");
+            ret = avcodec_receive_packet(encodeCtx, pkt);
+            if (ret != 0) {
+                item.setLog(std::format("从编码器接收包失败: {}/{}", ret, Utilxx_c::av_err2str(ret))
+                );
                 result = false;
                 break;
             }
@@ -501,30 +545,47 @@ public:
         MediaInfoItem_c&             item,
         AVFrame*                     frame,
         const std::filesystem::path& outputPath,
-        int                          targetWidth,
-        int                          targetHeight,
+        int                          targetMinLineSize,
         int                          quality = 2
     ) {
         struct SwsContext* swsCtx      = NULL;
         AVFrame*           scaledFrame = NULL;
         bool               result      = false;
 
+        // 计算缩放后的尺寸（保持宽高比）
+        int srcWidth   = frame->width;
+        int srcHeight  = frame->height;
+        int srcMinLine = min(srcWidth, srcHeight);
+        if (srcMinLine <= 0) {
+            item.setLog(std::format(
+                "saveFrameAsJPEGWithScale: src 最小宽度 <=0 : w {} / h {}",
+                srcWidth,
+                srcHeight
+            ));
+            srcMinLine = -1;
+        }
+        double scalePercent = (double)targetMinLineSize / srcMinLine;
+        LXX_DEBEG(
+            "saveFrameAsJPEGWithScale: quality {} | scale to {} %",
+            quality,
+            scalePercent * 100
+        );
+
         // 如果不需要缩放，直接保存
-        if (targetWidth <= 0 && targetHeight <= 0) {
+        if (scalePercent <= 0 || scalePercent >= 1) {
             return saveFrameAsJPEG(item, frame, outputPath, -1, -1, quality);
         }
 
         do {
-            // 计算缩放后的尺寸（保持宽高比）
-            int srcWidth  = frame->width;
-            int srcHeight = frame->height;
-
-            if (targetWidth <= 0) {
-                // 只指定了高度，按比例计算宽度
-                targetWidth = (int)((float)srcWidth * targetHeight / srcHeight);
-            } else if (targetHeight <= 0) {
-                // 只指定了宽度，按比例计算高度
-                targetHeight = (int)((float)srcHeight * targetWidth / srcWidth);
+            auto targetWidth  = (int)((double)srcWidth * scalePercent);
+            auto targetHeight = (int)((double)srcHeight * scalePercent);
+            if (targetHeight <= 0 || targetWidth <= 0) {
+                item.setLog(std::format(
+                    "saveFrameAsJPEGWithScale: target 最小宽度 <=0 : w {} / h {} / scale {}",
+                    srcWidth,
+                    srcHeight,
+                    scalePercent
+                ));
             }
 
             // 创建缩放上下文
@@ -534,7 +595,7 @@ public:
                 (AVPixelFormat)frame->format,
                 targetWidth,
                 targetHeight,
-                AV_PIX_FMT_YUV420P,
+                AVPixelFormat::AV_PIX_FMT_YUV420P,
                 SWS_BILINEAR, // 平衡速度和质量
                 NULL,
                 NULL,
@@ -555,18 +616,23 @@ public:
                 break;
             }
 
-            scaledFrame->width  = targetWidth;
-            scaledFrame->height = targetHeight;
-            scaledFrame->format = AV_PIX_FMT_YUVJ420P;
+            scaledFrame->width       = targetWidth;
+            scaledFrame->height      = targetHeight;
+            scaledFrame->format      = AVPixelFormat::AV_PIX_FMT_YUV420P;
+            scaledFrame->color_range = AVColorRange::AVCOL_RANGE_JPEG;
 
             // 为缩放帧分配缓冲区
             if (0 != av_frame_get_buffer(scaledFrame, 0)) {
                 item.setLog("无法为缩放帧分配缓冲区");
                 break;
             }
-
+            LXX_DEBEG(
+                "saveFrameAsJPEGWithScale: format {} | {}",
+                frame->format,
+                scaledFrame->format
+            );
             // 执行缩放
-            sws_scale(
+            auto reHeight = sws_scale(
                 swsCtx,
                 (const uint8_t* const*)frame->data,
                 frame->linesize,
@@ -574,6 +640,12 @@ public:
                 srcHeight,
                 scaledFrame->data,
                 scaledFrame->linesize
+            );
+            LXX_DEBEG(
+                "saveFrameAsJPEGWithScale: scale result: reheight {} | fw {} | fh {}",
+                reHeight,
+                scaledFrame->width,
+                scaledFrame->height
             );
 
             result = saveFrameAsJPEG(item, scaledFrame, outputPath, -1, -1, quality);
@@ -586,8 +658,12 @@ public:
     }
 
     // 像素格式转换函数
-    AVFrame*
-        convertFramePixelFormat(MediaInfoItem_c& item, AVFrame* srcFrame, AVPixelFormat dstPixFmt) {
+    AVFrame* convertFramePixelFormat(
+        MediaInfoItem_c& item,
+        AVFrame*         srcFrame,
+        AVPixelFormat    dstPixFmt,
+        AVColorRange     color_range
+    ) {
         struct SwsContext* swsCtx   = NULL;
         AVFrame*           dstFrame = NULL;
 
@@ -601,7 +677,7 @@ public:
         dstFrame->width       = srcFrame->width;
         dstFrame->height      = srcFrame->height;
         dstFrame->format      = dstPixFmt;
-        dstFrame->color_range = AVColorRange::AVCOL_RANGE_JPEG;
+        dstFrame->color_range = color_range;
 
         // 分配目标帧缓冲区
         if (0 != av_frame_get_buffer(dstFrame, 0)) {
@@ -650,8 +726,7 @@ public:
         AVPacket*                    pkt,
         AVStream*                    stream,
         const std::filesystem::path& outputPath,
-        const int                    targetWidth,
-        const int                    targetHeight,
+        const int                    targetMinLine,
         const int                    quality    = 2,
         AVCodecID                    useCodecId = AVCodecID::AV_CODEC_ID_NONE
     ) {
@@ -733,14 +808,7 @@ public:
                 break;
             }
 
-            result = saveFrameAsJPEGWithScale(
-                item,
-                frame,
-                outputPath,
-                targetWidth,
-                targetHeight,
-                quality
-            );
+            result = saveFrameAsJPEGWithScale(item, frame, outputPath, targetMinLine, quality);
         } while (false);
 
         avcodec_free_context(&decCtx);
@@ -755,8 +823,7 @@ public:
                     pkt,
                     stream,
                     outputPath,
-                    targetWidth,
-                    targetHeight,
+                    targetMinLine,
                     quality,
                     newId
                 );
@@ -795,7 +862,7 @@ public:
                     result = 1;
                     if (false == output96Str.empty()) {
                         LXX_DEBEG("tryGetPicture: savePictureScaleByStream-96");
-                        if (savePictureScaleByStream(item, &pkt, stream, outputPath96, 96, 96, 8)) {
+                        if (savePictureScaleByStream(item, &pkt, stream, outputPath96, 96, 8)) {
                             result = 2;
                         }
                     }
@@ -848,8 +915,13 @@ public:
 
                 if (targetFrame) {
                     // 如果像素格式不是YUVJ420P，进行转换
-                    if (targetFrame->format != AV_PIX_FMT_YUV420P) {
-                        jpegFrame = convertFramePixelFormat(item, targetFrame, AV_PIX_FMT_YUV420P);
+                    if (targetFrame->format != AVPixelFormat::AV_PIX_FMT_YUV420P) {
+                        jpegFrame = convertFramePixelFormat(
+                            item,
+                            targetFrame,
+                            AVPixelFormat::AV_PIX_FMT_YUV420P,
+                            AVColorRange::AVCOL_RANGE_JPEG
+                        );
 
                         if (!jpegFrame) {
                             item.setLog(std::format(
@@ -868,7 +940,7 @@ public:
                     if (saveFrameAsJPEG(item, useFrame, outputPath, -1, -1, 2)) {
                         result = 1;
                         if (false == output96Str.empty()) {
-                            if (saveFrameAsJPEGWithScale(item, useFrame, outputPath96, 96, 96, 8)) {
+                            if (saveFrameAsJPEGWithScale(item, useFrame, outputPath96, 96, 8)) {
                                 result = 2;
                             }
                         }

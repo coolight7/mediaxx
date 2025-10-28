@@ -33,8 +33,8 @@ int main(int argn, char** argv) {
 
     char* log    = nullptr;
     auto  result = mediaxx_get_media_info_malloc(
-        "C:/0Acoolight/Music/Chinese/林宥嘉 - 浪费.flac",
-        // "C:/0Acoolight/Music/English/Animals.flac",
+        // "C:/0Acoolight/Music/Chinese/林宥嘉 - 浪费.flac",
+        "C:/0Acoolight/Music/English/Animals.flac",
         // "C:/0Acoolight/Music/only/安静的午后_Pianoboy高至豪.flac",
         "",
         "./temp/output.jpg",
