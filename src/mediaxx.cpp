@@ -13,6 +13,7 @@ FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size) {
 }
 
 FFI_PLUGIN_EXPORT void mediaxx_free(void* ptr) {
+    LXX_DEBEG("mediaxx_free : {}", ptr);
     free(ptr);
 }
 
@@ -56,8 +57,8 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
     } else {
         result = nullptr;
     }
-    LXX_DEBEG("mediaxx_get_media_info_malloc done: {}", (void*)(result));
     item.dispose();
+    LXX_DEBEG("mediaxx_get_media_info_malloc done: {}", (void*)(result));
     return result;
 }
 

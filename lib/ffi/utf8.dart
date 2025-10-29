@@ -50,7 +50,7 @@ extension Utf8Pointer on Pointer<Utf8> {
   }
 
   String? tryToDartString({int? length}) {
-    if (0 == address) {
+    if (address <= 0) {
       return null;
     }
     return toDartString(length: length);

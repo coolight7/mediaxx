@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  benchmark_harness:
 
 dev_dependencies:
   ffi: ^2.1.3

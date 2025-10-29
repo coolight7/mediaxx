@@ -204,7 +204,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
         if (null != data.resultPtr) {
           malloc.free(data.resultPtr!);
         }
-        if (null != data.logPtr) {
+        if (null != data.logPtr && nullptr != data.logPtr) {
           malloc.free(data.logPtr!);
         }
         return;
@@ -246,6 +246,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
             picture96OutputPathPtr,
             log,
           );
+          final logPtr = log.value;
 
           malloc.free(filepathPtr);
           malloc.free(headersPtr);
@@ -256,7 +257,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
           final response = _AsyncxxResponseMediaInfo(
             data.id,
             resultPtr: resultPtr,
-            logPtr: (nullptr != log.value) ? log.value : null,
+            logPtr: (nullptr != logPtr) ? logPtr : null,
           );
           sendPort.send(response);
           return;
@@ -276,6 +277,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
             picture96OutputPathPtr,
             log,
           );
+          final logPtr = log.value;
 
           malloc.free(filepathPtr);
           malloc.free(headersPtr);
@@ -285,7 +287,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
           final response = _AsyncxxResponseMediaPicture(
             data.id,
             result: result,
-            logPtr: (nullptr != log.value) ? log.value : null,
+            logPtr: (nullptr != logPtr) ? logPtr : null,
           );
           sendPort.send(response);
           return;
