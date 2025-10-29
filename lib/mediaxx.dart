@@ -122,13 +122,19 @@ class _AsyncxxRequestMediaInfo {
 
 class _AsyncxxResponseMediaInfo {
   final int id;
+  final int ret;
   final Pointer<Char>? resultPtr;
   final Pointer<Char>? logPtr;
 
   String? result;
   String? log;
 
-  _AsyncxxResponseMediaInfo(this.id, {this.resultPtr, this.logPtr});
+  _AsyncxxResponseMediaInfo(
+    this.id, {
+    required this.ret,
+    this.resultPtr,
+    this.logPtr,
+  });
 }
 
 class _AsyncxxRequestMediaPicture {
@@ -228,27 +234,33 @@ Future<SendPort> _helperIsolateSendPort = () async {
           final headersPtr = data.headersPtr;
           final pictureOutputPathPtr = data.pictureOutputPathPtr;
           final picture96OutputPathPtr = data.picture96OutputPathPtr;
+          final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+          result.value = nullptr;
           final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
           log.value = nullptr;
 
-          final resultPtr = _bindings.mediaxx_get_media_info_malloc(
+          final ret = _bindings.mediaxx_get_media_info_malloc(
             filepathPtr,
             headersPtr,
             pictureOutputPathPtr,
             picture96OutputPathPtr,
+            result,
             log,
           );
+          final resultPtr = result.value;
           final logPtr = log.value;
 
           malloc.free(filepathPtr);
           malloc.free(headersPtr);
           malloc.free(pictureOutputPathPtr);
           malloc.free(picture96OutputPathPtr);
+          malloc.free(result);
           malloc.free(log);
           data.isDispose = true;
           final response = _AsyncxxResponseMediaInfo(
             data.id,
-            resultPtr: resultPtr,
+            ret: ret,
+            resultPtr: (nullptr != resultPtr) ? resultPtr : null,
             logPtr: (nullptr != logPtr) ? logPtr : null,
           );
           sendPort.send(response);

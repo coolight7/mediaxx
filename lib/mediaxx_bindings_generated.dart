@@ -80,41 +80,45 @@ class MediaxxBindings {
   ///
   /// ## Return:
   /// - 返回 json 格式的音视频信息
-  ffi.Pointer<ffi.Char> mediaxx_get_media_info_malloc(
+  int mediaxx_get_media_info_malloc(
     ffi.Pointer<ffi.Char> filepath,
     ffi.Pointer<ffi.Char> headers,
     ffi.Pointer<ffi.Char> pictureOutputPath,
     ffi.Pointer<ffi.Char> picture96OutputPath,
-    ffi.Pointer<ffi.Pointer<ffi.Char>> log,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outResult,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
   ) {
     return _mediaxx_get_media_info_malloc(
       filepath,
       headers,
       pictureOutputPath,
       picture96OutputPath,
-      log,
+      outResult,
+      outLog,
     );
   }
 
   late final _mediaxx_get_media_info_mallocPtr =
       _lookup<
         ffi.NativeFunction<
-          ffi.Pointer<ffi.Char> Function(
+          ffi.Int Function(
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
             ffi.Pointer<ffi.Pointer<ffi.Char>>,
           )
         >
       >('mediaxx_get_media_info_malloc');
   late final _mediaxx_get_media_info_malloc = _mediaxx_get_media_info_mallocPtr
       .asFunction<
-        ffi.Pointer<ffi.Char> Function(
+        int Function(
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Pointer<ffi.Char>>,
           ffi.Pointer<ffi.Pointer<ffi.Char>>,
         )
       >();
