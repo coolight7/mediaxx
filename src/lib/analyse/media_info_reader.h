@@ -181,26 +181,24 @@ public:
             result.append_key_value<"probe_score">(fmtCtx->probe_score);
             result.append_comma();
 
+            result.escape_and_append_with_quotes("tags");
+            result.append_colon();
+            result.start_object();
             auto ctxMetadata = fmtCtx->metadata;
             if (nullptr != ctxMetadata) {
-                result.escape_and_append_with_quotes("tags");
-                result.append_colon();
-                {
-                    result.start_object();
-                    AVDictionaryEntry* tag     = nullptr;
-                    auto               isFirst = true;
-                    while ((tag = av_dict_get(ctxMetadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
-                        if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
-                            if (false == isFirst) {
-                                result.append_comma();
-                            }
-                            isFirst = false;
-                            result.append_key_value(tag->key, tag->value);
+                AVDictionaryEntry* tag     = nullptr;
+                auto               isFirst = true;
+                while ((tag = av_dict_get(ctxMetadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
+                    if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
+                        if (false == isFirst) {
+                            result.append_comma();
                         }
+                        isFirst = false;
+                        result.append_key_value(tag->key, tag->value);
                     }
-                    result.end_object();
                 }
             }
+            result.end_object();
 
             result.end_object();
         }
