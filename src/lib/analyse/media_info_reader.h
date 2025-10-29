@@ -54,12 +54,12 @@ public:
     };
 
     const std::string filepath;
-    char**            log;
+    const char**      log;
     size_t            logNum  = 0;
     AVFormatContext*  fmtCtx  = nullptr;
     AVDictionary*     options = nullptr;
 
-    MediaInfoItem_c(const std::string_view in_filepath, char** in_log) :
+    MediaInfoItem_c(const std::string_view in_filepath, const char** in_log) :
         filepath(in_filepath),
         log(in_log) {
         // log 容器非空，但内容為空
@@ -70,10 +70,10 @@ public:
         ++logNum;
         auto temp = *log;
         if (nullptr == temp) {
-            *log = StringUtilxx_c::stringCopyMalloc(data);
+            *log = StringUtilxx_c::stringCopyMalloc(data).data();
         } else {
             // 已经有内容，附加
-            *log = StringUtilxx_c::stringCopyMalloc(*log, "\n\n", data);
+            *log = StringUtilxx_c::stringCopyMalloc(*log, "\n\n", data).data();
         }
         mediaxx_free(temp);
     }

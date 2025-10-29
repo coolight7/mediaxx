@@ -12,9 +12,10 @@ FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size) {
     return malloc(size);
 }
 
-FFI_PLUGIN_EXPORT void mediaxx_free(void* ptr) {
+FFI_PLUGIN_EXPORT void mediaxx_free(const void* ptr) {
     LXX_DEBEG("mediaxx_free : {}", ptr);
-    free(ptr);
+    free(const_cast<void*>(ptr));
+    LXX_DEBEG("mediaxx_free done : {}", ptr);
 }
 
 FFI_PLUGIN_EXPORT int mediaxx_get_libav_version() {
@@ -29,45 +30,53 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_label_malloc() {
     return str;
 }
 
-FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
-    const char* filepath,
-    const char* headers,
-    const char* pictureOutputPath,
-    const char* picture96OutputPath,
-    char**      log
+FFI_PLUGIN_EXPORT int mediaxx_get_media_info_malloc(
+    const char*  filepath,
+    const char*  headers,
+    const char*  pictureOutputPath,
+    const char*  picture96OutputPath,
+    const char** outResult,
+    const char** outLog
 ) {
     assert(nullptr != filepath);
     assert(nullptr != headers);
     assert(nullptr != pictureOutputPath);
     assert(nullptr != picture96OutputPath);
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
     LXX_DEBEG("mediaxx_get_media_info_malloc : {} ......", filepath);
-    auto  item   = MediaInfoItem_c{std::string_view{filepath}, log};
-    char* result = nullptr;
+
+    auto item  = MediaInfoItem_c{std::string_view{filepath}, outLog};
+    int  ret   = 0;
+    *outResult = nullptr;
     if (MediaInfoReader_c::instance.openFile(item, headers)) {
         // 读取信息
         auto             jsonsb    = MediaInfoReader_c::instance.toInfoMap(item);
         auto             pOutput   = std::string_view{pictureOutputPath};
         auto             p96Output = std::string_view{picture96OutputPath};
         std::string_view json      = jsonsb.view().value_unsafe();
-        result                     = StringUtilxx_c::stringCopyMalloc(json);
+        *outResult                 = StringUtilxx_c::stringCopyMalloc(json).data();
+
+        ret = 0;
         if (false == pOutput.empty()) {
             // 读取图片
-            MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
+            ret = MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
         }
     } else {
-        result = nullptr;
+        *outResult = nullptr;
+        ret        = -1;
     }
     item.dispose();
-    LXX_DEBEG("mediaxx_get_media_info_malloc done: {}", (void*)(result));
-    return result;
+    LXX_DEBEG("mediaxx_get_media_info_malloc done: {}", (void*)(*outResult));
+    return ret;
 }
 
 FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
-    const char* filepath,
-    const char* headers,
-    const char* pictureOutputPath,
-    const char* picture96OutputPath,
-    char**      log
+    const char*  filepath,
+    const char*  headers,
+    const char*  pictureOutputPath,
+    const char*  picture96OutputPath,
+    const char** log
 ) {
     assert(nullptr != filepath);
     assert(nullptr != headers);

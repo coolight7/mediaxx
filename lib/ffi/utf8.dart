@@ -94,4 +94,13 @@ extension StringUtf8Pointer on String {
     nativeString[units.length] = 0;
     return result.cast();
   }
+
+  Pointer<Utf8> toNativeUtf8WithPrefixInt4Size() {
+    final units = utf8.encode(this);
+    final Pointer<Uint8> result = malloc<Uint8>(units.length + 1);
+    final Uint8List nativeString = result.asTypedList(units.length + 1);
+    nativeString.setAll(0, units);
+    nativeString[units.length] = 0;
+    return result.cast();
+  }
 }

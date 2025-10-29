@@ -31,19 +31,23 @@ int main(int argn, char** argv) {
 
     std::cout << "Generated JSON: " << p << std::endl;
 
-    char* log    = nullptr;
-    auto  result = mediaxx_get_media_info_malloc(
+    const char* result = nullptr;
+    const char* log    = nullptr;
+    auto        ret    = mediaxx_get_media_info_malloc(
         // "C:/0Acoolight/Music/Chinese/林宥嘉 - 浪费.flac",
         "C:/0Acoolight/Music/English/Animals.flac",
         // "C:/0Acoolight/Music/only/安静的午后_Pianoboy高至豪.flac",
         "",
         "./temp/output.jpg",
         "./temp/output96.jpg",
+        &result,
         &log
     );
-    std::cout << "mediaxx info result: " << std::endl;
+    std::cout << "mediaxx info ret: " << ret << std::endl;
     std::cout << ((nullptr != result) ? result : "nullptr") << std::endl;
     std::cout << "log: " << ((nullptr != log) ? log : "nullptr") << std::endl;
+    mediaxx_free(result);
+    mediaxx_free(log);
     std::cout << "======= Test Done =======" << std::endl;
     std::cout << ">>>";
     int num = 0;

@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size);
-FFI_PLUGIN_EXPORT void  mediaxx_free(void* ptr);
+FFI_PLUGIN_EXPORT void  mediaxx_free(const void* ptr);
 
 FFI_PLUGIN_EXPORT int mediaxx_get_libav_version();
 
@@ -36,12 +36,13 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_label_malloc();
 ///
 /// ## Return:
 /// - 返回 json 格式的音视频信息
-FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
-    const char* filepath,
-    const char* headers,
-    const char* pictureOutputPath,
-    const char* picture96OutputPath,
-    char**      log
+FFI_PLUGIN_EXPORT int mediaxx_get_media_info_malloc(
+    const char*  filepath,
+    const char*  headers,
+    const char*  pictureOutputPath,
+    const char*  picture96OutputPath,
+    const char** outResult,
+    const char** outLog
 );
 
 /// # 获取音视频的封面
@@ -55,11 +56,11 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_media_info_malloc(
 /// ## Return:
 /// - 返回操作是否成功
 FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
-    const char* filepath,
-    const char* headers,
-    const char* pictureOutputPath,
-    const char* picture96OutputPath,
-    char**      log
+    const char*  filepath,
+    const char*  headers,
+    const char*  pictureOutputPath,
+    const char*  picture96OutputPath,
+    const char** log
 );
 
 FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(const char* filepath, const char* output);

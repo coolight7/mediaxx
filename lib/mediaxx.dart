@@ -98,10 +98,6 @@ final MediaxxBindings _bindings = MediaxxBindings(_dylib);
 
 class _AsyncxxRequestMediaInfo {
   final int id;
-  final String filepath;
-  final String headers;
-  final String pictureOutputPath;
-  final String picture96OutputPath;
 
   late Pointer<Char> filepathPtr;
   late Pointer<Char> headersPtr;
@@ -112,10 +108,10 @@ class _AsyncxxRequestMediaInfo {
 
   _AsyncxxRequestMediaInfo(
     this.id, {
-    required this.filepath,
-    required this.headers,
-    required this.pictureOutputPath,
-    required this.picture96OutputPath,
+    required String filepath,
+    required String headers,
+    required String pictureOutputPath,
+    required String picture96OutputPath,
   }) {
     filepathPtr = filepath.toNativeUtf8().cast<Char>();
     headersPtr = headers.toNativeUtf8().cast<Char>();
@@ -137,10 +133,6 @@ class _AsyncxxResponseMediaInfo {
 
 class _AsyncxxRequestMediaPicture {
   final int id;
-  final String filepath;
-  final String headers;
-  final String pictureOutputPath;
-  final String picture96OutputPath;
 
   late Pointer<Char> filepathPtr;
   late Pointer<Char> headersPtr;
@@ -151,10 +143,10 @@ class _AsyncxxRequestMediaPicture {
 
   _AsyncxxRequestMediaPicture(
     this.id, {
-    required this.filepath,
-    required this.headers,
-    required this.pictureOutputPath,
-    required this.picture96OutputPath,
+    required String filepath,
+    required String headers,
+    required String pictureOutputPath,
+    required String picture96OutputPath,
   }) {
     filepathPtr = filepath.toNativeUtf8().cast<Char>();
     headersPtr = headers.toNativeUtf8().cast<Char>();
