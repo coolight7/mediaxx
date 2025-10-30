@@ -34,5 +34,5 @@ migrate_working_dir/
 /build_rel/
 /coverage/
 /src/out/
-/src/third_party/ffmpeg/libs/
+/src/third_party/ffmpeg/libs-*/
 /temp/
