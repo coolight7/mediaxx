@@ -6,7 +6,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/",
                 "${workspaceFolder}/src/lib/",
-                "${workspaceFolder}/src/third_party/ffmpeg/include/",
+                // "${workspaceFolder}/src/third_party/ffmpeg/include-win/",
+                "${workspaceFolder}/src/third_party/ffmpeg/include-android/",
                 "${vcpkgRoot}/x64-windows/include",
                 "${vcpkgRoot}/x86-windows/include"
             ],
