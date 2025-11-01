@@ -80,9 +80,12 @@ include_directories(${simdjson_SOURCE_DIR}/include/)
 
 aux_source_directory(./lib/util DIR_UTIL)
 aux_source_directory(./lib/analyse DIR_ANALYSE)
+aux_source_directory(./impl DIR_IMPL)
+aux_source_directory(./impl/android/ DIR_IMPL_ANDROID)
 
 add_library(mediaxx SHARED
-  "mediaxx.cpp"
+  ${DIR_IMPL}
+  ${DIR_IMPL_ANDROID}
   ${DIR_UTIL}
   ${DIR_ANALYSE}
 )
@@ -93,7 +96,15 @@ target_link_directories(mediaxx PUBLIC
   ${ffmpeg_BINARY_DIR}
   ${simdjson_INSTALL_DIR}
 )
+
+if (DEFINED ANDROID)
+  find_library(log-lib log)
+  find_library(android-lib android)
+endif()
+
 target_link_libraries(mediaxx PUBLIC
+  ${log-lib}
+  ${android-lib}
   simdjson
   avcodec
   avdevice

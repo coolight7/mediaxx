@@ -6,10 +6,7 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/",
                 "${workspaceFolder}/src/lib/",
-                // "${workspaceFolder}/src/third_party/ffmpeg/include-win/",
-                "${workspaceFolder}/src/third_party/ffmpeg/include-android/",
-                "${vcpkgRoot}/x64-windows/include",
-                "${vcpkgRoot}/x86-windows/include"
+                "${workspaceFolder}/src/third_party/ffmpeg/include-win/"
             ],
             "defines": [
                 "_DEBUG",
@@ -18,6 +15,25 @@
             ],
             "windowsSdkVersion": "10.0.22000.0",
             "compilerPath": "cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++23"
+        },
+        {
+            "name": "Android",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/",
+                "${workspaceFolder}/src/lib/",
+                "${workspaceFolder}/src/third_party/ffmpeg/include-android/",
+                "${ANDROID_HOME}/ndk/27.3.13750724/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/",
+                "${ANDROID_HOME}/ndk/27.3.13750724/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/aarch64-linux-android/"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "ANDROID"
+            ],
             "cStandard": "c17",
             "cppStandard": "c++23"
         }

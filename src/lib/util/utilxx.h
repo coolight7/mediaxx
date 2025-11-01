@@ -13,11 +13,11 @@ extern "C" {
 class Utilxx_c {
 public:
 
+    static int debugArg;
+
     static inline std::string av_err2str(int errnum) {
         char av_error[AV_ERROR_MAX_STRING_SIZE] = {0};
-        return std::string{
-            av_make_error_string(av_error, AV_ERROR_MAX_STRING_SIZE, errnum)
-        };
+        return std::string{av_make_error_string(av_error, AV_ERROR_MAX_STRING_SIZE, errnum)};
     }
 
     static inline std::string av_ts2timestr(int64_t ts, const AVRational* tb) {

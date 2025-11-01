@@ -1,9 +1,12 @@
+
 #include "mediaxx.h"
 #include "analyse/audio_visualization.h"
 #include "analyse/media_info_reader.h"
 #include "simdjson.h"
+#include "util/log.h"
 #include "util/string_util.h"
 #include "util/utilxx.h"
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <string_view>
