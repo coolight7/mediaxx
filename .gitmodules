@@ -2,3 +2,6 @@
 	path = src/third_party/simdjson
 	url = https://github.com/simdjson/simdjson.git
 	branch = v4.0.7
+[submodule "src/third_party/vulkan-header"]
+	path = src/third_party/vulkan-header
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git
