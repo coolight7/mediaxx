@@ -12,7 +12,7 @@
 #define DllExport         __declspec(dllexport)
 #define FFI_PLUGIN_EXPORT DllExport
 #else
-#define FFI_PLUGIN_EXPORT
+#define FFI_PLUGIN_EXPORT __attribute__((visibility("default")))
 #endif
 
 #if __cplusplus

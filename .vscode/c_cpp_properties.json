@@ -3,15 +3,16 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/src/",
+                "${workspaceFolder}/src/third_party/ffmpeg/include-win/",
                 "${workspaceFolder}/src/lib/",
-                "${workspaceFolder}/src/third_party/ffmpeg/include-win/"
+                "${workspaceFolder}/src/",
+                "${workspaceFolder}/**"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "WIN32"
             ],
             "windowsSdkVersion": "10.0.22000.0",
             "compilerPath": "cl.exe",

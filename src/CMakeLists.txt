@@ -18,8 +18,8 @@ if (DEFINED WIN32)
 		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   /utf-8 /wd4200 /std:c17")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4200 /Zc:__cplusplus /std:c++23preview")
 else ()
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
+		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -fvisibility=hidden -fPIC -pipe -std=c17")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fvisibility=hidden -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
     if (DEBUG) 
         set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 		    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
@@ -64,9 +64,13 @@ set(simdjson_INSTALL_DIR "${BINARY_DIR}/")
 # .vscode/c_cpp_properties.json 默认取 android
 set(ffmpeg_INCLUDE_DIR ".")
 set(ffmpeg_BINARY_DIR ".")
+set(vulkan_INCLUDE_DIR ".")
+set(ffmpeg_help_IMPL "")
 if (DEFINED WIN32)
   set(ffmpeg_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-win/")
   set(ffmpeg_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-win/")
+  set(vulkan_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vulkan-header/")
+  set(ffmpeg_help_IMPL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.cpp")
 elseif (DEFINED ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
   set(ffmpeg_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-android/${ANDROID_ABI}/")
@@ -77,17 +81,19 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
 include_directories(${ffmpeg_INCLUDE_DIR})
 include_directories(${simdjson_SOURCE_DIR}/include/)
+include_directories(${vulkan_INCLUDE_DIR})
 
-aux_source_directory(./lib/util DIR_UTIL)
-aux_source_directory(./lib/analyse DIR_ANALYSE)
-aux_source_directory(./impl DIR_IMPL)
-aux_source_directory(./impl/android/ DIR_IMPL_ANDROID)
+aux_source_directory("./lib/util" DIR_UTIL)
+aux_source_directory("./lib/analyse" DIR_ANALYSE)
+aux_source_directory("./impl" DIR_IMPL)
+aux_source_directory("./impl/android/" DIR_IMPL_ANDROID)
 
 add_library(mediaxx SHARED
   ${DIR_IMPL}
   ${DIR_IMPL_ANDROID}
   ${DIR_UTIL}
   ${DIR_ANALYSE}
+  ${ffmpeg_help_IMPL}
 )
 
 add_dependencies(mediaxx simdjson_repo)
