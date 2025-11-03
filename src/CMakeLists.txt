@@ -61,27 +61,108 @@ set(simdjson_SOURCE_DIR "${SOURCE_DIR}")
 ExternalProject_Get_Property(simdjson_repo BINARY_DIR)
 set(simdjson_INSTALL_DIR "${BINARY_DIR}/")
 
-# .vscode/c_cpp_properties.json 默认取 android
+# - .vscode/c_cpp_properties.json 默认取 android
+# - 两种模式，动态链接 ffmpeg 和 静态链接 ffmpeg
+#   - 静态链接时需要各种 ffmpeg 的依赖库，因此只在发布 release 时上 docker 内编译，最终合并 ffmpeg 到 mediaxx 内整合为一个动态库
+set(ffmpeg_CFLAGS "")
 set(ffmpeg_INCLUDE_DIR ".")
 set(ffmpeg_BINARY_DIR ".")
+set(ffmpeg_LIBRARIES 
+  avcodec
+  avdevice
+  avfilter
+  avformat
+  avutil
+  swresample
+  swscale
+)
 set(vulkan_INCLUDE_DIR ".")
 set(ffmpeg_help_IMPL "")
+set(ffmpeg_help_EXPORT "")
 if (DEFINED WIN32)
-  set(ffmpeg_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-win/")
-  set(ffmpeg_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-win/")
-  set(vulkan_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vulkan-header/")
+  if (DEFINED STATIC_LINK_FFMPEG)
+    # 静态链接，合并 ffmpeg 
+    find_package(PkgConfig REQUIRED)
+
+    set(PKG_CONFIG_FLAGS "--static")
+
+    pkg_check_modules(AVCODEC REQUIRED libavcodec)
+    pkg_check_modules(AVDEVICE REQUIRED libavdevice)
+    pkg_check_modules(AVFILTER REQUIRED libavfilter)
+    pkg_check_modules(AVFORMAT REQUIRED libavformat)
+    pkg_check_modules(AVUTIL REQUIRED libavutil)
+    pkg_check_modules(SWRESAMPLE REQUIRED libswresample)
+    pkg_check_modules(SWSCALE REQUIRED libswscale)
+
+    set(ffmpeg_CFLAGS 
+      ${AVCODEC_CFLAGS}
+      ${AVDEVICE_CFLAGS}
+      ${AVFILTER_CFLAGS}
+      ${AVFORMAT_CFLAGS}
+      ${AVUTIL_CFLAGS}
+      ${SWRESAMPLE_CFLAGS}
+      ${SWSCALE_CFLAGS}
+    )
+    set(ffmpeg_BINARY_DIR 
+      ${AVCODEC_LIBRARY_DIRS}
+      ${AVDEVICE_LIBRARY_DIRS}
+      ${AVFILTER_LIBRARY_DIRS}
+      ${AVFORMAT_LIBRARY_DIRS}
+      ${AVUTIL_LIBRARY_DIRS}
+      ${SWRESAMPLE_LIBRARY_DIRS}
+      ${SWSCALE_LIBRARY_DIRS}
+    )
+    set(ffmpeg_LIBRARIES 
+      ${AVCODEC_LIBRARIES}
+      ${AVDEVICE_LIBRARIES}
+      ${AVFILTER_LIBRARIES}
+      ${AVFORMAT_LIBRARIES}
+      ${AVUTIL_LIBRARIES}
+      ${SWRESAMPLE_LIBRARIES}
+      ${SWSCALE_LIBRARIES}
+      avcodec
+      avdevice
+      avfilter
+      avformat
+      avutil
+      swresample
+      swscale
+      m
+      shlwapi
+      pthread
+      cfgmgr32
+    )
+    set(ffmpeg_INCLUDE_DIR 
+      ${AVCODEC_INCLUDE_DIRS}
+      ${AVDEVICE_INCLUDE_DIRS}
+      ${AVFILTER_INCLUDE_DIRS}
+      ${AVFORMAT_INCLUDE_DIRS}
+      ${AVUTIL_INCLUDE_DIRS}
+      ${SWRESAMPLE_INCLUDE_DIRS}
+      ${SWSCALE_INCLUDE_DIRS}
+    )
+  else () 
+    set(ffmpeg_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-win/")
+    set(ffmpeg_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-win/")
+    set(vulkan_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vulkan-header/include/")
+  endif ()
+
   set(ffmpeg_help_IMPL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.cpp")
+  set(ffmpeg_help_EXPORT "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.def")
 elseif (DEFINED ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
+  find_library(log-lib log)
+  find_library(android-lib android)
+
   set(ffmpeg_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-android/${ANDROID_ABI}/")
   set(ffmpeg_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-android/")
 endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
-include_directories(${ffmpeg_INCLUDE_DIR})
 include_directories(${simdjson_SOURCE_DIR}/include/)
 include_directories(${vulkan_INCLUDE_DIR})
+include_directories(${ffmpeg_INCLUDE_DIR})
 
 aux_source_directory("./lib/util" DIR_UTIL)
 aux_source_directory("./lib/analyse" DIR_ANALYSE)
@@ -94,6 +175,8 @@ add_library(mediaxx SHARED
   ${DIR_UTIL}
   ${DIR_ANALYSE}
   ${ffmpeg_help_IMPL}
+
+  ${ffmpeg_help_EXPORT}
 )
 
 add_dependencies(mediaxx simdjson_repo)
@@ -103,31 +186,20 @@ target_link_directories(mediaxx PUBLIC
   ${simdjson_INSTALL_DIR}
 )
 
-if (DEFINED ANDROID)
-  find_library(log-lib log)
-  find_library(android-lib android)
-endif()
-
 target_link_libraries(mediaxx PUBLIC
   ${log-lib}
   ${android-lib}
   simdjson
-  avcodec
-  avdevice
-  avfilter
-  avformat
-  avutil
-  swresample
-  swscale
+  ${ffmpeg_LIBRARIES}
 )
 
-if (DEFINED LUMENXX_BUILD_TYPE)
-  ADD_SUBDIRECTORY(test)
-  add_dependencies(test mediaxx)
-endif()
+target_compile_options(mediaxx PRIVATE 
+    ${ffmpeg_CFLAGS}
+)
 
 set_target_properties(mediaxx PROPERTIES
   PUBLIC_HEADER mediaxx.h
+  PREFIX "lib"
   OUTPUT_NAME "mediaxx"
 )
 
@@ -136,6 +208,11 @@ target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 if (ANDROID)
   # Support Android 15 16k page size
   target_link_options(mediaxx PRIVATE "-Wl,-z,max-page-size=16384")
+endif()
+
+if (DEFINED LUMENXX_BUILD_TYPE)
+  ADD_SUBDIRECTORY(test)
+  add_dependencies(test mediaxx)
 endif()
 
 if (DEFINED LUMENXX_BUILD_TYPE)
@@ -148,4 +225,6 @@ if (DEFINED LUMENXX_BUILD_TYPE)
   install(FILES "${ffmpeg_BINARY_DIR}/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
   install(FILES "${ffmpeg_BINARY_DIR}/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
   install(FILES "${ffmpeg_BINARY_DIR}/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+elseif (DEFINED STATIC_LINK_FFMPEG)
+  install(TARGETS mediaxx RUNTIME)
 endif()
