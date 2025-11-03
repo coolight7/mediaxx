@@ -13,11 +13,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message("[mediaxx] Current Configure Type: ${CMAKE_CONFIGURATION_TYPES}")
 message("[mediaxx] Current Build Type: ${CMAKE_BUILD_TYPE}")
 
-if (DEFINED WIN32)
+if (MSVC)
     # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   /utf-8 /wd4200 /std:c17")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4200 /Zc:__cplusplus /std:c++23preview")
-else ()
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -fvisibility=hidden -fPIC -pipe -std=c17")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fvisibility=hidden -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
+    if (DEBUG) 
+        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+		    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+    endif ()
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -fvisibility=hidden -fPIC -pipe -std=c17")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fvisibility=hidden -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
     if (DEBUG) 
@@ -41,6 +48,7 @@ ExternalProject_Add(
   UPDATE_COMMAND ""
   CMAKE_ARGS 
       "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+      "-DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}"
       "-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
       "-DANDROID_ABI=${ANDROID_ABI}"
       "-DANDROID_NDK=${ANDROID_NDK}"
