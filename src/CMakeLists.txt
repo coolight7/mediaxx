@@ -160,8 +160,8 @@ if (DEFINED WIN32)
   set(ffmpeg_help_EXPORT "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.def")
 elseif (DEFINED ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
-  find_library(log-lib log)
-  find_library(android-lib android)
+  # find_library(log-lib log)
+  # find_library(android-lib android)
 
   if (DEFINED STATIC_LINK_FFMPEG)
     # 静态链接，合并 ffmpeg 
