@@ -163,8 +163,70 @@ elseif (DEFINED ANDROID)
   find_library(log-lib log)
   find_library(android-lib android)
 
-  set(ffmpeg_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-android/${ANDROID_ABI}/")
-  set(ffmpeg_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-android/")
+  if (DEFINED STATIC_LINK_FFMPEG)
+    # 静态链接，合并 ffmpeg 
+    find_package(PkgConfig REQUIRED)
+
+    set(PKG_CONFIG_FLAGS "--static")
+
+    pkg_check_modules(AVCODEC REQUIRED libavcodec)
+    pkg_check_modules(AVDEVICE REQUIRED libavdevice)
+    pkg_check_modules(AVFILTER REQUIRED libavfilter)
+    pkg_check_modules(AVFORMAT REQUIRED libavformat)
+    pkg_check_modules(AVUTIL REQUIRED libavutil)
+    pkg_check_modules(SWRESAMPLE REQUIRED libswresample)
+    pkg_check_modules(SWSCALE REQUIRED libswscale)
+
+    set(ffmpeg_CFLAGS 
+      ${AVCODEC_CFLAGS}
+      ${AVDEVICE_CFLAGS}
+      ${AVFILTER_CFLAGS}
+      ${AVFORMAT_CFLAGS}
+      ${AVUTIL_CFLAGS}
+      ${SWRESAMPLE_CFLAGS}
+      ${SWSCALE_CFLAGS}
+    )
+    set(ffmpeg_BINARY_DIR 
+      ${AVCODEC_LIBRARY_DIRS}
+      ${AVDEVICE_LIBRARY_DIRS}
+      ${AVFILTER_LIBRARY_DIRS}
+      ${AVFORMAT_LIBRARY_DIRS}
+      ${AVUTIL_LIBRARY_DIRS}
+      ${SWRESAMPLE_LIBRARY_DIRS}
+      ${SWSCALE_LIBRARY_DIRS}
+    )
+    set(ffmpeg_LIBRARIES 
+      ${AVCODEC_LIBRARIES}
+      ${AVDEVICE_LIBRARIES}
+      ${AVFILTER_LIBRARIES}
+      ${AVFORMAT_LIBRARIES}
+      ${AVUTIL_LIBRARIES}
+      ${SWRESAMPLE_LIBRARIES}
+      ${SWSCALE_LIBRARIES}
+      avcodec
+      avdevice
+      avfilter
+      avformat
+      avutil
+      swresample
+      swscale
+    )
+    set(ffmpeg_INCLUDE_DIR 
+      ${AVCODEC_INCLUDE_DIRS}
+      ${AVDEVICE_INCLUDE_DIRS}
+      ${AVFILTER_INCLUDE_DIRS}
+      ${AVFORMAT_INCLUDE_DIRS}
+      ${AVUTIL_INCLUDE_DIRS}
+      ${SWRESAMPLE_INCLUDE_DIRS}
+      ${SWSCALE_INCLUDE_DIRS}
+    )
+  else ()
+    set(ffmpeg_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-android/${ANDROID_ABI}/")
+    set(ffmpeg_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-android/")
+  endif ()
+
+  set(ffmpeg_help_IMPL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android.cpp")
+  set(ffmpeg_help_EXPORT "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android.def")
 endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
