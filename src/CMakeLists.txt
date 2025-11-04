@@ -104,7 +104,6 @@ set(ffmpeg_LIBRARIES
 )
 set(third_party_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/")
 set(vulkan_INCLUDE_DIR ".")
-set(ffmpeg_help_IMPL "")
 set(ffmpeg_help_EXPORT_DEF "")
 set(ffmpeg_help_EXPORT_IDS "")
 if (DEFINED WIN32)
@@ -175,7 +174,6 @@ if (DEFINED WIN32)
     set(vulkan_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vulkan-header/include/")
   endif ()
 
-  set(ffmpeg_help_IMPL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.cpp")
   set(ffmpeg_help_EXPORT_DEF "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.def")
 elseif (DEFINED ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
@@ -244,7 +242,6 @@ elseif (DEFINED ANDROID)
     set(ffmpeg_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-android/")
   endif ()
 
-  set(ffmpeg_help_IMPL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android.cpp")
   set(ffmpeg_help_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android.lds")
 endif ()
 
@@ -265,7 +262,6 @@ add_library(mediaxx SHARED
   ${DIR_IMPL_ANDROID}
   ${DIR_UTIL}
   ${DIR_ANALYSE}
-  ${ffmpeg_help_IMPL}
 
   ${ffmpeg_help_EXPORT_DEF}
 )

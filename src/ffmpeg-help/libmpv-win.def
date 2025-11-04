@@ -1,7 +1,6 @@
 LIBRARY
 
 EXPORTS
-    mediaxxFFmpegHelpRef
     av_codec_is_decoder
     av_codec_is_encoder
     av_codec_iterate
