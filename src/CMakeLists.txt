@@ -113,6 +113,7 @@ set(vulkan_INCLUDE_DIR ".")
 # - 更新 `ffmpeg`、`mediaxx`、`libmpv` 时，需要检查更新符号表
 set(ffmpeg_help_EXPORT_DEF "")
 set(ffmpeg_help_EXPORT_IDS "")
+set(ffmpeg_help_EXPORT_KEEP_SYMBOL "")
 if (DEFINED WIN32)
   if (DEFINED STATIC_LINK_FFMPEG)
     # 静态链接，合并 ffmpeg 
@@ -250,6 +251,7 @@ elseif (DEFINED ANDROID)
   endif ()
 
   set(ffmpeg_help_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android.lds")
+  set(ffmpeg_help_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android-symbols.txt")
 endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
@@ -303,6 +305,7 @@ if (ANDROID)
   # Support Android 15 16k page size
   target_link_options(mediaxx PRIVATE 
     "-Wl,-z,max-page-size=16384"
+    "-Wl,@${ffmpeg_help_EXPORT_KEEP_SYMBOL}"
     "-Wl,--version-script=${ffmpeg_help_EXPORT_IDS}"
   )
 endif()
