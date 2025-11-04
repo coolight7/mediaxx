@@ -24,8 +24,18 @@ if (MSVC)
 		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   /utf-8 /MD /wd4200 /std:c17")
 		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -fvisibility=hidden -fPIC -pipe -std=c17")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fvisibility=hidden -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
+		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
+    if (DEFINED EXPORT_ALL_SYMBOL) 
+      # 导出所有符号
+      set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}    -fvisibility=default")
+		  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fvisibility=default")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--whole-archive")
+    else ()
+      # 只导出部分符号
+      set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}    -fvisibility=hidden")
+		  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fvisibility=hidden")
+    endif()
     if (DEBUG) 
         set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 		    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
@@ -42,7 +52,7 @@ else ()
   return()
 endif ()
 # static link to ffmpeg.a
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,-Bsymbolic")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
 
 set(EXE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/exec")
 message("[mediaxx] CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
@@ -183,6 +193,7 @@ if (DEFINED WIN32)
   endif ()
 
   set(ffmpeg_help_EXPORT_DEF "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.def")
+  set(ffmpeg_help_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win-symbols.rsp")
 elseif (DEFINED ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
   # find_library(log-lib log)
@@ -301,13 +312,23 @@ set_target_properties(mediaxx PROPERTIES
 
 target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 
-if (ANDROID)
+if (WIN32)
+  if (NOT DEFINED EXPORT_ALL_SYMBOL)
+    target_link_options(mediaxx PRIVATE 
+      "@\"${ffmpeg_help_EXPORT_KEEP_SYMBOL}\""
+    )
+  endif()
+elseif (ANDROID)
   # Support Android 15 16k page size
   target_link_options(mediaxx PRIVATE 
     "-Wl,-z,max-page-size=16384"
-    "-Wl,@${ffmpeg_help_EXPORT_KEEP_SYMBOL}"
-    "-Wl,--version-script=${ffmpeg_help_EXPORT_IDS}"
   )
+  if (NOT DEFINED EXPORT_ALL_SYMBOL)
+    target_link_options(mediaxx PRIVATE 
+      "-Wl,@\"${ffmpeg_help_EXPORT_KEEP_SYMBOL}\""
+      "-Wl,--version-script=\"${ffmpeg_help_EXPORT_IDS}\""
+    )
+  endif()
 endif()
 
 if (DEFINED LUMENXX_BUILD_TYPE)
