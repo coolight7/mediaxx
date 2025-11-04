@@ -13,6 +13,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message("[mediaxx] Current Configure Type: ${CMAKE_CONFIGURATION_TYPES}")
 message("[mediaxx] Current Build Type: ${CMAKE_BUILD_TYPE}")
 
+if (NDEBUG AND NOT DEFINED STATIC_LINK_FFMPEG) 
+  # release 时不需要，由主程序提供静态链接ffmpeg的动态库
+  message("[mediaxx] release 跳过编译 libmediaxx ，期望由主程序提供预编译动态库")
+  return()
+endif()
+
 if (MSVC)
     # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   /utf-8 /MD /wd4200 /std:c17")
@@ -32,6 +38,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 		    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
     endif ()
 endif ()
+# static link to ffmpeg.a
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,-Bsymbolic")
 
 set(EXE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/exec")
