@@ -13,33 +13,38 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message("[mediaxx] Current Configure Type: ${CMAKE_CONFIGURATION_TYPES}")
 message("[mediaxx] Current Build Type: ${CMAKE_BUILD_TYPE}")
 
-if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT DEFINED STATIC_LINK_FFMPEG) 
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT DEFINED STATIC_LINK_FFMPEG)
   # release 时不需要，由主程序提供静态链接ffmpeg的动态库
-  message("[mediaxx] release 跳过编译 libmediaxx ，期望由主程序提供预编译动态库")
+  message("[mediaxx] 跳过编译 libmediaxx ，期望由主程序提供预编译动态库")
   return()
 endif()
 
 if (MSVC)
+		set(CMAKE_C_FLAGS_RELEASE     "${CMAKE_C_FLAGS_RELEASE}    /utf-8 /MD /wd4200 /std:c17")
+		set(CMAKE_CXX_FLAGS_RELEASE   "${CMAKE_CXX_FLAGS_RELEASE}  /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
+		set(CMAKE_C_FLAGS_PROFILE     "${CMAKE_C_FLAGS_PROFILE}    /utf-8 /MD /wd4200 /std:c17")
+		set(CMAKE_CXX_FLAGS_PROFILE   "${CMAKE_CXX_FLAGS_PROFILE}  /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
+		set(CMAKE_C_FLAGS_DEBUG       "${CMAKE_C_FLAGS_DEBUG}      /utf-8 /MD /wd4200 /std:c17")
+		set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}    /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
     # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   /utf-8 /MD /wd4200 /std:c17")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-		set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
-    if (DEFINED EXPORT_ALL_SYMBOL) 
+    if (DEFINED EXPORT_ALL_SYMBOL)
       # 导出所有符号
-      set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}    -fvisibility=default")
-		  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fvisibility=default")
+      set(_MEDIAXX_C_FLAGS   "-fvisibility=default")
+		  set(_MEDIAXX_CXX_FLAGS "-fvisibility=default")
       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--export-dynamic,--whole-archive,--allow-multiple-definition")
     else ()
       # 只导出部分符号
-      set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}    -fvisibility=hidden")
-		  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fvisibility=hidden")
+      set(_MEDIAXX_C_FLAGS   "-fvisibility=hidden")
+		  set(_MEDIAXX_CXX_FLAGS "-fvisibility=hidden")
     endif()
-    if (DEBUG) 
-        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fno-omit-frame-pointer -fno-optimize-sibling-calls")
-		    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
-    endif ()
+
+		set(CMAKE_C_FLAGS_RELEASE     "${CMAKE_C_FLAGS_RELEASE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
+		set(CMAKE_CXX_FLAGS_RELEASE   "${CMAKE_CXX_FLAGS_RELEASE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
+		set(CMAKE_C_FLAGS_PROFILE     "${CMAKE_C_FLAGS_PROFILE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
+		set(CMAKE_CXX_FLAGS_PROFILE   "${CMAKE_CXX_FLAGS_PROFILE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
+		set(CMAKE_C_FLAGS_DEBUG       "${CMAKE_C_FLAGS_DEBUG}     ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+		set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}   ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 else ()
   message("[mediaxx] 不支持的编译器")
   return()
@@ -55,7 +60,6 @@ message("[mediaxx] CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 add_definitions(-D__STDC_CONSTANT_MACROS)
 
 include(ExternalProject)
-string(REPLACE ";" ";" MAIN_CONFIG_TYPES "${CMAKE_CONFIGURATION_TYPES}")
 ExternalProject_Add(
   simdjson_repo
   SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/simdjson/"
@@ -63,6 +67,7 @@ ExternalProject_Add(
   CMAKE_ARGS 
       -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
       -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
+      "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}"
       "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
       "-DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}"
       "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}"
@@ -78,8 +83,15 @@ ExternalProject_Add(
       "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
       "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
       "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
+
       "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
       "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+      "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
+      "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+      "-DCMAKE_C_FLAGS_PROFILE=${CMAKE_C_FLAGS_PROFILE}"
+      "-DCMAKE_CXX_FLAGS_PROFILE=${CMAKE_CXX_FLAGS_PROFILE}"
+      "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
+      "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
       -DTARGET_ARCHITECTURE=${TARGET_ARCHITECTURE}
       -DBUILD_SHARED_LIBS=OFF
       -DSIMDJSON_BUILD_STATIC_LIB=ON
@@ -189,8 +201,6 @@ if (DEFINED WIN32)
   set(ffmpeg_help_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win-symbols.rsp")
 elseif (DEFINED ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
-  # find_library(log-lib log)
-  # find_library(android-lib android)
 
   if (DEFINED STATIC_LINK_FFMPEG)
     # 静态链接，合并 ffmpeg 
@@ -287,8 +297,6 @@ target_link_directories(mediaxx PUBLIC
 )
 
 target_link_libraries(mediaxx PUBLIC
-  ${log-lib}
-  ${android-lib}
   simdjson
   ${ffmpeg_LIBRARIES}
 )

@@ -12,12 +12,19 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # This can be changed to accommodate different builds.
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/../src" "${CMAKE_CURRENT_BINARY_DIR}/shared")
 
+if(TARGET mediaxx)
+  # 安全使用目标相关的生成器表达式
+  set(MEDIAXX_FILE_PATH $<TARGET_FILE:mediaxx>)
+else()
+  set(MEDIAXX_FILE_PATH "")
+endif()
+
 # List of absolute paths to libraries that should be bundled with the plugin.
 # This list could contain prebuilt libraries, or libraries created by an
 # external build triggered from this build file.
 set(mediaxx_bundled_libraries
   # Defined in ../src/CMakeLists.txt.
   # This can be changed to accommodate different builds.
-  $<TARGET_FILE:mediaxx>
+  ${MEDIAXX_FILE_PATH}
   PARENT_SCOPE
 )
