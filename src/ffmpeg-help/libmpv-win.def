@@ -1,6 +1,14 @@
 LIBRARY
 
 EXPORTS
+    mediaxx_malloc
+    mediaxx_free
+    mediaxx_get_libav_version
+    mediaxx_get_label_malloc
+    mediaxx_get_media_info_malloc
+    mediaxx_get_media_picture
+    mediaxx_get_audio_visualization
+
     av_codec_is_decoder
     av_codec_is_encoder
     av_codec_iterate

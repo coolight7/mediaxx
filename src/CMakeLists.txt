@@ -104,6 +104,13 @@ set(ffmpeg_LIBRARIES
 )
 set(third_party_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/")
 set(vulkan_INCLUDE_DIR ".")
+# - 编译 libmediaxx 动态库时，如果静态链接 ffmpeg，下面的文件指定了最终导出的符号
+# - 应当包含：
+#     - `mediaxx.h` 导出的符号
+#     - `安卓JNI接口`
+#     - `libmpv` 可以引用的，部分静态链接库符号也由嵌入 libmediaxx 的 ffmpeg 导出，被libmpv引用，可大幅减少`libmpv` 的体积
+# - 限制符号导出可以大幅减少 `libmediaxx`，不建议包含标准库的导出符号，这可能导致内存管理混乱
+# - 更新 `ffmpeg`、`mediaxx`、`libmpv` 时，需要检查更新符号表
 set(ffmpeg_help_EXPORT_DEF "")
 set(ffmpeg_help_EXPORT_IDS "")
 if (DEFINED WIN32)

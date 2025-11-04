@@ -1,5 +1,16 @@
 {
   global:
+    mediaxx_malloc;
+    mediaxx_free;
+    mediaxx_get_libav_version;
+    mediaxx_get_label_malloc;
+    mediaxx_get_media_info_malloc;
+    mediaxx_get_media_picture;
+    mediaxx_get_audio_visualization;
+
+    JNI_OnLoad;
+    Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative;
+
     EVP_CIPHER_CTX_free;
     EVP_CIPHER_CTX_new;
     EVP_EncryptInit_ex;
