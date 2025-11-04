@@ -30,7 +30,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       # 导出所有符号
       set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}    -fvisibility=default")
 		  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -fvisibility=default")
-      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--whole-archive")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--whole-archive,--allow-multiple-definition")
     else ()
       # 只导出部分符号
       set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}    -fvisibility=hidden")
