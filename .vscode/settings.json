@@ -100,7 +100,8 @@
         "shared_mutex": "cpp",
         "cfenv": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "*.inc": "c"
     },
     "editor.defaultFormatter": "xaver.clang-format",
     "editor.suggest.showClasses": true,

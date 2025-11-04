@@ -13,7 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message("[mediaxx] Current Configure Type: ${CMAKE_CONFIGURATION_TYPES}")
 message("[mediaxx] Current Build Type: ${CMAKE_BUILD_TYPE}")
 
-if (NDEBUG AND NOT DEFINED STATIC_LINK_FFMPEG) 
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT DEFINED STATIC_LINK_FFMPEG) 
   # release 时不需要，由主程序提供静态链接ffmpeg的动态库
   message("[mediaxx] release 跳过编译 libmediaxx ，期望由主程序提供预编译动态库")
   return()
@@ -37,6 +37,9 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 		    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fno-optimize-sibling-calls")
     endif ()
+else ()
+  message("[mediaxx] 不支持的编译器")
+  return()
 endif ()
 # static link to ffmpeg.a
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,-Bsymbolic")
@@ -99,9 +102,11 @@ set(ffmpeg_LIBRARIES
   swresample
   swscale
 )
+set(third_party_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/")
 set(vulkan_INCLUDE_DIR ".")
 set(ffmpeg_help_IMPL "")
-set(ffmpeg_help_EXPORT "")
+set(ffmpeg_help_EXPORT_DEF "")
+set(ffmpeg_help_EXPORT_IDS "")
 if (DEFINED WIN32)
   if (DEFINED STATIC_LINK_FFMPEG)
     # 静态链接，合并 ffmpeg 
@@ -171,7 +176,7 @@ if (DEFINED WIN32)
   endif ()
 
   set(ffmpeg_help_IMPL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.cpp")
-  set(ffmpeg_help_EXPORT "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.def")
+  set(ffmpeg_help_EXPORT_DEF "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.def")
 elseif (DEFINED ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
   # find_library(log-lib log)
@@ -240,13 +245,14 @@ elseif (DEFINED ANDROID)
   endif ()
 
   set(ffmpeg_help_IMPL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android.cpp")
-  set(ffmpeg_help_EXPORT "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android.def")
+  set(ffmpeg_help_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android.lds")
 endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
 include_directories(${simdjson_SOURCE_DIR}/include/)
 include_directories(${vulkan_INCLUDE_DIR})
+include_directories(${third_party_DIR})
 include_directories(${ffmpeg_INCLUDE_DIR})
 
 aux_source_directory("./lib/util" DIR_UTIL)
@@ -261,7 +267,7 @@ add_library(mediaxx SHARED
   ${DIR_ANALYSE}
   ${ffmpeg_help_IMPL}
 
-  ${ffmpeg_help_EXPORT}
+  ${ffmpeg_help_EXPORT_DEF}
 )
 
 add_dependencies(mediaxx simdjson_repo)
@@ -292,7 +298,10 @@ target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 
 if (ANDROID)
   # Support Android 15 16k page size
-  target_link_options(mediaxx PRIVATE "-Wl,-z,max-page-size=16384")
+  target_link_options(mediaxx PRIVATE 
+    "-Wl,-z,max-page-size=16384"
+    "-Wl,--version-script=${ffmpeg_help_EXPORT_DEF}"
+  )
 endif()
 
 if (DEFINED LUMENXX_BUILD_TYPE)

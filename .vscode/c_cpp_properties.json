@@ -3,7 +3,12 @@
         {
             "name": "Win32",
             "includePath": [
+                "${workspaceFolder}/src/third_party/lcms2/include/",
+                "${workspaceFolder}/src/third_party/libiconv/include/",
+                "${workspaceFolder}/src/third_party/openssl/include/",
+                "${workspaceFolder}/src/third_party/rubberband/",
                 "${workspaceFolder}/src/third_party/ffmpeg/include-win/",
+                "${workspaceFolder}/src/third_party/",
                 "${workspaceFolder}/src/lib/",
                 "${workspaceFolder}/src/",
                 "${workspaceFolder}/**"
@@ -22,10 +27,15 @@
         {
             "name": "Android",
             "includePath": [
+                "${workspaceFolder}/src/third_party/ffmpeg/include-android/",
+                "${workspaceFolder}/src/third_party/lcms2/include/",
+                "${workspaceFolder}/src/third_party/libiconv/include/",
+                "${workspaceFolder}/src/third_party/openssl/include/",
+                "${workspaceFolder}/src/third_party/rubberband/",
+                "${workspaceFolder}/src/third_party/",
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/",
                 "${workspaceFolder}/src/lib/",
-                "${workspaceFolder}/src/third_party/ffmpeg/include-android/",
                 "${ANDROID_HOME}/ndk/27.3.13750724/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/",
                 "${ANDROID_HOME}/ndk/27.3.13750724/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/aarch64-linux-android/"
             ],
