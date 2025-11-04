@@ -296,7 +296,7 @@ if (ANDROID)
   # Support Android 15 16k page size
   target_link_options(mediaxx PRIVATE 
     "-Wl,-z,max-page-size=16384"
-    "-Wl,--version-script=${ffmpeg_help_EXPORT_DEF}"
+    "-Wl,--version-script=${ffmpeg_help_EXPORT_IDS}"
   )
 endif()
 
