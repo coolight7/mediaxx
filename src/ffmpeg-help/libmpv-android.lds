@@ -11,14 +11,6 @@
     JNI_OnLoad;
     Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative;
 
-    ANativeWindow_fromSurface;
-    ANativeWindow_getHeight;
-    ANativeWindow_getWidth;
-    ANativeWindow_release;
-    ANativeWindow_setBuffersGeometry;
-    BZ2_bzDecompress;
-    BZ2_bzDecompressEnd;
-    BZ2_bzDecompressInit;
     EVP_CIPHER_CTX_free;
     EVP_CIPHER_CTX_new;
     EVP_EncryptInit_ex;
@@ -317,7 +309,6 @@
     lzma_properties_decode;
     lzma_raw_decoder;
     lzma_stream_decoder;
-    memfd_create;
     rubberband_available;
     rubberband_delete;
     rubberband_get_samples_required;
@@ -327,7 +318,6 @@
     rubberband_retrieve;
     rubberband_set_pitch_scale;
     rubberband_set_time_ratio;
-    slCreateEngine;
     swr_alloc;
     swr_close;
     swr_convert;
