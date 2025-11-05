@@ -11,6 +11,14 @@
     JNI_OnLoad;
     Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative;
 
+    ANativeWindow_fromSurface;
+    ANativeWindow_getHeight;
+    ANativeWindow_getWidth;
+    ANativeWindow_release;
+    ANativeWindow_setBuffersGeometry;
+    BZ2_bzDecompress;
+    BZ2_bzDecompressEnd;
+    BZ2_bzDecompressInit;
     EVP_CIPHER_CTX_free;
     EVP_CIPHER_CTX_new;
     EVP_EncryptInit_ex;
@@ -26,6 +34,10 @@
     EVP_aes_192_ecb;
     EVP_aes_256_ecb;
     OPENSSL_cleanse;
+    SL_IID_ANDROIDCONFIGURATION;
+    SL_IID_BUFFERQUEUE;
+    SL_IID_ENGINE;
+    SL_IID_PLAY;
     ZSTD_DStreamOutSize;
     ZSTD_createDStream;
     ZSTD_decompressStream;
@@ -46,9 +58,13 @@
     _ZNSt20bad_array_new_lengthD1Ev;
     _ZNSt6__ndk112__next_primeEj;
     _ZNSt6__ndk112__next_primeEm;
+    _ZNSt6__ndk112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE6assignEPKc;
+    _ZNSt6__ndk112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED2Ev;
     _ZNSt6__ndk117bad_function_callD1Ev;
     _ZNSt6__ndk119__shared_weak_count14__release_weakEv;
     _ZNSt6__ndk119__shared_weak_countD2Ev;
+    _ZNSt6__ndk127__from_chars_floating_pointIdEENS_19__from_chars_resultIT_EEPKcS5_NS_12chars_formatE;
+    _ZNSt6__ndk127__from_chars_floating_pointIfEENS_19__from_chars_resultIT_EEPKcS5_NS_12chars_formatE;
     _ZNSt6__ndk18to_charsEPcS0_d;
     _ZNSt6__ndk18to_charsEPcS0_f;
     _ZNSt9bad_allocC1Ev;
@@ -70,6 +86,10 @@
     _ZTVNSt6__ndk117bad_function_callE;
     _ZTVSt12length_error;
     _ZTVSt14overflow_error;
+    _ZdlPvj;
+    _ZdlPvm;
+    _Znwj;
+    _Znwm;
     __cxa_allocate_exception;
     __cxa_begin_catch;
     __cxa_end_catch;
@@ -82,7 +102,7 @@
     __cxa_thread_atexit;
     __cxa_throw;
     __dynamic_cast;
-    __gxx_personality_v0;
+    __gxx_personality_v0_N;
     av_base64_encode;
     av_buffer_alloc;
     av_buffer_create;
@@ -355,6 +375,7 @@
     lzma_properties_decode;
     lzma_raw_decoder;
     lzma_stream_decoder;
+    memfd_create;
     rubberband_available;
     rubberband_delete;
     rubberband_get_samples_required;
@@ -364,6 +385,7 @@
     rubberband_retrieve;
     rubberband_set_pitch_scale;
     rubberband_set_time_ratio;
+    slCreateEngine;
     swr_alloc;
     swr_close;
     swr_convert;

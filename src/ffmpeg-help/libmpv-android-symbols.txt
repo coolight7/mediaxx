@@ -11,6 +11,14 @@
 --undefined=JNI_OnLoad
 --undefined=Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative
 
+--undefined=ANativeWindow_fromSurface
+--undefined=ANativeWindow_getHeight
+--undefined=ANativeWindow_getWidth
+--undefined=ANativeWindow_release
+--undefined=ANativeWindow_setBuffersGeometry
+--undefined=BZ2_bzDecompress
+--undefined=BZ2_bzDecompressEnd
+--undefined=BZ2_bzDecompressInit
 --undefined=EVP_CIPHER_CTX_free
 --undefined=EVP_CIPHER_CTX_new
 --undefined=EVP_EncryptInit_ex
@@ -26,6 +34,10 @@
 --undefined=EVP_aes_192_ecb
 --undefined=EVP_aes_256_ecb
 --undefined=OPENSSL_cleanse
+--undefined=SL_IID_ANDROIDCONFIGURATION
+--undefined=SL_IID_BUFFERQUEUE
+--undefined=SL_IID_ENGINE
+--undefined=SL_IID_PLAY
 --undefined=ZSTD_DStreamOutSize
 --undefined=ZSTD_createDStream
 --undefined=ZSTD_decompressStream
@@ -46,9 +58,13 @@
 --undefined=_ZNSt20bad_array_new_lengthD1Ev
 --undefined=_ZNSt6__ndk112__next_primeEj
 --undefined=_ZNSt6__ndk112__next_primeEm
+--undefined=_ZNSt6__ndk112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE6assignEPKc
+--undefined=_ZNSt6__ndk112basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEED2Ev
 --undefined=_ZNSt6__ndk117bad_function_callD1Ev
 --undefined=_ZNSt6__ndk119__shared_weak_count14__release_weakEv
 --undefined=_ZNSt6__ndk119__shared_weak_countD2Ev
+--undefined=_ZNSt6__ndk127__from_chars_floating_pointIdEENS_19__from_chars_resultIT_EEPKcS5_NS_12chars_formatE
+--undefined=_ZNSt6__ndk127__from_chars_floating_pointIfEENS_19__from_chars_resultIT_EEPKcS5_NS_12chars_formatE
 --undefined=_ZNSt6__ndk18to_charsEPcS0_d
 --undefined=_ZNSt6__ndk18to_charsEPcS0_f
 --undefined=_ZNSt9bad_allocC1Ev
@@ -70,6 +86,10 @@
 --undefined=_ZTVNSt6__ndk117bad_function_callE
 --undefined=_ZTVSt12length_error
 --undefined=_ZTVSt14overflow_error
+--undefined=_ZdlPvj
+--undefined=_ZdlPvm
+--undefined=_Znwj
+--undefined=_Znwm
 --undefined=__cxa_allocate_exception
 --undefined=__cxa_begin_catch
 --undefined=__cxa_end_catch
@@ -82,7 +102,7 @@
 --undefined=__cxa_thread_atexit
 --undefined=__cxa_throw
 --undefined=__dynamic_cast
---undefined=__gxx_personality_v0
+--undefined=__gxx_personality_v0_N
 --undefined=av_base64_encode
 --undefined=av_buffer_alloc
 --undefined=av_buffer_create
@@ -355,6 +375,7 @@
 --undefined=lzma_properties_decode
 --undefined=lzma_raw_decoder
 --undefined=lzma_stream_decoder
+--undefined=memfd_create
 --undefined=rubberband_available
 --undefined=rubberband_delete
 --undefined=rubberband_get_samples_required
@@ -364,6 +385,7 @@
 --undefined=rubberband_retrieve
 --undefined=rubberband_set_pitch_scale
 --undefined=rubberband_set_time_ratio
+--undefined=slCreateEngine
 --undefined=swr_alloc
 --undefined=swr_close
 --undefined=swr_convert
