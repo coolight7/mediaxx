@@ -29,13 +29,14 @@ if (MSVC)
 		set(CMAKE_CXX_FLAGS_PROFILE   "${CMAKE_CXX_FLAGS_PROFILE}  /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
 		set(CMAKE_C_FLAGS_DEBUG       "${CMAKE_C_FLAGS_DEBUG}      /utf-8 /MD /wd4200 /std:c17")
 		set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}    /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
+
     # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (EXPORT_ALL_SYMBOL)
       # 导出所有符号
       set(_MEDIAXX_C_FLAGS   "-fvisibility=default")
 		  set(_MEDIAXX_CXX_FLAGS "-fvisibility=default")
-      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--export-dynamic,--whole-archive,--allow-multiple-definition")
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--export-dynamic,--export-all-symbols,--whole-archive,--allow-multiple-definition")
     else ()
       # 只导出部分符号
       set(_MEDIAXX_C_FLAGS   "-fvisibility=hidden")
@@ -48,12 +49,13 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL 
 		set(CMAKE_CXX_FLAGS_PROFILE   "${CMAKE_CXX_FLAGS_PROFILE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
 		set(CMAKE_C_FLAGS_DEBUG       "${CMAKE_C_FLAGS_DEBUG}     ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 		set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}   ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+
+    # static link to ffmpeg.a
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
 else ()
   message("[mediaxx] 不支持的编译器")
   return()
 endif ()
-# static link to ffmpeg.a
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
 
 set(EXE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/exec")
 message("[mediaxx] CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
