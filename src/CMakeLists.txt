@@ -14,7 +14,7 @@ message("[mediaxx] Current Configure Type: ${CMAKE_CONFIGURATION_TYPES}")
 message("[mediaxx] Current Build Type: ${CMAKE_BUILD_TYPE}")
 
 set(STATIC_LINK_FFMPEG OFF CACHE STRING "是否编译时静态链接 ffmepg")
-set(STATIC_LINK_FFMPEG OFF CACHE STRING "是否编译时静态链接 ffmepg")
+set(EXPORT_ALL_SYMBOL OFF CACHE STRING "导出所有符号")
 
 if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT STATIC_LINK_FFMPEG)
   # release 时不需要，由主程序提供静态链接ffmpeg的动态库
@@ -31,7 +31,7 @@ if (MSVC)
 		set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}    /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
     # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (DEFINED EXPORT_ALL_SYMBOL)
+    if (EXPORT_ALL_SYMBOL)
       # 导出所有符号
       set(_MEDIAXX_C_FLAGS   "-fvisibility=default")
 		  set(_MEDIAXX_CXX_FLAGS "-fvisibility=default")
@@ -317,7 +317,7 @@ set_target_properties(mediaxx PROPERTIES
 target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 
 if (WIN32)
-  if (NOT DEFINED EXPORT_ALL_SYMBOL)
+  if (NOT EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
       "@\"${ffmpeg_help_EXPORT_KEEP_SYMBOL}\""
     )
@@ -327,7 +327,7 @@ elseif (ANDROID)
   target_link_options(mediaxx PRIVATE 
     "-Wl,-z,max-page-size=16384"
   )
-  if (NOT DEFINED EXPORT_ALL_SYMBOL)
+  if (NOT EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
       "-Wl,@\"${ffmpeg_help_EXPORT_KEEP_SYMBOL}\""
       "-Wl,--version-script=\"${ffmpeg_help_EXPORT_IDS}\""
