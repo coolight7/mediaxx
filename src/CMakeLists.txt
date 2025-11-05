@@ -36,7 +36,6 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL 
       # 导出所有符号
       set(_MEDIAXX_C_FLAGS   "-fvisibility=default")
 		  set(_MEDIAXX_CXX_FLAGS "-fvisibility=default")
-      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--export-dynamic,--export-all-symbols,--whole-archive,--allow-multiple-definition")
     else ()
       # 只导出部分符号
       set(_MEDIAXX_C_FLAGS   "-fvisibility=hidden")
@@ -319,9 +318,13 @@ set_target_properties(mediaxx PROPERTIES
 target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 
 if (WIN32)
-  if (NOT EXPORT_ALL_SYMBOL)
+  if (EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
-      "@${ffmpeg_help_EXPORT_KEEP_SYMBOL}"
+      "-Wl,--export-all-symbols,--whole-archive,--allow-multiple-definition"
+    )
+  else ()
+    target_link_options(mediaxx PRIVATE 
+      "-Wl,@${ffmpeg_help_EXPORT_KEEP_SYMBOL}"
     )
   endif()
 elseif (ANDROID)
@@ -329,7 +332,11 @@ elseif (ANDROID)
   target_link_options(mediaxx PRIVATE 
     "-Wl,-z,max-page-size=16384"
   )
-  if (NOT EXPORT_ALL_SYMBOL)
+  if (EXPORT_ALL_SYMBOL)
+    target_link_options(mediaxx PRIVATE 
+      "-Wl,--export-dynamic,--whole-archive,--allow-multiple-definition"
+    )
+  else ()
     target_link_options(mediaxx PRIVATE 
       "-Wl,@${ffmpeg_help_EXPORT_KEEP_SYMBOL}"
       "-Wl,--version-script=${ffmpeg_help_EXPORT_IDS}"
