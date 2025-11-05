@@ -1,4 +1,4 @@
---unresolved-symbols=ignore-in-shared-libs
+--undefined-version
 
 --undefined=mediaxx_malloc
 --undefined=mediaxx_free
