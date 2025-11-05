@@ -13,7 +13,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message("[mediaxx] Current Configure Type: ${CMAKE_CONFIGURATION_TYPES}")
 message("[mediaxx] Current Build Type: ${CMAKE_BUILD_TYPE}")
 
-if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT DEFINED STATIC_LINK_FFMPEG)
+set(STATIC_LINK_FFMPEG OFF CACHE STRING "是否编译时静态链接 ffmepg")
+set(STATIC_LINK_FFMPEG OFF CACHE STRING "是否编译时静态链接 ffmepg")
+
+if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT STATIC_LINK_FFMPEG)
   # release 时不需要，由主程序提供静态链接ffmpeg的动态库
   message("[mediaxx] 跳过编译 libmediaxx ，期望由主程序提供预编译动态库")
   return()
@@ -129,8 +132,8 @@ set(vulkan_INCLUDE_DIR ".")
 set(ffmpeg_help_EXPORT_DEF "")
 set(ffmpeg_help_EXPORT_IDS "")
 set(ffmpeg_help_EXPORT_KEEP_SYMBOL "")
-if (DEFINED WIN32)
-  if (DEFINED STATIC_LINK_FFMPEG)
+if (WIN32)
+  if (STATIC_LINK_FFMPEG)
     # 静态链接，合并 ffmpeg 
     find_package(PkgConfig REQUIRED)
 
@@ -202,7 +205,7 @@ if (DEFINED WIN32)
 elseif (DEFINED ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
 
-  if (DEFINED STATIC_LINK_FFMPEG)
+  if (STATIC_LINK_FFMPEG)
     # 静态链接，合并 ffmpeg 
     find_package(PkgConfig REQUIRED)
 
@@ -347,6 +350,6 @@ if (DEFINED LUMENXX_BUILD_TYPE)
   install(FILES "${ffmpeg_BINARY_DIR}/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
   install(FILES "${ffmpeg_BINARY_DIR}/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
   install(FILES "${ffmpeg_BINARY_DIR}/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
-elseif (DEFINED STATIC_LINK_FFMPEG)
+elseif (STATIC_LINK_FFMPEG)
   install(TARGETS mediaxx RUNTIME)
 endif()
