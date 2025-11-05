@@ -319,7 +319,7 @@ target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 if (WIN32)
   if (NOT EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
-      "@\"${ffmpeg_help_EXPORT_KEEP_SYMBOL}\""
+      "@${ffmpeg_help_EXPORT_KEEP_SYMBOL}"
     )
   endif()
 elseif (ANDROID)
@@ -329,8 +329,8 @@ elseif (ANDROID)
   )
   if (NOT EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
-      "-Wl,@\"${ffmpeg_help_EXPORT_KEEP_SYMBOL}\""
-      "-Wl,--version-script=\"${ffmpeg_help_EXPORT_IDS}\""
+      "-Wl,@${ffmpeg_help_EXPORT_KEEP_SYMBOL}"
+      "-Wl,--version-script=${ffmpeg_help_EXPORT_IDS}"
     )
   endif()
 endif()
