@@ -1,4 +1,4 @@
---allow-shlib-undefined 
+--allow-shlib-undefined
 --undefined=mediaxx_malloc
 --undefined=mediaxx_free
 --undefined=mediaxx_get_libav_version
@@ -40,8 +40,10 @@
 --undefined=_ZNSt13exception_ptrD1Ev
 --undefined=_ZNSt13runtime_errorC2EPKc
 --undefined=_ZNSt13runtime_errorD2Ev
+--undefined=_ZNSt14overflow_errorD1Ev
 --undefined=_ZNSt20bad_array_new_lengthC1Ev
 --undefined=_ZNSt20bad_array_new_lengthD1Ev
+--undefined=_ZNSt6__ndk112__next_primeEj
 --undefined=_ZNSt6__ndk112__next_primeEm
 --undefined=_ZNSt6__ndk117bad_function_callD1Ev
 --undefined=_ZNSt6__ndk119__shared_weak_count14__release_weakEv
@@ -66,9 +68,11 @@
 --undefined=_ZTVN10__cxxabiv121__vmi_class_type_infoE
 --undefined=_ZTVNSt6__ndk117bad_function_callE
 --undefined=_ZTVSt12length_error
+--undefined=_ZTVSt14overflow_error
 --undefined=__cxa_allocate_exception
 --undefined=__cxa_begin_catch
 --undefined=__cxa_end_catch
+--undefined=__cxa_end_cleanup
 --undefined=__cxa_free_exception
 --undefined=__cxa_guard_acquire
 --undefined=__cxa_guard_release

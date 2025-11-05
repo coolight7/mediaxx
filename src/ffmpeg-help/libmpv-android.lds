@@ -41,8 +41,10 @@
     _ZNSt13exception_ptrD1Ev;
     _ZNSt13runtime_errorC2EPKc;
     _ZNSt13runtime_errorD2Ev;
+    _ZNSt14overflow_errorD1Ev;
     _ZNSt20bad_array_new_lengthC1Ev;
     _ZNSt20bad_array_new_lengthD1Ev;
+    _ZNSt6__ndk112__next_primeEj;
     _ZNSt6__ndk112__next_primeEm;
     _ZNSt6__ndk117bad_function_callD1Ev;
     _ZNSt6__ndk119__shared_weak_count14__release_weakEv;
@@ -67,9 +69,11 @@
     _ZTVN10__cxxabiv121__vmi_class_type_infoE;
     _ZTVNSt6__ndk117bad_function_callE;
     _ZTVSt12length_error;
+    _ZTVSt14overflow_error;
     __cxa_allocate_exception;
     __cxa_begin_catch;
     __cxa_end_catch;
+    __cxa_end_cleanup;
     __cxa_free_exception;
     __cxa_guard_acquire;
     __cxa_guard_release;
