@@ -205,7 +205,7 @@ if (WIN32)
   endif ()
 
   set(ffmpeg_help_EXPORT_DEF "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.def")
-  set(ffmpeg_help_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win-symbols.rsp")
+  set(ffmpeg_help_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win-symbols.lds")
 elseif (DEFINED ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
 

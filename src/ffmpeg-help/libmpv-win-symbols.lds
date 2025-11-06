@@ -1,5 +1,3 @@
---undefined-version
-
 --undefined=mediaxx_malloc
 --undefined=mediaxx_free
 --undefined=mediaxx_get_libav_version
