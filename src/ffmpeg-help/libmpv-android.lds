@@ -7,10 +7,10 @@
     mediaxx_get_media_info_malloc;
     mediaxx_get_media_picture;
     mediaxx_get_audio_visualization;
-
     JNI_OnLoad;
     Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative;
-    
+    av_jni_set_java_vm;
+    av_jni_set_android_app_ctx;
     mpv_abort_async_command;
     mpv_client_api_version;
     mpv_client_id;

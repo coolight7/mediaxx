@@ -1,5 +1,4 @@
 --undefined-version
-
 --undefined=mediaxx_malloc
 --undefined=mediaxx_free
 --undefined=mediaxx_get_libav_version
@@ -7,10 +6,10 @@
 --undefined=mediaxx_get_media_info_malloc
 --undefined=mediaxx_get_media_picture
 --undefined=mediaxx_get_audio_visualization
-
 --undefined=JNI_OnLoad
 --undefined=Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative
-
+--undefined=av_jni_set_java_vm
+--undefined=av_jni_set_android_app_ctx
 --undefined=mpv_abort_async_command
 --undefined=mpv_client_api_version
 --undefined=mpv_client_id
