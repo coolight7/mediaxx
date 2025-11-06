@@ -323,7 +323,7 @@ target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 if (WIN32)
   if (EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
-      "-Wl,--export-all-symbols,--whole-archive,--allow-multiple-definition"
+      "-Wl,--export-all-symbols"
     )
   else ()
     target_link_options(mediaxx PRIVATE 
