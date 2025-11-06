@@ -197,9 +197,6 @@ if (STATIC_LINK_FFMPEG)
     ${SWRESAMPLE_LIBRARIES}
     ${SWSCALE_LIBRARIES}
     m
-    shlwapi
-    pthread
-    cfgmgr32
   )
   set(ffmpeg_mpv_INCLUDE_DIR 
     ${LIBMPV_INCLUDE_DIRS}
