@@ -321,14 +321,16 @@ set_target_properties(mediaxx PROPERTIES
 target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 
 if (WIN32)
-  if (EXPORT_ALL_SYMBOL)
-    target_link_options(mediaxx PRIVATE 
-      "-Wl,--export-all-symbols"
-    )
-  else ()
-    target_link_options(mediaxx PRIVATE 
-      "-Wl,@${ffmpeg_help_EXPORT_KEEP_SYMBOL}"
-    )
+  if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (EXPORT_ALL_SYMBOL)
+      target_link_options(mediaxx PRIVATE 
+        "-Wl,--export-all-symbols"
+      )
+    else ()
+      target_link_options(mediaxx PRIVATE 
+        "-Wl,@${ffmpeg_help_EXPORT_KEEP_SYMBOL}"
+      )
+    endif()
   endif()
 elseif (ANDROID)
   # Support Android 15 16k page size
