@@ -157,7 +157,7 @@ if (STATIC_LINK_FFMPEG)
   pkg_check_modules(SWSCALE REQUIRED libswscale)
 
   if (STATIC_LINK_LIBMPV)
-    pkg_check_modules(LIBMPV REQUIRED libmpv)
+    pkg_check_modules(LIBMPV REQUIRED mpv)
   endif()
 
   set(ffmpeg_mpv_CFLAGS 
