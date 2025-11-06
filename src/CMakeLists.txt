@@ -22,6 +22,7 @@ if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT STATIC_LINK_FFMPEG)
   return()
 endif()
 
+message("[mediaxx] CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
 if (MSVC)
 		set(CMAKE_C_FLAGS_RELEASE     "${CMAKE_C_FLAGS_RELEASE}    /utf-8 /MD /wd4200 /std:c17")
 		set(CMAKE_CXX_FLAGS_RELEASE   "${CMAKE_CXX_FLAGS_RELEASE}  /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
@@ -205,8 +206,8 @@ if (WIN32)
   endif ()
 
   set(ffmpeg_help_EXPORT_DEF "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.def")
-  set(ffmpeg_help_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win-symbols.lds")
-elseif (DEFINED ANDROID)
+  set(ffmpeg_help_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win-symbols.txt")
+elseif (ANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
 
   if (STATIC_LINK_FFMPEG)
