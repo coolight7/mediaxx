@@ -49,8 +49,11 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL 
 		set(CMAKE_C_FLAGS_DEBUG       "${CMAKE_C_FLAGS_DEBUG}     ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 		set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}   ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 
-    # static link to ffmpeg.a
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
+    if (ANDROID) 
+      # static link to ffmpeg.a
+      # windows 不需要
+      set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
+    endif()
 else ()
   message("[mediaxx] 不支持的编译器")
   return()
