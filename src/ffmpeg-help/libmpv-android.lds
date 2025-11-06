@@ -11,6 +11,9 @@
     JNI_OnLoad;
     Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative;
 
+    BZ2_bzDecompress;
+    BZ2_bzDecompressEnd;
+    BZ2_bzDecompressInit;
     EVP_CIPHER_CTX_free;
     EVP_CIPHER_CTX_new;
     EVP_EncryptInit_ex;
@@ -26,10 +29,6 @@
     EVP_aes_192_ecb;
     EVP_aes_256_ecb;
     OPENSSL_cleanse;
-    SL_IID_ANDROIDCONFIGURATION;
-    SL_IID_BUFFERQUEUE;
-    SL_IID_ENGINE;
-    SL_IID_PLAY;
     ZSTD_DStreamOutSize;
     ZSTD_createDStream;
     ZSTD_decompressStream;
