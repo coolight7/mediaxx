@@ -34,15 +34,8 @@ if (MSVC)
 
     # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    if (EXPORT_ALL_SYMBOL)
-      # 导出所有符号
-      set(_MEDIAXX_C_FLAGS   "-fvisibility=default")
-		  set(_MEDIAXX_CXX_FLAGS "-fvisibility=default")
-    else ()
-      # 只导出部分符号
-      set(_MEDIAXX_C_FLAGS   "-fvisibility=hidden")
-		  set(_MEDIAXX_CXX_FLAGS "-fvisibility=hidden")
-    endif()
+    set(_MEDIAXX_C_FLAGS   "-fvisibility=default")
+    set(_MEDIAXX_CXX_FLAGS "-fvisibility=default")
 
 		set(CMAKE_C_FLAGS_RELEASE     "${CMAKE_C_FLAGS_RELEASE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
 		set(CMAKE_CXX_FLAGS_RELEASE   "${CMAKE_CXX_FLAGS_RELEASE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
