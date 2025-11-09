@@ -1,7 +1,7 @@
 
 #include "mediaxx.h"
 #include "analyse/audio_visualization.h"
-#include "analyse/hwanalyse.h"
+#include "analyse/codec_info.h"
 #include "analyse/media_info_reader.h"
 #include "simdjson.h"
 #include "util/log.h"
@@ -106,7 +106,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
 }
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
-    auto             jsonsb = HWAnalyse_c::findAvailHW();
+    auto             jsonsb = CodecInfo_c::findAvailCodec();
     std::string_view json   = jsonsb.view().value_unsafe();
     return StringUtilxx_c::stringCopyMalloc(json).data();
 }
