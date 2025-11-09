@@ -292,7 +292,6 @@ elseif (ANDROID)
     )
   else ()
     target_link_options(mediaxx PRIVATE 
-      "-Wl,--exclude-all-symbols"
       "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
       "-Wl,--version-script=${mediaxx_EXPORT_IDS}"
     )
