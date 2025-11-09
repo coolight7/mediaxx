@@ -52,18 +52,19 @@ public:
                     result.escape_and_append_with_quotes("hw");
                     result.append_colon();
                     result.start_array();
+                    bool isFirst = true;
                     for (int i = 0;; i++) {
                         const AVCodecHWConfig* config = avcodec_get_hw_config(codec, i);
                         if (!config) {
                             break;
                         }
 
-                        if (i > 0) {
-                            result.append_comma();
-                        }
-
                         const char* hw_type_str = av_hwdevice_get_type_name(config->device_type);
                         if (hw_type_str) {
+                            if (false == isFirst) {
+                                result.append_comma();
+                            }
+                            isFirst = false;
                             result.escape_and_append_with_quotes(hw_type_str);
                         }
                     }
