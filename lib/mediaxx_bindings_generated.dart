@@ -48,16 +48,25 @@ class MediaxxBindings {
   late final _mediaxx_free = _mediaxx_freePtr
       .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
-  int mediaxx_get_libav_version() {
-    return _mediaxx_get_libav_version();
+  int mediaxx_get_log_level() {
+    return _mediaxx_get_log_level();
   }
 
-  late final _mediaxx_get_libav_versionPtr =
-      _lookup<ffi.NativeFunction<ffi.Int Function()>>(
-        'mediaxx_get_libav_version',
-      );
-  late final _mediaxx_get_libav_version = _mediaxx_get_libav_versionPtr
+  late final _mediaxx_get_log_levelPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function()>>('mediaxx_get_log_level');
+  late final _mediaxx_get_log_level = _mediaxx_get_log_levelPtr
       .asFunction<int Function()>();
+
+  void mediaxx_set_log_level(int level) {
+    return _mediaxx_set_log_level(level);
+  }
+
+  late final _mediaxx_set_log_levelPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>(
+        'mediaxx_set_log_level',
+      );
+  late final _mediaxx_set_log_level = _mediaxx_set_log_levelPtr
+      .asFunction<void Function(int)>();
 
   ffi.Pointer<ffi.Char> mediaxx_get_label_malloc() {
     return _mediaxx_get_label_malloc();
@@ -171,6 +180,18 @@ class MediaxxBindings {
           ffi.Pointer<ffi.Pointer<ffi.Char>>,
         )
       >();
+
+  ffi.Pointer<ffi.Char> mediaxx_get_available_hwcodec_list() {
+    return _mediaxx_get_available_hwcodec_list();
+  }
+
+  late final _mediaxx_get_available_hwcodec_listPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function()>>(
+        'mediaxx_get_available_hwcodec_list',
+      );
+  late final _mediaxx_get_available_hwcodec_list =
+      _mediaxx_get_available_hwcodec_listPtr
+          .asFunction<ffi.Pointer<ffi.Char> Function()>();
 
   int mediaxx_get_audio_visualization(
     ffi.Pointer<ffi.Char> filepath,

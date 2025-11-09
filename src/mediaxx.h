@@ -22,7 +22,8 @@ extern "C" {
 FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size);
 FFI_PLUGIN_EXPORT void  mediaxx_free(const void* ptr);
 
-FFI_PLUGIN_EXPORT int mediaxx_get_libav_version();
+FFI_PLUGIN_EXPORT int  mediaxx_get_log_level();
+FFI_PLUGIN_EXPORT void mediaxx_set_log_level(int level);
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_label_malloc();
 
@@ -62,6 +63,8 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     const char*  picture96OutputPath,
     const char** log
 );
+
+FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list();
 
 FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(const char* filepath, const char* output);
 

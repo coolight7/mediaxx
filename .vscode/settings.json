@@ -101,7 +101,9 @@
         "cfenv": "cpp",
         "queue": "cpp",
         "stack": "cpp",
-        "*.inc": "c"
+        "*.inc": "c",
+        "execution": "cpp",
+        "print": "cpp"
     },
     "editor.defaultFormatter": "xaver.clang-format",
     "editor.suggest.showClasses": true,

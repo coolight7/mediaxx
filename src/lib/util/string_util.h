@@ -7,6 +7,13 @@
 class StringUtilxx_c {
 public:
 
+    static inline const std::string_view toStringNotNull(const char* str) {
+        if (nullptr == str) {
+            return std::string_view{""};
+        }
+        return str;
+    }
+
     static inline std::string_view stringCopyMalloc(
         const std::string_view data1,
         const std::string_view data2 = "",

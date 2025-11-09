@@ -1,6 +1,7 @@
 
 #include "mediaxx.h"
 #include "analyse/audio_visualization.h"
+#include "analyse/hwanalyse.h"
 #include "analyse/media_info_reader.h"
 #include "simdjson.h"
 #include "util/log.h"
@@ -21,9 +22,13 @@ FFI_PLUGIN_EXPORT void mediaxx_free(const void* ptr) {
     free(const_cast<void*>(ptr));
 }
 
-FFI_PLUGIN_EXPORT int mediaxx_get_libav_version() {
+FFI_PLUGIN_EXPORT int mediaxx_get_log_level() {
     auto ver = av_log_get_level();
     return ver;
+}
+
+FFI_PLUGIN_EXPORT void mediaxx_set_log_level(int level) {
+    av_log_set_level(level);
 }
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_label_malloc() {
@@ -98,6 +103,12 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     }
     item.dispose();
     return result;
+}
+
+FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
+    auto             jsonsb = HWAnalyse_c::findAvailHW();
+    std::string_view json   = jsonsb.view().value_unsafe();
+    return StringUtilxx_c::stringCopyMalloc(json).data();
 }
 
 FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(const char* filepath, const char* output) {

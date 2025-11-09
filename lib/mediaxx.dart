@@ -24,13 +24,19 @@ void mediaxx_free(Pointer ptr) {
   _bindings.mediaxx_free(ptr.cast<Void>());
 }
 
-int mediaxx_get_libav_version() {
-  return _bindings.mediaxx_get_libav_version();
+int mediaxx_get_log_level() {
+  return _bindings.mediaxx_get_log_level();
 }
 
-(String, Pointer<Utf8>) mediaxx_get_label_malloc() {
+void mediaxx_set_log_level(int level) {
+  _bindings.mediaxx_set_log_level(level);
+}
+
+String mediaxx_get_label_malloc() {
   final ptr = _bindings.mediaxx_get_label_malloc().cast<Utf8>();
-  return (ptr.toDartString(), ptr);
+  final str = ptr.toDartString();
+  mediaxx_free(ptr);
+  return str;
 }
 
 Future<(String? result, String? log)> mediaxx_get_media_info_malloc(
@@ -75,6 +81,13 @@ Future<(int result, String? log)> mediaxx_get_media_picture(
   helperIsolateSendPort.send(request);
   final result = await completer.future;
   return (result.result, result.log);
+}
+
+String mediaxx_get_available_hwcodec_list() {
+  final result = _bindings.mediaxx_get_available_hwcodec_list();
+  final str = result.cast<Utf8>().toDartString();
+  mediaxx_free(result);
+  return str;
 }
 
 const String _libName = 'mediaxx';

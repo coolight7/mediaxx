@@ -1,7 +1,8 @@
 extern "C" {
-#include "libavutil/log.h"
+#include "libavcodec/codec.h"
 }
 
+#include "analyse/hwanalyse.h"
 #include "mediaxx.h"
 #include "simdjson.h"
 #include <iostream>
@@ -10,11 +11,14 @@ extern "C" {
 using namespace std;
 
 void test() {
-    mediaxx_get_libav_version();
+    mediaxx_set_log_level(AV_LOG_TRACE);
+    auto result = mediaxx_get_available_hwcodec_list();
+    if (nullptr != result) {
+        std::cout << "硬件加速编解码器：" << result << std::endl;
+    }
 }
 
 int main(int argn, char** argv) {
-    av_log_set_level(AV_LOG_TRACE);
     std::cout << "======= Test Start =======" << std::endl;
     test();
 
