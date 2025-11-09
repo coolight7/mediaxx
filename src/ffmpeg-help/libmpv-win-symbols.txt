@@ -1,9 +1,11 @@
 --undefined=mediaxx_malloc
 --undefined=mediaxx_free
---undefined=mediaxx_get_libav_version
+--undefined=mediaxx_get_log_level
+--undefined=mediaxx_set_log_level
 --undefined=mediaxx_get_label_malloc
 --undefined=mediaxx_get_media_info_malloc
 --undefined=mediaxx_get_media_picture
+--undefined=mediaxx_get_available_hwcodec_list
 --undefined=mediaxx_get_audio_visualization
 
 --undefined=mpv_abort_async_command

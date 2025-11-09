@@ -2,10 +2,12 @@
   global:
     mediaxx_malloc;
     mediaxx_free;
-    mediaxx_get_libav_version;
+    mediaxx_get_log_level;
+    mediaxx_set_log_level;
     mediaxx_get_label_malloc;
     mediaxx_get_media_info_malloc;
     mediaxx_get_media_picture;
+    mediaxx_get_available_hwcodec_list;
     mediaxx_get_audio_visualization;
     JNI_OnLoad;
     Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative;
