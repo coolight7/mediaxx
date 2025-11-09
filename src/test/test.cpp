@@ -2,7 +2,7 @@ extern "C" {
 #include "libavcodec/codec.h"
 }
 
-#include "analyse/hwanalyse.h"
+#include "analyse/codec_info.h"
 #include "mediaxx.h"
 #include "simdjson.h"
 #include <iostream>
