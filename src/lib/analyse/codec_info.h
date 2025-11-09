@@ -11,11 +11,11 @@ extern "C" {
 class CodecInfo_c {
 public:
 
-    static simdjson::fallback::builder::string_builder findAvailCodec() {
-        std::vector<const AVCodec*>                 hardware_codecs{};
-        simdjson::fallback::builder::string_builder result{};
-        const AVCodec*                              codec           = nullptr;
-        void*                                       iteration_state = nullptr;
+    static simdjson::builder::string_builder findAvailCodec() {
+        std::vector<const AVCodec*>       hardware_codecs{};
+        simdjson::builder::string_builder result{};
+        const AVCodec*                    codec           = nullptr;
+        void*                             iteration_state = nullptr;
 
         result.start_array();
 
