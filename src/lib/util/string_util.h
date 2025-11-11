@@ -7,25 +7,59 @@
 #include <unordered_set>
 
 namespace stringxx {
-    inline bool isAvailUtf8(const char* str) {}
+    inline bool isAvailUtf8(const char* str) {
+        if (nullptr != str && str[0] != '\0' && utf8GetLengthCheckLenAvail(str) == 0) {
+            return false;
+        }
+        return true;
+    }
 
     inline size_t utf8GetLength(std::string_view in_str) {
         size_t length = 0;
-        for (size_t i = 0, len = 0; i < in_str.size(); i += len) {
+        for (size_t i = 0, step = 0; i < in_str.size(); i += step) {
             unsigned char byte = in_str[i];
             // lenght 6
             if (byte >= 0xFC) {
-                len = 6;
+                step = 6;
             } else if (byte >= 0xF8) {
-                len = 5;
+                step = 5;
             } else if (byte >= 0xF0) {
-                len = 4;
+                step = 4;
             } else if (byte >= 0xE0) {
-                len = 3;
+                step = 3;
             } else if (byte >= 0xC0) {
-                len = 2;
+                step = 2;
             } else {
-                len = 1;
+                step = 1;
+            }
+            length++;
+        }
+        return length;
+    }
+
+    inline size_t utf8GetLengthCheckLenAvail(const char* str) {
+        size_t length = 0;
+        for (size_t i = 0, step = 0;; i += step) {
+            unsigned char ch = str[i];
+            // lenght 6
+            if (ch >= 0xFC) {
+                step = 6;
+            } else if (ch >= 0xF8) {
+                step = 5;
+            } else if (ch >= 0xF0) {
+                step = 4;
+            } else if (ch >= 0xE0) {
+                step = 3;
+            } else if (ch >= 0xC0) {
+                step = 2;
+            } else {
+                step = 1;
+            }
+            for (int j = 0; j < step; j++) {
+                if (str[i + j] == '\0') {
+                    // 不合规
+                    return 0;
+                }
             }
             length++;
         }
