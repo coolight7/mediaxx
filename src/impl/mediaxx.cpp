@@ -63,7 +63,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_info_malloc(
         auto             pOutput   = std::string_view{pictureOutputPath};
         auto             p96Output = std::string_view{picture96OutputPath};
         std::string_view json      = jsonsb.view().value_unsafe();
-        *outResult                 = StringUtilxx_c::stringCopyMalloc(json).data();
+        *outResult                 = stringxx::stringCopyMalloc(json).data();
 
         if (false == pOutput.empty()) {
             // 读取图片
@@ -108,7 +108,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
     auto             jsonsb = CodecInfo_c::findAvailCodec();
     std::string_view json   = jsonsb.view().value_unsafe();
-    return StringUtilxx_c::stringCopyMalloc(json).data();
+    return stringxx::stringCopyMalloc(json).data();
 }
 
 FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(const char* filepath, const char* output) {

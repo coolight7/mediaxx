@@ -23,7 +23,7 @@ public class MediaxxPlugin implements FlutterPlugin {
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-        Log.e("mediaxx", "package:mediaxx attached.");
+        Log.i("mediaxx", "package:mediaxx attached.");
         try {
             // Save android.content.Context for access later within MediaKitAndroidHelpers e.g. loading bundled assets.
             MediaxxAndroidHelper.setApplicationContextJava(flutterPluginBinding.getApplicationContext());

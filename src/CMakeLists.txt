@@ -60,6 +60,9 @@ message("[mediaxx] EXE_INSTALL_PREFIX: ${EXE_INSTALL_PREFIX}")
 message("[mediaxx] CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_definitions(-D__STDC_CONSTANT_MACROS)
+if (DEFINED LUMENXX_BUILD_TYPE)
+  add_definitions(-DLUMENXX_BUILD_TYPE=${LUMENXX_BUILD_TYPE})
+endif()
 
 include(ExternalProject)
 ExternalProject_Add(

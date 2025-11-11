@@ -40,7 +40,8 @@ int main(int argn, char** argv) {
     auto        ret    = mediaxx_get_media_info_malloc(
         // "C:/0Acoolight/Music/Chinese/林宥嘉 - 浪费.flac",
         // "C:/0Acoolight/Music/English/Animals.flac",
-        "C:/0Acoolight/Music/only/安静的午后_Pianoboy高至豪.flac",
+        // "C:/0Acoolight/Music/only/安静的午后_Pianoboy高至豪.flac",
+        "D:\\0Acoolight\\Download\\chrome\\李艺皓+-+嚣张.wav",
         "",
         "./temp/output.jpg",
         "./temp/output96.jpg",

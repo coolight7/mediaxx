@@ -70,10 +70,10 @@ public:
         ++logNum;
         auto temp = *log;
         if (nullptr == temp) {
-            *log = StringUtilxx_c::stringCopyMalloc(data).data();
+            *log = stringxx::stringCopyMalloc(data).data();
         } else {
             // 已经有内容，附加
-            *log = StringUtilxx_c::stringCopyMalloc(*log, "\n\n", data).data();
+            *log = stringxx::stringCopyMalloc(*log, "\n\n", data).data();
         }
         mediaxx_free(temp);
     }
@@ -188,13 +188,22 @@ public:
             if (nullptr != ctxMetadata) {
                 AVDictionaryEntry* tag     = nullptr;
                 auto               isFirst = true;
+                LXX_WARN("tags =============== ");
                 while ((tag = av_dict_get(ctxMetadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
                     if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
+                        auto key   = std::string_view{tag->key};
+                        auto value = std::string_view{tag->value};
+                        LXX_WARN("tags =============== {} {}", key, value);
+                        stringxx::printStringToIntList(tag->value);
+                        if (key.contains("�") || value.contains("�")) {
+                            LXX_WARN("tags pair contain '�': '{}': '{}'", key, value);
+                            continue;
+                        }
                         if (false == isFirst) {
                             result.append_comma();
                         }
                         isFirst = false;
-                        result.append_key_value(tag->key, tag->value);
+                        result.append_key_value(key, value);
                     }
                 }
             }
@@ -258,6 +267,7 @@ public:
                     );
                     result.append_comma();
                 }
+
                 result.escape_and_append_with_quotes("tags");
                 result.append_colon();
                 {
@@ -267,11 +277,17 @@ public:
                     auto               isFirst  = true;
                     while ((tag = av_dict_get(metadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
                         if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
+                            auto key   = std::string_view{tag->key};
+                            auto value = std::string_view{tag->value};
+                            if (key.contains("�") || value.contains("�")) {
+                                LXX_WARN("tags pair contain '�': '{}': '{}'", key, value);
+                                continue;
+                            }
                             if (false == isFirst) {
                                 result.append_comma();
                             }
                             isFirst = false;
-                            result.append_key_value(tag->key, tag->value);
+                            result.append_key_value(key, value);
                         }
                     }
                     result.end_object();
