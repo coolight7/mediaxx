@@ -7,12 +7,6 @@
 #include <unordered_set>
 
 namespace stringxx {
-    inline bool isAvailUtf8(const char* str) {
-        if (nullptr != str && str[0] != '\0' && utf8GetLengthCheckLenAvail(str) == 0) {
-            return false;
-        }
-        return true;
-    }
 
     inline size_t utf8GetLength(std::string_view in_str) {
         size_t length = 0;
@@ -64,6 +58,13 @@ namespace stringxx {
             length++;
         }
         return length;
+    }
+
+    inline bool isAvailUtf8(const char* str) {
+        if (nullptr != str && str[0] != '\0' && utf8GetLengthCheckLenAvail(str) == 0) {
+            return false;
+        }
+        return true;
     }
 
     inline std::vector<std::string> strSplit(const std::string& in_str, char in_char) {
