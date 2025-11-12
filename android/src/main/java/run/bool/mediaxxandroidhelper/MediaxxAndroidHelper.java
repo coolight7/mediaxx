@@ -3,6 +3,9 @@ package run.bool.mediaxxandroidhelper;
 import android.net.Uri;
 import android.content.Context;
 
+import androidx.annotation.Keep;
+
+@Keep
 public class MediaxxAndroidHelper {
     static {
         System.loadLibrary("mediaxx");
