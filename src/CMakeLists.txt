@@ -17,7 +17,7 @@ set(STATIC_LINK_FFMPEG OFF CACHE STRING "是否编译时静态链接 ffmepg")
 set(STATIC_LINK_LIBMPV OFF CACHE STRING "是否编译时静态链接 libmpv")
 set(EXPORT_ALL_SYMBOL OFF CACHE STRING "导出所有符号")
 
-if (NOT CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT STATIC_LINK_FFMPEG)
+if (NOT DEFINED LUMENXX_BUILD_TYPE AND NOT STATIC_LINK_FFMPEG)
   # release 时不需要，由主程序提供静态链接ffmpeg的动态库
   message("[mediaxx] 跳过编译 libmediaxx ，期望由主程序提供预编译动态库")
   return()

@@ -25,7 +25,6 @@ public class MediaxxPlugin implements FlutterPlugin {
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
         Log.i("mediaxx", "package:mediaxx attached.");
         try {
-            // Save android.content.Context for access later within MediaKitAndroidHelpers e.g. loading bundled assets.
             MediaxxAndroidHelper.setApplicationContextJava(flutterPluginBinding.getApplicationContext());
             Log.i("mediaxx", "Saved application context.");
         } catch (Throwable e) {
@@ -35,6 +34,6 @@ public class MediaxxPlugin implements FlutterPlugin {
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-        Log.e("mediaxx", "package:mediaxx detached.");
+        Log.i("mediaxx", "package:mediaxx detached.");
     }
 }
