@@ -10,6 +10,24 @@ set(CMAKE_C_STANDARD 23)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(_ISLINUX FALSE)
+set(_ISWIN FALSE)
+set(_ISMACOS FALSE)
+set(_ISANDROID FALSE)
+set(_ISIOS FALSE)
+
+if (WIN32)
+  set(_ISWIN TRUE)
+elseif (ANDROID)
+  set(_ISANDROID TRUE)
+elseif (APPLE AND CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(_ISMACOS TRUE)
+elseif (APPLE AND CMAKE_SYSTEM_NAME STREQUAL "iOS")
+  set(_ISIOS TRUE)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  set(_ISLINUX TRUE)
+endif ()
+
 message("[mediaxx] Current Configure Type: ${CMAKE_CONFIGURATION_TYPES}")
 message("[mediaxx] Current Build Type: ${CMAKE_BUILD_TYPE}")
 
@@ -33,7 +51,7 @@ if (MSVC)
 		set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}    /utf-8 /MD /wd4200 /Zc:__cplusplus /std:c++23preview")
 
     # set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     set(_MEDIAXX_C_FLAGS   "-fvisibility=default")
     set(_MEDIAXX_CXX_FLAGS "-fvisibility=default")
 
@@ -46,7 +64,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL 
 		set(CMAKE_C_FLAGS_DEBUG       "${CMAKE_C_FLAGS_DEBUG}     ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 		set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}   ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fno-optimize-sibling-calls")
 
-    if (ANDROID) 
+    if (_ISANDROID OR _ISIOS OR _ISMACOS OR _ISLINUX) 
       # static link to ffmpeg.a
       # windows 不需要
       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
@@ -207,7 +225,7 @@ if (STATIC_LINK_FFMPEG)
   )
 endif ()
 
-if (WIN32)
+if (_ISWIN)
   if (NOT STATIC_LINK_FFMPEG)
     set(ffmpeg_mpv_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-win/")
     set(ffmpeg_mpv_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-win/")
@@ -216,7 +234,7 @@ if (WIN32)
     set(mediaxx_EXPORT_DEF "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win.def")
     set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-win-symbols.txt")
   endif ()
-elseif (ANDROID)
+elseif (_ISANDROID)
   message("[mediaxx] build for android | ANDROID_ABI: ${ANDROID_ABI}")
 
   if (NOT STATIC_LINK_FFMPEG)
@@ -226,7 +244,7 @@ elseif (ANDROID)
     set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android.lds")
     set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android-symbols.txt")
   endif ()
-elseif (UNIX)
+elseif (_ISLINUX)
 
 endif ()
 
@@ -275,7 +293,7 @@ set_target_properties(mediaxx PROPERTIES
 
 target_compile_definitions(mediaxx PUBLIC DART_SHARED_LIB)
 
-if (WIN32)
+if (_ISWIN)
   if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     if (EXPORT_ALL_SYMBOL)
       target_link_options(mediaxx PRIVATE 
@@ -287,7 +305,7 @@ if (WIN32)
       )
     endif()
   endif()
-elseif (ANDROID)
+elseif (_ISANDROID)
   # Support Android 15 16k page size
   target_link_options(mediaxx PRIVATE 
     "-Wl,-z,max-page-size=16384"
@@ -312,7 +330,7 @@ endif()
 if (DEFINED LUMENXX_BUILD_TYPE)
   install(TARGETS mediaxx RUNTIME DESTINATION "${EXE_INSTALL_PREFIX}")
 
-  if (WIN32)
+  if (_ISWIN)
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/avdevice.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/avfilter.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
