@@ -54,7 +54,8 @@ void test() {
         const char* result = nullptr;
         const char* log    = nullptr;
         auto        ret    = mediaxx_get_media_info_malloc(
-            "./temp/李艺皓+-+嚣张.wav",
+            // "./temp/李艺皓+-+嚣张.wav",
+            "./temp/林力尧 - 初恋旧爱新欢.flac",
             "",
             "./temp/output.jpg",
             "./temp/output96.jpg",
@@ -68,7 +69,14 @@ void test() {
         mediaxx_free(log);
     }
 
-    { analyse_tool::analysePictureColorFromPath("./temp/output.jpg"); }
+    {
+        auto result = analyse_tool::analysePictureColorFromPath("./temp/output.jpg");
+        if (nullptr != result) {
+            std::cout << std::endl
+                      << "## analysePictureColorFromPath: "
+                      << result->toJson().view().value_unsafe() << std::endl;
+        }
+    }
 
     {
         auto file = std::ifstream{"./temp/output.jpg", std::ios::binary};
@@ -83,7 +91,12 @@ void test() {
                       << "## analyzePictureColorFromData: " << file.good()
                       << " size:" << buffer.size() << std::endl;
             file.close();
-            analyse_tool::analyzePictureColorFromData(buffer.data(), buffer.size());
+            auto result = analyse_tool::analyzePictureColorFromData(buffer.data(), buffer.size());
+            if (nullptr != result) {
+                std::cout << std::endl
+                          << "## analyzePictureColorFromData: "
+                          << result->toJson().view().value_unsafe() << std::endl;
+            }
         } else {
             std::cout << "无法打开文件进行二进制读取" << std::endl;
         }

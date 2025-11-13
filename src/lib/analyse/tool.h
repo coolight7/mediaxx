@@ -10,10 +10,12 @@ extern "C" {
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include "simdjson.h"
 #include "util/log.h"
 
 namespace analyse_tool {
@@ -21,6 +23,91 @@ namespace analyse_tool {
         uint8_t r, g, b;
         int     count;
         double  brightness;
+
+        void toJson(simdjson::builder::string_builder& sb) const {
+            sb.start_object();
+            {
+                sb.append_key_value<"rgb">(
+                    (unsigned int)r << 16 | (unsigned int)g << 8 | (unsigned int)b
+                );
+                sb.append_comma();
+                sb.append_key_value<"count">(count);
+                sb.append_comma();
+                sb.append_key_value<"brightness">(brightness);
+            }
+            sb.end_object();
+        }
+    };
+
+    class AnalysePictureColorResult {
+    public:
+
+        Color mainColor;
+        Color lightColors[4];
+        Color darkColors[4];
+        Color dominantColors[4];
+
+        simdjson::builder::string_builder toJson() const {
+            LXX_DEBEG("AnalysePictureColorResult.toJson ......");
+            simdjson::builder::string_builder sb{};
+
+            sb.start_object();
+
+            sb.escape_and_append_with_quotes("mainColor");
+            sb.append_colon();
+            mainColor.toJson(sb);
+            sb.append_comma();
+
+            sb.escape_and_append_with_quotes("lightColors");
+            sb.append_colon();
+            {
+                sb.start_array();
+                bool isFirst = true;
+                for (const auto& c : lightColors) {
+                    if (false == isFirst) {
+                        sb.append_comma();
+                    }
+                    isFirst = false;
+                    c.toJson(sb);
+                }
+                sb.end_array();
+            }
+            sb.append_comma();
+
+            sb.escape_and_append_with_quotes("darkColors");
+            sb.append_colon();
+            {
+                sb.start_array();
+                bool isFirst = true;
+                for (const auto& c : darkColors) {
+                    if (false == isFirst) {
+                        sb.append_comma();
+                    }
+                    isFirst = false;
+                    c.toJson(sb);
+                }
+                sb.end_array();
+            }
+            sb.append_comma();
+
+            sb.escape_and_append_with_quotes("dominantColors");
+            sb.append_colon();
+            {
+                sb.start_array();
+                bool isFirst = true;
+                for (const auto& c : dominantColors) {
+                    if (false == isFirst) {
+                        sb.append_comma();
+                    }
+                    isFirst = false;
+                    c.toJson(sb);
+                }
+                sb.end_array();
+            }
+
+            sb.end_object();
+            return sb;
+        }
     };
 
     struct BufferData {
@@ -47,12 +134,12 @@ namespace analyse_tool {
         return ss.str();
     }
 
-    void analysePictureColor(AVFormatContext* formatCtx) {
+    std::shared_ptr<AnalysePictureColorResult> analysePictureColor(AVFormatContext* formatCtx) {
         LXX_DEBEG("analysePictureColor: ");
         if (avformat_find_stream_info(formatCtx, nullptr) < 0) {
             std::cout << "无法获取流信息" << std::endl;
             avformat_close_input(&formatCtx);
-            return;
+            return nullptr;
         }
         LXX_DEBEG("find picture stream: ");
 
@@ -68,7 +155,7 @@ namespace analyse_tool {
         if (videoStreamIndex < 0) {
             std::cout << "未找到视频流" << std::endl;
             avformat_close_input(&formatCtx);
-            return;
+            return nullptr;
         }
 
         // 获取解码器参数
@@ -78,28 +165,28 @@ namespace analyse_tool {
         if (!codec) {
             std::cout << "无法找到解码器" << std::endl;
             avformat_close_input(&formatCtx);
-            return;
+            return nullptr;
         }
 
         AVCodecContext* codecCtx = avcodec_alloc_context3(codec);
         if (!codecCtx) {
             std::cout << "无法分配解码器上下文" << std::endl;
             avformat_close_input(&formatCtx);
-            return;
+            return nullptr;
         }
 
         if (avcodec_parameters_to_context(codecCtx, codecPar) < 0) {
             std::cout << "无法将解码器参数复制到上下文" << std::endl;
             avcodec_free_context(&codecCtx);
             avformat_close_input(&formatCtx);
-            return;
+            return nullptr;
         }
 
         if (avcodec_open2(codecCtx, codec, nullptr) < 0) {
             std::cout << "无法打开解码器" << std::endl;
             avcodec_free_context(&codecCtx);
             avformat_close_input(&formatCtx);
-            return;
+            return nullptr;
         }
         LXX_DEBEG("decoder picture...");
 
@@ -135,7 +222,7 @@ namespace analyse_tool {
             av_frame_free(&rgbFrame);
             avcodec_free_context(&codecCtx);
             avformat_close_input(&formatCtx);
-            return;
+            return nullptr;
         }
 
         // 转换为RGB格式
@@ -159,7 +246,7 @@ namespace analyse_tool {
             av_frame_free(&rgbFrame);
             avcodec_free_context(&codecCtx);
             avformat_close_input(&formatCtx);
-            return;
+            return nullptr;
         }
 
         int numBytes
@@ -217,45 +304,30 @@ namespace analyse_tool {
         std::sort(allColors.begin(), allColors.end(), compareColor);
 
         // 分类主色调、亮色调、暗色调
-        std::vector<Color> brightColors;                // 亮色调 (亮度 > 180)
-        std::vector<Color> darkColors;                  // 暗色调 (亮度 < 80)
-        Color              mainColor = {0, 0, 0, 0, 0}; // 主色调
+        auto result = std::make_shared<AnalysePictureColorResult>();
 
         if (!allColors.empty()) {
-            mainColor = allColors[0]; // 主色调：出现次数最多的颜色
-
+            result->mainColor = allColors[0]; // 主色调：出现次数最多的颜色
+            int index         = 0;
+            int lightIndex    = 0;
+            int darkIndex     = 0;
             for (auto& color : allColors) {
-                if (color.brightness > 180 && brightColors.size() < 4) {
-                    brightColors.push_back(color);
-                } else if (color.brightness < 80 && darkColors.size() < 4) {
-                    darkColors.push_back(color);
+                if (index < 4) {
+                    result->dominantColors[index] = color;
+                }
+                if (color.brightness > 180 && lightIndex < 4) {
+                    result->lightColors[lightIndex] = color;
+                    ++lightIndex;
+                } else if (color.brightness < 80 && darkIndex < 4) {
+                    result->darkColors[darkIndex] = color;
+                    ++darkIndex;
                 }
 
-                if (brightColors.size() >= 4 && darkColors.size() >= 4) {
+                if (lightIndex >= 4 && darkIndex >= 4) {
                     break;
                 }
+                ++index;
             }
-        }
-
-        // 输出结果
-        std::cout << "图片尺寸: " << width << "x" << height << std::endl;
-        std::cout << "\n主色调: " << colorToHex(mainColor.r, mainColor.g, mainColor.b)
-                  << " (出现次数: " << mainColor.count << ")" << std::endl;
-
-        std::cout << "\n亮色调 (Top 4):" << std::endl;
-        for (int i = 0; i < brightColors.size(); i++) {
-            std::cout << i + 1 << ". "
-                      << colorToHex(brightColors[i].r, brightColors[i].g, brightColors[i].b)
-                      << " (出现次数: " << brightColors[i].count
-                      << ", 亮度: " << brightColors[i].brightness << ")" << std::endl;
-        }
-
-        std::cout << "\n暗色调 (Top 4):" << std::endl;
-        for (int i = 0; i < darkColors.size(); i++) {
-            std::cout << i + 1 << ". "
-                      << colorToHex(darkColors[i].r, darkColors[i].g, darkColors[i].b)
-                      << " (出现次数: " << darkColors[i].count
-                      << ", 亮度: " << darkColors[i].brightness << ")" << std::endl;
         }
 
         // 释放资源
@@ -265,23 +337,28 @@ namespace analyse_tool {
         av_frame_free(&rgbFrame);
         avcodec_free_context(&codecCtx);
         avformat_close_input(&formatCtx);
+
+        return result;
     }
 
-    void analysePictureColorFromPath(const char* picturePath) {
+    std::shared_ptr<AnalysePictureColorResult> analysePictureColorFromPath(const char* picturePath
+    ) {
         AVFormatContext* formatCtx = nullptr;
         if (avformat_open_input(&formatCtx, picturePath, nullptr, nullptr) != 0) {
             std::cout << "无法打开图片文件" << std::endl;
-            return;
+            return nullptr;
         }
-        analysePictureColor(formatCtx);
+        return analysePictureColor(formatCtx);
     }
 
     static int _packetRead(void* opaque, uint8_t* buf, int buf_size) {
         BufferData* bd = (BufferData*)opaque;
         buf_size       = int(std::min((size_t)buf_size, bd->size - bd->pos));
 
-        if (buf_size <= 0)
-            return AVERROR_EOF; // 文件结束
+        if (buf_size <= 0) {
+            // 文件结束
+            return AVERROR_EOF;
+        }
 
         // 从我们的缓冲区复制数据到 FFmpeg 的缓冲区
         memcpy(buf, bd->ptr + bd->pos, buf_size);
@@ -290,10 +367,11 @@ namespace analyse_tool {
         return buf_size;
     }
 
-    void analyzePictureColorFromData(const char* data, size_t dataSize) {
+    std::shared_ptr<AnalysePictureColorResult>
+        analyzePictureColorFromData(const char* data, size_t dataSize) {
         if (nullptr == data || dataSize == 0) {
             std::cout << "无效的输入数据" << std::endl;
-            return;
+            return nullptr;
         }
 
         // 2. 设置缓冲区数据结构
@@ -305,7 +383,7 @@ namespace analyse_tool {
         uint8_t*     avio_buffer      = (uint8_t*)av_malloc(avio_buffer_size);
         if (nullptr == avio_buffer) {
             std::cout << "无法分配 AVIO 缓冲区" << std::endl;
-            return;
+            return nullptr;
         }
         AVIOContext* avioCtx = avio_alloc_context(
             avio_buffer,
@@ -319,14 +397,14 @@ namespace analyse_tool {
         if (nullptr == avioCtx) {
             std::cout << "无法分配 AVIO 上下文" << std::endl;
             av_free(avio_buffer); // 释放已分配的缓冲区
-            return;
+            return nullptr;
         }
 
         // 4. 分配并初始化 AVFormatContext
         AVFormatContext* formatCtx = avformat_alloc_context();
         if (nullptr == formatCtx) {
             avio_context_free(&avioCtx); // 这会同时释放 avio_buffer
-            return;
+            return nullptr;
         }
         formatCtx->pb = avioCtx;
 
@@ -335,9 +413,9 @@ namespace analyse_tool {
             avformat_free_context(formatCtx);
             avio_context_free(&avioCtx);
             av_free(avio_buffer);
-            return;
+            return nullptr;
         }
 
-        analysePictureColor(formatCtx);
+        return analysePictureColor(formatCtx);
     }
 }; // namespace analyse_tool

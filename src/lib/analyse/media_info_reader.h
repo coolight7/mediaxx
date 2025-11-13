@@ -220,6 +220,10 @@ public:
         {
             result.start_array();
             for (unsigned int i = 0; i < fmtCtx->nb_streams; i++) {
+                if (i > 0) {
+                    result.append_comma();
+                }
+
                 result.start_object();
                 AVStream*          stream   = fmtCtx->streams[i];
                 AVCodecParameters* codecPar = stream->codecpar;
@@ -390,9 +394,6 @@ public:
                 }
 
                 result.end_object();
-                if (i < fmtCtx->nb_streams - 1) {
-                    result.append_comma();
-                }
             }
             result.end_array();
             // result.append_comma();
