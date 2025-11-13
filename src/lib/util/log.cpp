@@ -1,7 +1,7 @@
 #include "log.h"
 #include <format>
 
-#ifdef _ISLINUX
+#if _ISLINUX
 #include <csignal>
 #include <execinfo.h>
 
