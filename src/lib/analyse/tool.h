@@ -267,9 +267,16 @@ namespace analyse_tool {
         avformat_close_input(&formatCtx);
     }
 
-    // FFmpeg 的读取回调函数
-    // 当 FFmpeg 需要数据时，它会调用这个函数
-    static int _readPacket(void* opaque, uint8_t* buf, int buf_size) {
+    void analysePictureColorFromPath(const char* picturePath) {
+        AVFormatContext* formatCtx = nullptr;
+        if (avformat_open_input(&formatCtx, picturePath, nullptr, nullptr) != 0) {
+            std::cout << "无法打开图片文件" << std::endl;
+            return;
+        }
+        analysePictureColor(formatCtx);
+    }
+
+    static int _packetRead(void* opaque, uint8_t* buf, int buf_size) {
         BufferData* bd = (BufferData*)opaque;
         buf_size       = int(std::min((size_t)buf_size, bd->size - bd->pos));
 
@@ -283,15 +290,6 @@ namespace analyse_tool {
         return buf_size;
     }
 
-    void analysePictureColorFromPath(const char* picturePath) {
-        AVFormatContext* formatCtx = nullptr;
-        if (avformat_open_input(&formatCtx, picturePath, nullptr, nullptr) != 0) {
-            std::cout << "无法打开图片文件" << std::endl;
-            return;
-        }
-        analysePictureColor(formatCtx);
-    }
-
     void analyzePictureColorFromData(const char* data, size_t dataSize) {
         if (nullptr == data || dataSize == 0) {
             std::cout << "无效的输入数据" << std::endl;
@@ -299,7 +297,7 @@ namespace analyse_tool {
         }
 
         // 2. 设置缓冲区数据结构
-        BufferData bd = {(const uint8_t*)data, dataSize, 0};
+        auto bd = BufferData{(const uint8_t*)data, dataSize, 0};
 
         // 3. 分配并初始化 AVIOContext
         // 我们使用一个小的内部缓冲区 (例如 4KB)，FFmpeg 会从这里读取
@@ -314,11 +312,11 @@ namespace analyse_tool {
             avio_buffer_size,
             0,
             &bd,
-            &_readPacket,
+            &_packetRead,
             nullptr,
             nullptr
         );
-        if (!avioCtx) {
+        if (nullptr == avioCtx) {
             std::cout << "无法分配 AVIO 上下文" << std::endl;
             av_free(avio_buffer); // 释放已分配的缓冲区
             return;
@@ -330,8 +328,16 @@ namespace analyse_tool {
             avio_context_free(&avioCtx); // 这会同时释放 avio_buffer
             return;
         }
-        formatCtx->pb                 = avioCtx;
-        formatCtx->protocol_whitelist = av_strdup("file,data,pipe");
+        formatCtx->pb = avioCtx;
+
+        if (avformat_open_input(&formatCtx, NULL, NULL, NULL) != 0) {
+            std::cout << "无法打开 avformat_open_input" << std::endl;
+            avformat_free_context(formatCtx);
+            avio_context_free(&avioCtx);
+            av_free(avio_buffer);
+            return;
+        }
+
         analysePictureColor(formatCtx);
     }
 }; // namespace analyse_tool

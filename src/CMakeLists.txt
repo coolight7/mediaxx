@@ -55,14 +55,22 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "
     set(_MEDIAXX_C_FLAGS   "-fvisibility=default")
     set(_MEDIAXX_CXX_FLAGS "-fvisibility=default")
 
-    set(CMAKE_C_FLAGS             "${CMAKE_C_FLAGS_RELEASE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
-		set(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS_RELEASE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
-		set(CMAKE_C_FLAGS_RELEASE     "${CMAKE_C_FLAGS_RELEASE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
-		set(CMAKE_CXX_FLAGS_RELEASE   "${CMAKE_CXX_FLAGS_RELEASE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
-		set(CMAKE_C_FLAGS_PROFILE     "${CMAKE_C_FLAGS_PROFILE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
-		set(CMAKE_CXX_FLAGS_PROFILE   "${CMAKE_CXX_FLAGS_PROFILE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
-		set(CMAKE_C_FLAGS_DEBUG       "${CMAKE_C_FLAGS_DEBUG}     ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
-		set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}   ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+    if (DEFINED CMAKE_CONFIGURATION_TYPES)
+      set(CMAKE_C_FLAGS_RELEASE     "${CMAKE_C_FLAGS_RELEASE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
+      set(CMAKE_CXX_FLAGS_RELEASE   "${CMAKE_CXX_FLAGS_RELEASE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
+      set(CMAKE_C_FLAGS_PROFILE     "${CMAKE_C_FLAGS_PROFILE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
+      set(CMAKE_CXX_FLAGS_PROFILE   "${CMAKE_CXX_FLAGS_PROFILE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
+      set(CMAKE_C_FLAGS_DEBUG       "${CMAKE_C_FLAGS_DEBUG}     ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+      set(CMAKE_CXX_FLAGS_DEBUG     "${CMAKE_CXX_FLAGS_DEBUG}   ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+    else ()
+      if (CMAKE_BUILD_TYPE MATCHES "Debug")
+        set(CMAKE_C_FLAGS           "${CMAKE_C_FLAGS}     ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17 -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+        set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS}   ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+      else ()
+        set(CMAKE_C_FLAGS           "${CMAKE_C_FLAGS}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
+        set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
+      endif ()
+    endif ()
 
     if (_ISANDROID OR _ISIOS OR _ISMACOS OR _ISLINUX) 
       # static link to ffmpeg.a
@@ -92,7 +100,6 @@ ExternalProject_Add(
   CMAKE_ARGS 
       -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
       -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
-      "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}"
       "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
       "-DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}"
       "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}"
@@ -105,6 +112,7 @@ ExternalProject_Add(
       "-DANDROID_NDK=${ANDROID_NDK}"
       "-DANDROID_STL=${ANDROID_STL}"
 
+      "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}"
       "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
       "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
       "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
@@ -245,7 +253,13 @@ elseif (_ISANDROID)
     set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-android-symbols.txt")
   endif ()
 elseif (_ISLINUX)
-
+  if (NOT STATIC_LINK_FFMPEG)
+    set(ffmpeg_mpv_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-linux/")
+    set(ffmpeg_mpv_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-linux/")
+  else ()
+    set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-linux.lds")
+    set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-linux-symbols.txt")
+  endif ()
 endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
@@ -328,7 +342,7 @@ if (DEFINED LUMENXX_BUILD_TYPE)
 endif()
 
 if (DEFINED LUMENXX_BUILD_TYPE)
-  install(TARGETS mediaxx RUNTIME DESTINATION "${EXE_INSTALL_PREFIX}")
+  install(TARGETS mediaxx DESTINATION "${EXE_INSTALL_PREFIX}")
 
   if (_ISWIN)
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/avcodec.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
@@ -338,6 +352,19 @@ if (DEFINED LUMENXX_BUILD_TYPE)
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/avutil.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/swresample.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/swscale.dll" DESTINATION "${EXE_INSTALL_PREFIX}")
+  elseif (_ISLINUX)
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavcodec.so" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavdevice.so" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavfilter.so" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavformat.so" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavutil.so" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libswresample.so" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libswscale.so" DESTINATION "${EXE_INSTALL_PREFIX}")
+
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libva.so.2" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libva-drm.so.2" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libva-x11.so.2" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libvdpau.so.1" DESTINATION "${EXE_INSTALL_PREFIX}")
   endif ()
 elseif (STATIC_LINK_FFMPEG)
   install(TARGETS mediaxx RUNTIME)

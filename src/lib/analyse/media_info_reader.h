@@ -195,7 +195,9 @@ public:
                         auto value = std::string_view{tag->value};
                         LXX_WARN("tags =============== {} {}", key, value);
                         stringxx::printStringToIntList(tag->value);
-                        if (key.contains("�") || value.contains("�")) {
+                        if (key.contains("�") || false == stringxx::utf8IsAvail(key.data())
+                            || value.contains("�")
+                            || false == stringxx::utf8IsAvail(value.data())) {
                             LXX_WARN("tags pair contain '�': '{}': '{}'", key, value);
                             continue;
                         }

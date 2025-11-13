@@ -13,6 +13,36 @@ extern "C" {
 using namespace std;
 
 void test() {
+    {
+        std::map<std::string, std::string> data{
+            {"name",     "simdjson"    },
+            {"type",     "parser"      },
+            {"language", "C++23"       },
+            {"version",  "版本 4.0.7"}
+        };
+        simdjson::builder::string_builder sb;
+        sb.append(data);
+        std::string_view json = sb.view().value_unsafe();
+        std::cout << "Generated JSON: " << json << std::endl;
+    }
+
+    {
+        assert(stringxx::utf8IsAvail(nullptr) == false);
+        assert(stringxx::utf8IsAvail("\0") == false);
+        assert(stringxx::utf8IsAvail("1"));
+        assert(stringxx::utf8IsAvail("ww 测试 cc"));
+        // assert(stringxx::isAvailUtf8("ww 测试 cc �") == false);
+        assert(stringxx::utf8IsAvail(std::vector<char>{-49, -7, -43, -59}.data()) == false);
+        // 多字节后续字节格式错误，后续字节固定为 10xxxxxx
+        assert(stringxx::utf8IsAvail("12 \xE4\x28\x01 fd") == false);
+        // 非最短编码检查
+        assert(stringxx::utf8IsAvail("12 \xE0\x80\xAF fd") == false);
+        assert(stringxx::utf8IsAvail("12 \xC0\x80 fd") == false);
+        // 5、6字节编码无效
+        assert(stringxx::utf8IsAvail("12 \xF8\xF7 fd") == false);
+        assert(stringxx::utf8IsAvail("12 \xFC\xFD fd") == false);
+    }
+
     mediaxx_set_log_level(AV_LOG_TRACE);
 
     auto result = mediaxx_get_available_hwcodec_list();
@@ -21,26 +51,10 @@ void test() {
     }
 
     {
-        std::map<std::string, std::string> data{
-            {"name",     "simdjson"},
-            {"type",     "parser"  },
-            {"language", "C++23"   },
-            {"version",  "4.0.7"   }
-        };
-        simdjson::builder::string_builder sb;
-        sb.append(data);
-        std::string_view p{sb};
-        std::cout << "Generated JSON: " << p << std::endl;
-    }
-
-    {
         const char* result = nullptr;
         const char* log    = nullptr;
         auto        ret    = mediaxx_get_media_info_malloc(
-            // "C:/0Acoolight/Music/Chinese/林宥嘉 - 浪费.flac",
-            // "C:/0Acoolight/Music/English/Animals.flac",
-            // "C:/0Acoolight/Music/only/安静的午后_Pianoboy高至豪.flac",
-            "D:\\0Acoolight\\Download\\chrome\\李艺皓+-+嚣张.wav",
+            "./temp/李艺皓+-+嚣张.wav",
             "",
             "./temp/output.jpg",
             "./temp/output96.jpg",
@@ -65,9 +79,10 @@ void test() {
             vector<char> buffer{};
             buffer.resize(fileSize);
             file.read(buffer.data(), fileSize);
-            file.close();
             std::cout << std::endl
-                      << "## analyzePictureColorFromData: " << buffer.size() << std::endl;
+                      << "## analyzePictureColorFromData: " << file.good()
+                      << " size:" << buffer.size() << std::endl;
+            file.close();
             analyse_tool::analyzePictureColorFromData(buffer.data(), buffer.size());
         } else {
             std::cout << "无法打开文件进行二进制读取" << std::endl;
@@ -76,6 +91,7 @@ void test() {
 }
 
 int main(int argn, char** argv) {
+    logxx::signal_error(argv[0]);
     std::cout << "======= Test Start =======" << std::endl;
     test();
     std::cout << "======= Test Done =======" << std::endl;

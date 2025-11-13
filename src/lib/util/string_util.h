@@ -31,28 +31,51 @@ namespace stringxx {
         return length;
     }
 
-    inline size_t utf8GetLengthCheckLenAvail(const char* str) {
+    inline bool utf8IsContinuationChar(unsigned char ch) {
+        return (ch & 0xC0) == 0x80; // 10xxxxxx 的二进制特征：前两位是 10
+    }
+
+    inline size_t utf8GetLengthCheckAvail(const char* str) {
         size_t length = 0;
         for (size_t i = 0, step = 0;; i += step) {
             unsigned char ch = str[i];
-            // lenght 6
-            if (ch >= 0xFC) {
-                step = 6;
-            } else if (ch >= 0xF8) {
-                step = 5;
+            if (ch == '\0') {
+                break;
+            } else if (ch >= 0xFC || ch >= 0xF8) {
+                // lenght 6、5 无效
+                return 0;
             } else if (ch >= 0xF0) {
+                if (ch == 0xF0 && (static_cast<unsigned char>(str[i + 1]) & 0xF0) == 0x80) {
+                    // 检查非最短编码长度，对应 0~0xFFFF
+                    return 0;
+                }
                 step = 4;
             } else if (ch >= 0xE0) {
+                if (ch == 0xE0 && (static_cast<unsigned char>(str[i + 1]) & 0xE0) == 0x80) {
+                    // 0xE0 0x80~0x9F 对应 0~0x7FF
+                    return 0;
+                }
                 step = 3;
             } else if (ch >= 0xC0) {
+                if (ch == 0xC0 || ch == 0xC1) {
+                    // 对应 0~0x3F
+                    return 0;
+                }
                 step = 2;
             } else {
+                if (str[i] < 0) {
+                    return 0;
+                }
                 step = 1;
             }
-            for (int j = 0; j < step; j++) {
-                if (str[i + j] == '\0') {
-                    // 不合规
-                    return 0;
+
+            if (step > 1) {
+                for (int j = 1; j < step; j++) {
+                    if (str[i + j] == '\0'
+                        || false == utf8IsContinuationChar((unsigned char)str[i + j])) {
+                        // 不合规
+                        return 0;
+                    }
                 }
             }
             length++;
@@ -60,8 +83,8 @@ namespace stringxx {
         return length;
     }
 
-    inline bool isAvailUtf8(const char* str) {
-        if (nullptr != str && str[0] != '\0' && utf8GetLengthCheckLenAvail(str) == 0) {
+    inline bool utf8IsAvail(const char* str) {
+        if (nullptr == str || str[0] == '\0' || (utf8GetLengthCheckAvail(str) == 0)) {
             return false;
         }
         return true;
