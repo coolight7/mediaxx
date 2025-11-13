@@ -22,8 +22,7 @@ void test() {
         };
         simdjson::builder::string_builder sb;
         sb.append(data);
-        std::string_view json = sb.view().value_unsafe();
-        std::cout << "Generated JSON: " << json << std::endl;
+        std::cout << "Generated JSON: " << sb.view().value_unsafe() << std::endl;
     }
 
     {
@@ -70,7 +69,9 @@ void test() {
     }
 
     {
-        auto result = analyse_tool::analysePictureColorFromPath("./temp/output.jpg");
+        const char* log     = nullptr;
+        auto        logItem = analyse_tool::AnalyseLogItem_c{&log};
+        auto result = analyse_tool::analysePictureColorFromPath("./temp/output.jpg", logItem);
         if (nullptr != result) {
             std::cout << std::endl
                       << "## analysePictureColorFromPath: "
@@ -91,7 +92,10 @@ void test() {
                       << "## analyzePictureColorFromData: " << file.good()
                       << " size:" << buffer.size() << std::endl;
             file.close();
-            auto result = analyse_tool::analyzePictureColorFromData(buffer.data(), buffer.size());
+            const char* log     = nullptr;
+            auto        logItem = analyse_tool::AnalyseLogItem_c{&log};
+            auto        result
+                = analyse_tool::analyzePictureColorFromData(buffer.data(), buffer.size(), logItem);
             if (nullptr != result) {
                 std::cout << std::endl
                           << "## analyzePictureColorFromData: "

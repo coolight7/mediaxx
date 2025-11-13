@@ -13,6 +13,7 @@ extern "C" {
 #include "libswscale/swscale.h"
 }
 
+#include "analyse/tool.h"
 #include "simdjson.h"
 #include "util/json_helper.h"
 #include "util/log.h"
@@ -46,7 +47,7 @@ inline static const SignatureInfo cImgSignatureTable[] = {
     {nullptr,                             0, AV_CODEC_ID_NONE,  nullptr               }  // 结束标记
 };
 
-class MediaInfoItem_c {
+class MediaInfoItem_c : public analyse_tool::AnalyseLogItem_c {
 public:
 
     inline static const auto cDefUserAgent = std::string_view{
@@ -54,29 +55,12 @@ public:
     };
 
     const std::string filepath;
-    const char**      log;
-    size_t            logNum  = 0;
     AVFormatContext*  fmtCtx  = nullptr;
     AVDictionary*     options = nullptr;
 
     MediaInfoItem_c(const std::string_view in_filepath, const char** in_log) :
-        filepath(in_filepath),
-        log(in_log) {
-        // log 容器非空，但内容為空
-        assert(nullptr != log && nullptr == *log);
-    }
-
-    void setLog(const std::string_view data) {
-        ++logNum;
-        auto temp = *log;
-        if (nullptr == temp) {
-            *log = stringxx::stringCopyMalloc(data).data();
-        } else {
-            // 已经有内容，附加
-            *log = stringxx::stringCopyMalloc(*log, "\n\n", data).data();
-        }
-        mediaxx_free(temp);
-    }
+        analyse_tool::AnalyseLogItem_c(in_log),
+        filepath(in_filepath) {}
 
     void setOptions(const std::string_view headers) {
         av_dict_set(&options, "timeout", "30000000", 0);

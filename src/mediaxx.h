@@ -61,7 +61,15 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     const char*  headers,
     const char*  pictureOutputPath,
     const char*  picture96OutputPath,
-    const char** log
+    const char** outLog
+);
+
+FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color(
+    const char*  filepath,
+    const char*  data,
+    const size_t dataSize,
+    const char** outResult,
+    const char** outLog
 );
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list();

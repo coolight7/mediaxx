@@ -17,8 +17,39 @@ extern "C" {
 
 #include "simdjson.h"
 #include "util/log.h"
+#include "util/string_util.h"
 
 namespace analyse_tool {
+    class AnalyseLogItem_c {
+    public:
+
+        const char** log;
+        size_t       logNum = 0;
+
+        AnalyseLogItem_c(const char** in_log) :
+            log(in_log) {
+            // log 容器非空，但内容為空
+            assert(nullptr != log && nullptr == *log);
+        }
+
+        void setLog(const std::string_view data) {
+            ++logNum;
+            auto temp = *log;
+            if (nullptr == temp) {
+                *log = stringxx::stringCopyMalloc(data).data();
+            } else {
+                // 已经有内容，附加
+                *log = stringxx::stringCopyMalloc(*log, "\n\n", data).data();
+            }
+            mediaxx_free(temp);
+        }
+
+        template<typename... _Args>
+        void setLog(std::format_string<_Args...> fmt, _Args&&... args) {
+            setLog(std::format(fmt, std::forward<_Args>(args)...));
+        }
+    };
+
     struct Color {
         uint8_t r, g, b;
         int     count;
@@ -116,25 +147,24 @@ namespace analyse_tool {
         size_t         pos;  // 当前读取位置
     };
 
-    // 比较函数：用于颜色排序（按出现次数降序）
-    bool compareColor(const Color& a, const Color& b) {
+    inline bool compareColor(const Color& a, const Color& b) {
         return a.count > b.count;
     }
 
     // 计算颜色亮度
-    double calculateBrightness(uint8_t r, uint8_t g, uint8_t b) {
+    inline double calculateBrightness(uint8_t r, uint8_t g, uint8_t b) {
         return 0.299 * r + 0.587 * g + 0.114 * b;
     }
 
-    // 颜色转十六进制字符串
-    std::string colorToHex(uint8_t r, uint8_t g, uint8_t b) {
+    inline std::string colorToHex(uint8_t r, uint8_t g, uint8_t b) {
         std::stringstream ss{};
         ss << std::hex << std::setw(2) << std::setfill('0') << (int)r << std::setw(2) << (int)g
            << std::setw(2) << (int)b;
         return ss.str();
     }
 
-    std::shared_ptr<AnalysePictureColorResult> analysePictureColor(AVFormatContext* formatCtx) {
+    inline std::shared_ptr<AnalysePictureColorResult>
+        analysePictureColor(AVFormatContext* formatCtx, analyse_tool::AnalyseLogItem_c& logItem) {
         LXX_DEBEG("analysePictureColor: ");
         if (avformat_find_stream_info(formatCtx, nullptr) < 0) {
             std::cout << "无法获取流信息" << std::endl;
@@ -143,7 +173,6 @@ namespace analyse_tool {
         }
         LXX_DEBEG("find picture stream: ");
 
-        // 查找视频流（图片只有一个视频流）
         int videoStreamIndex = -1;
         for (unsigned int i = 0; i < formatCtx->nb_streams; i++) {
             if (formatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
@@ -158,7 +187,6 @@ namespace analyse_tool {
             return nullptr;
         }
 
-        // 获取解码器参数
         LXX_DEBEG("decoder picture: ");
         auto codecPar = formatCtx->streams[videoStreamIndex]->codecpar;
         auto codec    = avcodec_find_decoder(codecPar->codec_id);
@@ -296,7 +324,7 @@ namespace analyse_tool {
             }
         }
 
-        // 转换为vector并排序
+        // 排序
         std::vector<Color> allColors;
         for (auto& pair : colorMap) {
             allColors.push_back(pair.second);
@@ -330,7 +358,6 @@ namespace analyse_tool {
             }
         }
 
-        // 释放资源
         av_free(rgbBuffer);
         sws_freeContext(swsCtx);
         av_frame_free(&frame);
@@ -341,17 +368,7 @@ namespace analyse_tool {
         return result;
     }
 
-    std::shared_ptr<AnalysePictureColorResult> analysePictureColorFromPath(const char* picturePath
-    ) {
-        AVFormatContext* formatCtx = nullptr;
-        if (avformat_open_input(&formatCtx, picturePath, nullptr, nullptr) != 0) {
-            std::cout << "无法打开图片文件" << std::endl;
-            return nullptr;
-        }
-        return analysePictureColor(formatCtx);
-    }
-
-    static int _packetRead(void* opaque, uint8_t* buf, int buf_size) {
+    static inline int _packetRead(void* opaque, uint8_t* buf, int buf_size) {
         BufferData* bd = (BufferData*)opaque;
         buf_size       = int(std::min((size_t)buf_size, bd->size - bd->pos));
 
@@ -360,29 +377,28 @@ namespace analyse_tool {
             return AVERROR_EOF;
         }
 
-        // 从我们的缓冲区复制数据到 FFmpeg 的缓冲区
         memcpy(buf, bd->ptr + bd->pos, buf_size);
         bd->pos += buf_size;
 
         return buf_size;
     }
 
-    std::shared_ptr<AnalysePictureColorResult>
-        analyzePictureColorFromData(const char* data, size_t dataSize) {
+    inline std::shared_ptr<AnalysePictureColorResult> analyzePictureColorFromData(
+        const char*                     data,
+        size_t                          dataSize,
+        analyse_tool::AnalyseLogItem_c& logItem
+    ) {
         if (nullptr == data || dataSize == 0) {
-            std::cout << "无效的输入数据" << std::endl;
+            logItem.setLog("输入数据无效, dataPtr: {}, dataSize: {}", (void*)data, dataSize);
             return nullptr;
         }
 
-        // 2. 设置缓冲区数据结构
         auto bd = BufferData{(const uint8_t*)data, dataSize, 0};
 
-        // 3. 分配并初始化 AVIOContext
-        // 我们使用一个小的内部缓冲区 (例如 4KB)，FFmpeg 会从这里读取
         const size_t avio_buffer_size = 4096;
         uint8_t*     avio_buffer      = (uint8_t*)av_malloc(avio_buffer_size);
         if (nullptr == avio_buffer) {
-            std::cout << "无法分配 AVIO 缓冲区" << std::endl;
+            logItem.setLog("无法分配 AVIO 缓冲区");
             return nullptr;
         }
         AVIOContext* avioCtx = avio_alloc_context(
@@ -395,27 +411,38 @@ namespace analyse_tool {
             nullptr
         );
         if (nullptr == avioCtx) {
-            std::cout << "无法分配 AVIO 上下文" << std::endl;
-            av_free(avio_buffer); // 释放已分配的缓冲区
+            logItem.setLog("无法分配 AVIO 上下文");
+            av_free(avio_buffer);
             return nullptr;
         }
 
-        // 4. 分配并初始化 AVFormatContext
-        AVFormatContext* formatCtx = avformat_alloc_context();
+        auto formatCtx = avformat_alloc_context();
         if (nullptr == formatCtx) {
-            avio_context_free(&avioCtx); // 这会同时释放 avio_buffer
+            avio_context_free(&avioCtx); // 同时释放 avio_buffer
             return nullptr;
         }
         formatCtx->pb = avioCtx;
 
         if (avformat_open_input(&formatCtx, NULL, NULL, NULL) != 0) {
-            std::cout << "无法打开 avformat_open_input" << std::endl;
+            logItem.setLog("无法打开 avformat_open_input");
             avformat_free_context(formatCtx);
             avio_context_free(&avioCtx);
             av_free(avio_buffer);
             return nullptr;
         }
 
-        return analysePictureColor(formatCtx);
+        return analysePictureColor(formatCtx, logItem);
+    }
+
+    inline std::shared_ptr<AnalysePictureColorResult> analysePictureColorFromPath(
+        const char*                     picturePath,
+        analyse_tool::AnalyseLogItem_c& logItem
+    ) {
+        AVFormatContext* formatCtx = nullptr;
+        if (avformat_open_input(&formatCtx, picturePath, nullptr, nullptr) != 0) {
+            logItem.setLog("无法打开图片文件");
+            return nullptr;
+        }
+        return analysePictureColor(formatCtx, logItem);
     }
 }; // namespace analyse_tool
