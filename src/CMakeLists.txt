@@ -37,6 +37,8 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL 
     set(_MEDIAXX_C_FLAGS   "-fvisibility=default")
     set(_MEDIAXX_CXX_FLAGS "-fvisibility=default")
 
+    set(CMAKE_C_FLAGS             "${CMAKE_C_FLAGS_RELEASE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
+		set(CMAKE_CXX_FLAGS           "${CMAKE_CXX_FLAGS_RELEASE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
 		set(CMAKE_C_FLAGS_RELEASE     "${CMAKE_C_FLAGS_RELEASE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
 		set(CMAKE_CXX_FLAGS_RELEASE   "${CMAKE_CXX_FLAGS_RELEASE} ${_MEDIAXX_CXX_FLAGS} -Wall -fPIC -pipe -std=c++23 -fno-exceptions -fno-rtti")
 		set(CMAKE_C_FLAGS_PROFILE     "${CMAKE_C_FLAGS_PROFILE}   ${_MEDIAXX_C_FLAGS}   -Wall -fPIC -pipe -std=c17")
@@ -97,7 +99,6 @@ ExternalProject_Add(
       "-DCMAKE_CXX_FLAGS_PROFILE=${CMAKE_CXX_FLAGS_PROFILE}"
       "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
       "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-      -DTARGET_ARCHITECTURE=${TARGET_ARCHITECTURE}
       -DBUILD_SHARED_LIBS=OFF
       -DSIMDJSON_BUILD_STATIC_LIB=ON
   INSTALL_COMMAND ""
