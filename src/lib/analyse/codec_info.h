@@ -73,6 +73,12 @@ public:
                     result.end_object();
                 }
                 break;
+            case AVMediaType::AVMEDIA_TYPE_UNKNOWN:
+            case AVMediaType::AVMEDIA_TYPE_DATA:
+            case AVMediaType::AVMEDIA_TYPE_SUBTITLE:
+            case AVMediaType::AVMEDIA_TYPE_ATTACHMENT:
+            case AVMediaType::AVMEDIA_TYPE_NB:
+                break;
             }
         }
 

@@ -108,7 +108,7 @@ public:
         int ret = avformat_open_input(&item.fmtCtx, item.filepath.c_str(), nullptr, &item.options);
         if (ret != 0) {
             item.setLog(
-                std::format("无法打开文件: {}, 错误: {}", item.filepath, Utilxx_c::av_err2str(ret))
+                std::format("无法打开文件: {}, 错误: {}", item.filepath, utilxx::av_err2str(ret))
             );
             return false;
         }
@@ -116,8 +116,7 @@ public:
         LXX_DEBEG("openFile | find info ...... : {}", item.filepath);
         ret = avformat_find_stream_info(item.fmtCtx, nullptr);
         if (ret < 0) {
-            item.setLog(std::format("无法获取流信息: {}", item.filepath, Utilxx_c::av_err2str(ret))
-            );
+            item.setLog(std::format("无法获取流信息: {}", item.filepath, utilxx::av_err2str(ret)));
             return false;
         }
 
@@ -492,8 +491,7 @@ public:
             // 打开编码器
             auto ret = avcodec_open2(encodeCtx, encoder, NULL);
             if (ret != 0) {
-                item.setLog(std::format("无法打开JPEG编码器: {}/{}", ret, Utilxx_c::av_err2str(ret))
-                );
+                item.setLog(std::format("无法打开JPEG编码器: {}/{}", ret, utilxx::av_err2str(ret)));
                 result = false;
                 break;
             }
@@ -509,8 +507,7 @@ public:
             // 发送帧到编码器
             ret = avcodec_send_frame(encodeCtx, frame);
             if (ret != 0) {
-                item.setLog(std::format("发送帧到编码器失败: {}/{}", ret, Utilxx_c::av_err2str(ret))
-                );
+                item.setLog(std::format("发送帧到编码器失败: {}/{}", ret, utilxx::av_err2str(ret)));
                 result = false;
                 break;
             }
@@ -518,8 +515,7 @@ public:
             // 接收编码后的包
             ret = avcodec_receive_packet(encodeCtx, pkt);
             if (ret != 0) {
-                item.setLog(std::format("从编码器接收包失败: {}/{}", ret, Utilxx_c::av_err2str(ret))
-                );
+                item.setLog(std::format("从编码器接收包失败: {}/{}", ret, utilxx::av_err2str(ret)));
                 result = false;
                 break;
             }
@@ -762,7 +758,7 @@ public:
             // 复制流参数到解码器上下文
             int ret = avcodec_parameters_to_context(decCtx, stream->codecpar);
             if (ret < 0) {
-                item.setLog(std::format("复制流参数失败: {}/{}", ret, Utilxx_c::av_err2str(ret)));
+                item.setLog(std::format("复制流参数失败: {}/{}", ret, utilxx::av_err2str(ret)));
                 result = false;
                 break;
             }
@@ -776,7 +772,7 @@ public:
             // 打开解码器
             ret = avcodec_open2(decCtx, decoder, nullptr);
             if (ret != 0) {
-                item.setLog(std::format("无法打开解码器: {}/{}", ret, Utilxx_c::av_err2str(ret)));
+                item.setLog(std::format("无法打开解码器: {}/{}", ret, utilxx::av_err2str(ret)));
                 retryByCodecId = true;
                 result         = false;
                 break;
@@ -794,7 +790,7 @@ public:
             ret = avcodec_send_packet(decCtx, pkt);
             if (ret != 0) {
                 item.setLog(
-                    std::format("发送数据包到解码器失败: {}/{}", ret, Utilxx_c::av_err2str(ret))
+                    std::format("发送数据包到解码器失败: {}/{}", ret, utilxx::av_err2str(ret))
                 );
                 retryByCodecId = true;
                 result         = false;
@@ -804,7 +800,7 @@ public:
             // 接收解码后的帧（封面通常只有一帧）
             ret = avcodec_receive_frame(decCtx, frame);
             if (ret != 0) {
-                item.setLog(std::format("接收解码帧失败: {}/{}", ret, Utilxx_c::av_err2str(ret)));
+                item.setLog(std::format("接收解码帧失败: {}/{}", ret, utilxx::av_err2str(ret)));
                 retryByCodecId = true;
                 result         = false;
                 break;

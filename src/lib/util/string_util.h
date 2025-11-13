@@ -70,7 +70,7 @@ namespace stringxx {
             }
 
             if (step > 1) {
-                for (int j = 1; j < step; j++) {
+                for (size_t j = 1; j < step; j++) {
                     if (str[i + j] == '\0'
                         || false == utf8IsContinuationChar((unsigned char)str[i + j])) {
                         // 不合规

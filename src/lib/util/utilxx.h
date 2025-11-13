@@ -10,11 +10,7 @@ extern "C" {
 
 #include <string>
 
-class Utilxx_c {
-public:
-
-    static int debugArg;
-
+namespace utilxx {
     static inline std::string av_err2str(int errnum) {
         char av_error[AV_ERROR_MAX_STRING_SIZE] = {0};
         return std::string{av_make_error_string(av_error, AV_ERROR_MAX_STRING_SIZE, errnum)};
@@ -29,4 +25,4 @@ public:
         char av_error[AV_TS_MAX_STRING_SIZE] = {0};
         return std::string{av_ts_make_string(av_error, ts)};
     }
-};
+}; // namespace utilxx

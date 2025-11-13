@@ -121,13 +121,17 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color(
         auto result = analyse_tool::analyzePictureColorFromData(data, dataSize, logItem);
         if (nullptr != result) {
             *outResult = stringxx::stringCopyMalloc(result->toJson().view().value_unsafe()).data();
+            return 1;
         }
     } else if (nullptr != filepath) {
         auto result = analyse_tool::analysePictureColorFromPath(filepath, logItem);
         if (nullptr != result) {
             *outResult = stringxx::stringCopyMalloc(result->toJson().view().value_unsafe()).data();
+            return 1;
         }
     }
+
+    return 0;
 }
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
