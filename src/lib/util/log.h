@@ -2,6 +2,7 @@
 
 #include <format>
 #include <iostream>
+#include <string_view>
 
 #ifdef LUMENXX_BUILD_TYPE
 
@@ -24,3 +25,9 @@
 #define LXX_ERR(str, ...) ;
 
 #endif
+
+namespace logxx {
+    void printStack();
+
+    void signal_error(std::string_view exepath);
+}; // namespace logxx
