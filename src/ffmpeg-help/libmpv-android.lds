@@ -7,6 +7,7 @@
     mediaxx_get_label_malloc;
     mediaxx_get_media_info_malloc;
     mediaxx_get_media_picture;
+    mediaxx_analyse_picture_color;
     mediaxx_get_available_hwcodec_list;
     mediaxx_get_audio_visualization;
     JNI_OnLoad;

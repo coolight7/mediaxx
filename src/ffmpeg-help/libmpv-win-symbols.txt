@@ -5,6 +5,7 @@
 --undefined=mediaxx_get_label_malloc
 --undefined=mediaxx_get_media_info_malloc
 --undefined=mediaxx_get_media_picture
+--undefined=mediaxx_analyse_picture_color
 --undefined=mediaxx_get_available_hwcodec_list
 --undefined=mediaxx_get_audio_visualization
 
