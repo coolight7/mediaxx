@@ -28,6 +28,12 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   set(_ISLINUX TRUE)
 endif ()
 
+add_definitions(-D_ISLINUX=${_ISLINUX})
+add_definitions(-D_ISWIN=${_ISWIN})
+add_definitions(-D_ISMACOS=${_ISMACOS})
+add_definitions(-D_ISANDROID=${_ISANDROID})
+add_definitions(-D_ISIOS=${_ISIOS})
+
 message("[mediaxx] Current Configure Type: ${CMAKE_CONFIGURATION_TYPES}")
 message("[mediaxx] Current Build Type: ${CMAKE_BUILD_TYPE}")
 

@@ -1,7 +1,9 @@
 #include "log.h"
+#include <format>
+
+#ifdef _ISLINUX
 #include <csignal>
 #include <execinfo.h>
-#include <format>
 
 static std::string _exe_path{};
 
@@ -108,3 +110,11 @@ void logxx::signal_error(std::string_view exepath) {
     _exe_path = exepath;
     signal(SIGSEGV, signal_handler);
 }
+
+#else
+
+void logxx::printStack() {}
+
+void logxx::signal_error(std::string_view exepath) {}
+
+#endif
