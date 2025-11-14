@@ -149,9 +149,10 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
         auto result = analyse_tool::analysePictureColorFromDecodedData(
             (const uint8_t*)data,
             dataSize,
-            dataSize,
+            dataSize / 4,
             1,
-            dataSize
+            dataSize,
+            4
         );
         if (nullptr != result) {
             *outResult = stringxx::stringCopyMalloc(result->toJson().view().value_unsafe()).data();

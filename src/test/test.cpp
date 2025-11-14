@@ -114,7 +114,7 @@ void test() {
     }
 
     {
-        auto file = std::ifstream{"./temp/decodedImg", std::ios::binary};
+        auto file = std::ifstream{"./temp/decodedImg-2", std::ios::binary};
         if (file.is_open()) {
             file.seekg(0, ios::end);
             size_t fileSize = file.tellg();
@@ -139,7 +139,7 @@ void test() {
             }
             std::cout << std::endl
                       << "## analysePictureColorFromDecodedData: ret: " << ret
-                      << "  result: " << result << std::endl;
+                      << "  result: " << ((nullptr != result) ? result : "") << std::endl;
         } else {
             std::cout << "无法打开文件进行二进制读取" << std::endl;
         }

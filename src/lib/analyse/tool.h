@@ -170,9 +170,12 @@ namespace analyse_tool {
         size_t         dataSize,
         int            width,
         int            height,
-        int            lineSize
+        int            lineSize,
+        int            itemSize = 3
     ) {
-        assert(lineSize >= width && (dataSize == 0 || dataSize >= size_t(height * lineSize)));
+        assert(lineSize >= width * itemSize);
+        assert((dataSize == 0 || dataSize >= size_t(height * lineSize)));
+        assert(itemSize >= 3);
         // 统计颜色
         LXX_DEBEG("analyse color...");
         // key: RGB值(0xRRGGBB), value: 颜色信息
@@ -180,7 +183,7 @@ namespace analyse_tool {
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                const uint8_t* pixel = data + y * lineSize + x * 3;
+                const uint8_t* pixel = data + y * lineSize + x * itemSize;
                 const uint8_t  r     = pixel[0];
                 const uint8_t  g     = pixel[1];
                 const uint8_t  b     = pixel[2];
@@ -197,6 +200,7 @@ namespace analyse_tool {
         }
 
         // 排序
+        LXX_DEBEG("sort color...");
         std::vector<Color> allColors{};
         for (auto& pair : colorMap) {
             allColors.push_back(pair.second);
