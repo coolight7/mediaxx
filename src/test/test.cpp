@@ -115,7 +115,9 @@ void test() {
 }
 
 int main(int argn, char** argv) {
-    // logxx::signal_error(argv[0]);
+#if _ISLINUX
+    logxx::signal_error(argv[0]);
+#endif
     std::cout << "======= Test Start =======" << std::endl;
     test();
     std::cout << "======= Test Done =======" << std::endl;
