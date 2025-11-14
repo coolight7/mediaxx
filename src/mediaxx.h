@@ -72,6 +72,13 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color(
     const char** outLog
 );
 
+FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
+    const char*  data,
+    const size_t dataSize,
+    const char** outResult,
+    const char** outLog
+);
+
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list();
 
 FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(const char* filepath, const char* output);

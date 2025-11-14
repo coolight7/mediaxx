@@ -164,6 +164,74 @@ namespace analyse_tool {
         return ss.str();
     }
 
+    /// [dataSize] 如果指定 dataSize == 0，则不检查；否则应当比需要遍历的宽高乘积数据大
+    inline std::shared_ptr<AnalysePictureColorResult> analysePictureColorFromDecodedData(
+        const uint8_t* data,
+        size_t         dataSize,
+        int            width,
+        int            height,
+        int            lineSize
+    ) {
+        assert(lineSize >= width && (dataSize == 0 || dataSize >= size_t(height * lineSize)));
+        // 统计颜色
+        LXX_DEBEG("analyse color...");
+        // key: RGB值(0xRRGGBB), value: 颜色信息
+        std::map<uint32_t, Color> colorMap{};
+
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                const uint8_t* pixel = data + y * lineSize + x * 3;
+                const uint8_t  r     = pixel[0];
+                const uint8_t  g     = pixel[1];
+                const uint8_t  b     = pixel[2];
+
+                uint32_t key        = (r << 16) | (g << 8) | b;
+                double   brightness = calculateBrightness(r, g, b);
+
+                if (colorMap.find(key) != colorMap.end()) {
+                    colorMap[key].count++;
+                } else {
+                    colorMap[key] = {r, g, b, 1, brightness};
+                }
+            }
+        }
+
+        // 排序
+        std::vector<Color> allColors{};
+        for (auto& pair : colorMap) {
+            allColors.push_back(pair.second);
+        }
+        std::sort(allColors.begin(), allColors.end(), compareColor);
+
+        // 分类主色调、亮色调、暗色调
+        if (!allColors.empty()) {
+            auto result       = std::make_shared<AnalysePictureColorResult>();
+            result->mainColor = allColors[0];
+            int index         = 0;
+            int lightIndex    = 0;
+            int darkIndex     = 0;
+            for (auto& color : allColors) {
+                if (index < 4) {
+                    result->dominantColors[index] = color;
+                }
+                if (color.brightness > 180 && lightIndex < 4) {
+                    result->lightColors[lightIndex] = color;
+                    ++lightIndex;
+                } else if (color.brightness < 80 && darkIndex < 4) {
+                    result->darkColors[darkIndex] = color;
+                    ++darkIndex;
+                }
+
+                if (lightIndex >= 4 && darkIndex >= 4) {
+                    break;
+                }
+                ++index;
+            }
+            return result;
+        }
+        return nullptr;
+    }
+
     inline std::shared_ptr<AnalysePictureColorResult>
         analysePictureColor(AVFormatContext* formatCtx, analyse_tool::AnalyseLogItem_c& logItem) {
         LXX_DEBEG("analysePictureColor: ");
@@ -312,62 +380,13 @@ namespace analyse_tool {
         );
 
         // 统计颜色
-        LXX_DEBEG("analyse color...");
-        std::map<uint32_t, Color> colorMap; // key: RGB值(0xRRGGBB), value: 颜色信息
-        int                       width  = codecCtx->width;
-        int                       height = codecCtx->height;
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                uint8_t* pixel = rgbFrame->data[0] + y * rgbFrame->linesize[0] + x * 3;
-                uint8_t  r     = pixel[0];
-                uint8_t  g     = pixel[1];
-                uint8_t  b     = pixel[2];
-
-                uint32_t key        = (r << 16) | (g << 8) | b;
-                double   brightness = calculateBrightness(r, g, b);
-
-                if (colorMap.find(key) != colorMap.end()) {
-                    colorMap[key].count++;
-                } else {
-                    colorMap[key] = {r, g, b, 1, brightness};
-                }
-            }
-        }
-
-        // 排序
-        std::vector<Color> allColors;
-        for (auto& pair : colorMap) {
-            allColors.push_back(pair.second);
-        }
-        std::sort(allColors.begin(), allColors.end(), compareColor);
-
-        // 分类主色调、亮色调、暗色调
-        auto result = std::make_shared<AnalysePictureColorResult>();
-
-        if (!allColors.empty()) {
-            result->mainColor = allColors[0]; // 主色调：出现次数最多的颜色
-            int index         = 0;
-            int lightIndex    = 0;
-            int darkIndex     = 0;
-            for (auto& color : allColors) {
-                if (index < 4) {
-                    result->dominantColors[index] = color;
-                }
-                if (color.brightness > 180 && lightIndex < 4) {
-                    result->lightColors[lightIndex] = color;
-                    ++lightIndex;
-                } else if (color.brightness < 80 && darkIndex < 4) {
-                    result->darkColors[darkIndex] = color;
-                    ++darkIndex;
-                }
-
-                if (lightIndex >= 4 && darkIndex >= 4) {
-                    break;
-                }
-                ++index;
-            }
-        }
+        auto result = analysePictureColorFromDecodedData(
+            rgbFrame->data[0],
+            0,
+            codecCtx->width,
+            codecCtx->height,
+            rgbFrame->linesize[0]
+        );
 
         av_free(rgbBuffer);
         sws_freeContext(swsCtx);
@@ -406,8 +425,8 @@ namespace analyse_tool {
 
         auto bd = BufferData{(const uint8_t*)data, dataSize, 0};
 
-        const size_t avio_buffer_size = 4096;
-        uint8_t*     avio_buffer      = (uint8_t*)av_malloc(avio_buffer_size);
+        constexpr size_t avio_buffer_size = 4096;
+        uint8_t*         avio_buffer      = (uint8_t*)av_malloc(avio_buffer_size);
         if (nullptr == avio_buffer) {
             logItem.setLog("无法分配 AVIO 缓冲区");
             return nullptr;
@@ -433,13 +452,11 @@ namespace analyse_tool {
             return nullptr;
         }
         formatCtx->pb = avioCtx;
-
-        int ret = avformat_open_input(&formatCtx, NULL, NULL, NULL);
+        int ret       = avformat_open_input(&formatCtx, NULL, NULL, NULL);
         if (ret != 0) {
             logItem.setLog("avformat_open_input: 无法打开数据 | {}", utilxx::av_err2str(ret));
             avformat_free_context(formatCtx);
             avio_context_free(&avioCtx);
-            av_free(avio_buffer);
             return nullptr;
         }
 

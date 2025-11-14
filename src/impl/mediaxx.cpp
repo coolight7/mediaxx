@@ -134,6 +134,34 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color(
     return 0;
 }
 
+FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
+    const char*  data,
+    const size_t dataSize,
+    const char** outResult,
+    const char** outLog
+) {
+    assert(nullptr != data && dataSize > 0);
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
+
+    // auto logItem = analyse_tool::AnalyseLogItem_c{outLog};
+    if (nullptr != data) {
+        auto result = analyse_tool::analysePictureColorFromDecodedData(
+            (const uint8_t*)data,
+            dataSize,
+            dataSize,
+            1,
+            dataSize
+        );
+        if (nullptr != result) {
+            *outResult = stringxx::stringCopyMalloc(result->toJson().view().value_unsafe()).data();
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
     auto jsonsb = CodecInfo_c::findAvailCodec();
     return stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();

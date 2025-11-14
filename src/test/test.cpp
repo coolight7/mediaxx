@@ -73,8 +73,8 @@ void test() {
         const char* log     = nullptr;
         auto        logItem = analyse_tool::AnalyseLogItem_c{&log};
         auto result = analyse_tool::analysePictureColorFromPath("./temp/output.jpg", logItem);
-        if (nullptr != logItem.log) {
-            std::cout << "log: " << logItem.log << std::endl;
+        if (nullptr != *logItem.log) {
+            std::cout << "log: " << *logItem.log << std::endl;
         }
         if (nullptr != result) {
             std::cout << std::endl
@@ -84,7 +84,7 @@ void test() {
     }
 
     {
-        auto file = std::ifstream{"./temp/decodedImg", std::ios::binary};
+        auto file = std::ifstream{"./temp/output.jpg", std::ios::binary};
         if (file.is_open()) {
             file.seekg(0, ios::end);
             size_t fileSize = file.tellg();
@@ -100,14 +100,46 @@ void test() {
             auto        logItem = analyse_tool::AnalyseLogItem_c{&log};
             auto        result
                 = analyse_tool::analyzePictureColorFromData(buffer.data(), buffer.size(), logItem);
-            if (nullptr != logItem.log) {
-                std::cout << "log: " << logItem.log << std::endl;
+            if (nullptr != *logItem.log) {
+                std::cout << "log: " << *logItem.log << std::endl;
             }
             if (nullptr != result) {
                 std::cout << std::endl
                           << "## analyzePictureColorFromData: "
                           << result->toJson().view().value_unsafe() << std::endl;
             }
+        } else {
+            std::cout << "无法打开文件进行二进制读取" << std::endl;
+        }
+    }
+
+    {
+        auto file = std::ifstream{"./temp/decodedImg", std::ios::binary};
+        if (file.is_open()) {
+            file.seekg(0, ios::end);
+            size_t fileSize = file.tellg();
+            file.seekg(0, ios::beg);
+            vector<char> buffer{};
+            buffer.resize(fileSize);
+            file.read(buffer.data(), fileSize);
+            std::cout << std::endl
+                      << "## mediaxx_analyse_picture_color_from_decoded_data: " << file.good()
+                      << " size:" << buffer.size() << std::endl;
+            file.close();
+            const char* result = nullptr;
+            const char* log    = nullptr;
+            auto        ret    = mediaxx_analyse_picture_color_from_decoded_data(
+                buffer.data(),
+                buffer.size(),
+                &result,
+                &log
+            );
+            if (nullptr != log) {
+                std::cout << "log: " << log << std::endl;
+            }
+            std::cout << std::endl
+                      << "## analysePictureColorFromDecodedData: ret: " << ret
+                      << "  result: " << result << std::endl;
         } else {
             std::cout << "无法打开文件进行二进制读取" << std::endl;
         }
