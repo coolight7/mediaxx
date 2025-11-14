@@ -103,11 +103,43 @@ Future<(int ret, String? result, String? log)> mediaxx_analyse_picture_color(
   return (result.ret, result.result, result.log);
 }
 
+(int ret, String? result, String? log)
+mediaxx_analyse_picture_color_from_decoded_data(Uint8List data) {
+  final dataPtr = malloc<Uint8>(data.lengthInBytes);
+  final Uint8List nativeString = dataPtr.asTypedList(data.lengthInBytes);
+  nativeString.setAll(0, data);
+
+  final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+  result.value = nullptr;
+  final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+  log.value = nullptr;
+
+  final ret = _bindings.mediaxx_analyse_picture_color_from_decoded_data(
+    dataPtr.cast<Char>(),
+    data.lengthInBytes,
+    result,
+    log,
+  );
+
+  final resultPtr = result.value;
+  final logPtr = log.value;
+
+  malloc.free(dataPtr);
+  malloc.free(result);
+  malloc.free(log);
+
+  final resultStr = resultPtr.cast<Utf8>().tryToDartString();
+  mediaxx_free(resultPtr);
+  final logstr = logPtr.cast<Utf8>().tryToDartString();
+  mediaxx_free(logPtr);
+  return (ret, resultStr, logstr);
+}
+
 String mediaxx_get_available_hwcodec_list() {
   final result = _bindings.mediaxx_get_available_hwcodec_list();
-  final str = result.cast<Utf8>().toDartString();
+  final str = result.cast<Utf8>().tryToDartString();
   mediaxx_free(result);
-  return str;
+  return str ?? "";
 }
 
 const String _libName = 'mediaxx';

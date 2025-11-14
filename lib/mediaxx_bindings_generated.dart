@@ -220,6 +220,42 @@ class MediaxxBindings {
         )
       >();
 
+  int mediaxx_analyse_picture_color_from_decoded_data(
+    ffi.Pointer<ffi.Char> data,
+    int dataSize,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outResult,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
+  ) {
+    return _mediaxx_analyse_picture_color_from_decoded_data(
+      data,
+      dataSize,
+      outResult,
+      outLog,
+    );
+  }
+
+  late final _mediaxx_analyse_picture_color_from_decoded_dataPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Size,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+          )
+        >
+      >('mediaxx_analyse_picture_color_from_decoded_data');
+  late final _mediaxx_analyse_picture_color_from_decoded_data =
+      _mediaxx_analyse_picture_color_from_decoded_dataPtr
+          .asFunction<
+            int Function(
+              ffi.Pointer<ffi.Char>,
+              int,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            )
+          >();
+
   ffi.Pointer<ffi.Char> mediaxx_get_available_hwcodec_list() {
     return _mediaxx_get_available_hwcodec_list();
   }
