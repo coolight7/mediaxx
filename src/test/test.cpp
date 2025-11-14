@@ -6,6 +6,7 @@ extern "C" {
 #include "analyse/tool.h"
 #include "mediaxx.h"
 #include "simdjson.h"
+#include "util/log.h"
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -72,6 +73,9 @@ void test() {
         const char* log     = nullptr;
         auto        logItem = analyse_tool::AnalyseLogItem_c{&log};
         auto result = analyse_tool::analysePictureColorFromPath("./temp/output.jpg", logItem);
+        if (nullptr != logItem.log) {
+            std::cout << "log: " << logItem.log << std::endl;
+        }
         if (nullptr != result) {
             std::cout << std::endl
                       << "## analysePictureColorFromPath: "
@@ -80,7 +84,7 @@ void test() {
     }
 
     {
-        auto file = std::ifstream{"./temp/output.jpg", std::ios::binary};
+        auto file = std::ifstream{"./temp/decodedImg", std::ios::binary};
         if (file.is_open()) {
             file.seekg(0, ios::end);
             size_t fileSize = file.tellg();
@@ -96,6 +100,9 @@ void test() {
             auto        logItem = analyse_tool::AnalyseLogItem_c{&log};
             auto        result
                 = analyse_tool::analyzePictureColorFromData(buffer.data(), buffer.size(), logItem);
+            if (nullptr != logItem.log) {
+                std::cout << "log: " << logItem.log << std::endl;
+            }
             if (nullptr != result) {
                 std::cout << std::endl
                           << "## analyzePictureColorFromData: "
@@ -108,7 +115,7 @@ void test() {
 }
 
 int main(int argn, char** argv) {
-    logxx::signal_error(argv[0]);
+    // logxx::signal_error(argv[0]);
     std::cout << "======= Test Start =======" << std::endl;
     test();
     std::cout << "======= Test Done =======" << std::endl;

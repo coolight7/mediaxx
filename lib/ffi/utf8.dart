@@ -93,7 +93,7 @@ extension StringUtf8Pointer on String {
     final Uint8List nativeString = result.asTypedList(units.length + 1);
     nativeString.setAll(0, units);
     nativeString[units.length] = 0;
-    return result.cast();
+    return result.cast<Utf8>();
   }
 
   Pointer<Utf8> toNativeUtf8WithPrefixInt4Size() {
@@ -102,6 +102,6 @@ extension StringUtf8Pointer on String {
     final Uint8List nativeString = result.asTypedList(units.length + 1);
     nativeString.setAll(0, units);
     nativeString[units.length] = 0;
-    return result.cast();
+    return result.cast<Utf8>();
   }
 }

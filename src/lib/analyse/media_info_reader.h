@@ -177,7 +177,6 @@ public:
                         auto key   = std::string_view{tag->key};
                         auto value = std::string_view{tag->value};
                         LXX_WARN("tags =============== {} {}", key, value);
-                        stringxx::printStringToIntList(tag->value);
                         if (key.contains("�") || false == stringxx::utf8IsAvail(key.data())
                             || value.contains("�")
                             || false == stringxx::utf8IsAvail(value.data())) {

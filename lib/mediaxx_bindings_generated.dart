@@ -147,14 +147,14 @@ class MediaxxBindings {
     ffi.Pointer<ffi.Char> headers,
     ffi.Pointer<ffi.Char> pictureOutputPath,
     ffi.Pointer<ffi.Char> picture96OutputPath,
-    ffi.Pointer<ffi.Pointer<ffi.Char>> log,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
   ) {
     return _mediaxx_get_media_picture(
       filepath,
       headers,
       pictureOutputPath,
       picture96OutputPath,
-      log,
+      outLog,
     );
   }
 
@@ -177,6 +177,45 @@ class MediaxxBindings {
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Pointer<ffi.Char>>,
+        )
+      >();
+
+  int mediaxx_analyse_picture_color(
+    ffi.Pointer<ffi.Char> filepath,
+    ffi.Pointer<ffi.Char> data,
+    int dataSize,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outResult,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
+  ) {
+    return _mediaxx_analyse_picture_color(
+      filepath,
+      data,
+      dataSize,
+      outResult,
+      outLog,
+    );
+  }
+
+  late final _mediaxx_analyse_picture_colorPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
+            ffi.Size,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+          )
+        >
+      >('mediaxx_analyse_picture_color');
+  late final _mediaxx_analyse_picture_color = _mediaxx_analyse_picture_colorPtr
+      .asFunction<
+        int Function(
+          ffi.Pointer<ffi.Char>,
+          ffi.Pointer<ffi.Char>,
+          int,
+          ffi.Pointer<ffi.Pointer<ffi.Char>>,
           ffi.Pointer<ffi.Pointer<ffi.Char>>,
         )
       >();
