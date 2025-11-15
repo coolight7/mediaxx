@@ -95,6 +95,7 @@ Future<(int ret, String? result, String? log)> mediaxx_analyse_picture_color(
     requestId,
     filepath: filepath,
     data: data,
+    decodedData: null,
   );
   final completer = Completer<_AsyncxxResponseMediaInfo>();
   _asyncxxRequests[requestId] = completer;
@@ -103,36 +104,21 @@ Future<(int ret, String? result, String? log)> mediaxx_analyse_picture_color(
   return (result.ret, result.result, result.log);
 }
 
-(int ret, String? result, String? log)
-mediaxx_analyse_picture_color_from_decoded_data(Uint8List data) {
-  final dataPtr = malloc<Uint8>(data.lengthInBytes);
-  final Uint8List nativeString = dataPtr.asTypedList(data.lengthInBytes);
-  nativeString.setAll(0, data);
-
-  final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
-  result.value = nullptr;
-  final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
-  log.value = nullptr;
-
-  final ret = _bindings.mediaxx_analyse_picture_color_from_decoded_data(
-    dataPtr.cast<Char>(),
-    data.lengthInBytes,
-    result,
-    log,
+Future<(int ret, String? result, String? log)>
+mediaxx_analyse_picture_color_from_decoded_data(Uint8List data) async {
+  final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
+  final int requestId = _nextAsyncxxRequestId++;
+  final request = _AsyncxxRequestAnalysePictureColor(
+    requestId,
+    filepath: null,
+    data: null,
+    decodedData: data,
   );
-
-  final resultPtr = result.value;
-  final logPtr = log.value;
-
-  malloc.free(dataPtr);
-  malloc.free(result);
-  malloc.free(log);
-
-  final resultStr = resultPtr.cast<Utf8>().tryToDartString();
-  mediaxx_free(resultPtr);
-  final logstr = logPtr.cast<Utf8>().tryToDartString();
-  mediaxx_free(logPtr);
-  return (ret, resultStr, logstr);
+  final completer = Completer<_AsyncxxResponseMediaInfo>();
+  _asyncxxRequests[requestId] = completer;
+  helperIsolateSendPort.send(request);
+  final result = await completer.future;
+  return (result.ret, result.result, result.log);
 }
 
 String mediaxx_get_available_hwcodec_list() {
@@ -231,6 +217,7 @@ class _AsyncxxRequestAnalysePictureColor {
 
   late Pointer<Char>? filepathPtr;
   Pointer<Uint8>? dataPtr;
+  Pointer<Uint8>? decodedDataPtr;
   late int dataSize;
 
   bool isDispose = false;
@@ -239,14 +226,23 @@ class _AsyncxxRequestAnalysePictureColor {
     this.id, {
     required String? filepath,
     required final Uint8List? data,
+    required final Uint8List? decodedData,
   }) {
     filepathPtr = filepath?.toNativeUtf8().cast<Char>();
+    dataSize = 0;
     if (null != data) {
+      dataSize = data.lengthInBytes;
       dataPtr = malloc<Uint8>(data.lengthInBytes);
       final Uint8List nativeString = dataPtr!.asTypedList(data.lengthInBytes);
       nativeString.setAll(0, data);
+    } else if (null != decodedData) {
+      dataSize = decodedData.lengthInBytes;
+      decodedDataPtr = malloc<Uint8>(decodedData.lengthInBytes);
+      final Uint8List nativeString = decodedDataPtr!.asTypedList(
+        decodedData.lengthInBytes,
+      );
+      nativeString.setAll(0, decodedData);
     }
-    dataSize = data?.lengthInBytes ?? 0;
   }
 }
 
@@ -392,15 +388,27 @@ Future<SendPort> _helperIsolateSendPort = () async {
           final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
           log.value = nullptr;
           assert(
-            null != filepathPtr || (null != data.dataPtr && data.dataSize > 0),
+            null != filepathPtr ||
+                (null != data.dataPtr && data.dataSize > 0) ||
+                (null != data.decodedDataPtr && data.dataSize > 0),
           );
-          final ret = _bindings.mediaxx_analyse_picture_color(
-            filepathPtr ?? nullptr,
-            data.dataPtr?.cast<Char>() ?? nullptr,
-            data.dataSize,
-            result,
-            log,
-          );
+          int ret = 0;
+          if (null != data.decodedDataPtr) {
+            ret = _bindings.mediaxx_analyse_picture_color_from_decoded_data(
+              data.decodedDataPtr?.cast<Char>() ?? nullptr,
+              data.dataSize,
+              result,
+              log,
+            );
+          } else {
+            ret = _bindings.mediaxx_analyse_picture_color(
+              filepathPtr ?? nullptr,
+              data.dataPtr?.cast<Char>() ?? nullptr,
+              data.dataSize,
+              result,
+              log,
+            );
+          }
           final resultPtr = result.value;
           final logPtr = log.value;
 
