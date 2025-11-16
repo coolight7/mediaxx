@@ -138,8 +138,8 @@ void test() {
                 std::cout << "log: " << log << std::endl;
             }
             std::cout << std::endl
-                      << "## analysePictureColorFromDecodedData: ret: " << ret
-                      << "  result: " << ((nullptr != result) ? result : "") << std::endl;
+                      << "## mediaxx_analyse_picture_color_from_decoded_data: ret: " << ret
+                      << "  result: " << ((nullptr != result) ? result : "nullptr") << std::endl;
         } else {
             std::cout << "无法打开文件进行二进制读取" << std::endl;
         }

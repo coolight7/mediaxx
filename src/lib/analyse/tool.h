@@ -11,8 +11,10 @@ extern "C" {
 #include <iostream>
 #include <map>
 #include <memory>
+#include <random>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "simdjson.h"
@@ -68,6 +70,10 @@ namespace analyse_tool {
                 sb.append_key_value<"brightness">(brightness);
             }
             sb.end_object();
+        }
+
+        bool operator==(const Color& other) const {
+            return r == other.r && g == other.g && b == other.b;
         }
     };
 
@@ -152,6 +158,46 @@ namespace analyse_tool {
         return a.count > b.count;
     }
 
+    // RGB转HSL
+    inline void rgbToHsl(uint8_t r, uint8_t g, uint8_t b, double& h, double& s, double& l) {
+        double red   = r / 255.0;
+        double green = g / 255.0;
+        double blue  = b / 255.0;
+
+        double max = std::max({red, green, blue});
+        double min = std::min({red, green, blue});
+
+        l = (max + min) / 2.0;
+
+        if (max == min) {
+            h = s = 0.0; // achromatic
+        } else {
+            double delta = max - min;
+            s            = l > 0.5 ? delta / (2.0 - max - min) : delta / (max + min);
+
+            if (max == red) {
+                h = (green - blue) / delta + (green < blue ? 6.0 : 0.0);
+            } else if (max == green) {
+                h = (blue - red) / delta + 2.0;
+            } else {
+                h = (red - green) / delta + 4.0;
+            }
+            h /= 6.0;
+        }
+    }
+
+    // 计算颜色差异
+    inline double colorDistance(const Color& c1, const Color& c2) {
+        double rmean = (c1.r + c2.r) / 2.0;
+        double r     = c1.r - c2.r;
+        double g     = c1.g - c2.g;
+        double b     = c1.b - c2.b;
+
+        return std::sqrt(
+            (2 + rmean / 256.0) * r * r + 4 * g * g + (2 + (255 - rmean) / 256.0) * b * b
+        );
+    }
+
     // 计算颜色亮度
     inline double calculateBrightness(uint8_t r, uint8_t g, uint8_t b) {
         return 0.299 * r + 0.587 * g + 0.114 * b;
@@ -163,6 +209,195 @@ namespace analyse_tool {
            << std::setw(2) << (int)b;
         return ss.str();
     }
+
+    inline std::string colorToHex(const Color& color) {
+        return colorToHex(color.r, color.g, color.b);
+    }
+
+    class KMeansCluster {
+    private:
+
+        std::vector<Color>              centroids{};
+        std::vector<std::vector<Color>> clusters{};
+
+    public:
+
+        void cluster(const std::vector<Color>& colors, int k, int maxIterations = 100) {
+            if (colors.empty() || k <= 0) {
+                return;
+            }
+
+            // 初始化质心
+            initializeCentroids(colors, k);
+
+            for (int iter = 0; iter < maxIterations; ++iter) {
+                // 清空聚类
+                clusters.clear();
+                clusters.resize(k);
+
+                // 分配每个颜色到最近的质心
+                for (const auto& color : colors) {
+                    int    bestCluster  = 0;
+                    double bestDistance = std::numeric_limits<double>::max();
+
+                    for (int i = 0; i < k; ++i) {
+                        double distance = colorDistance(color, centroids[i]);
+                        if (distance < bestDistance) {
+                            bestDistance = distance;
+                            bestCluster  = i;
+                        }
+                    }
+
+                    // 根据count添加多个副本
+                    for (int j = 0; j < color.count; ++j) {
+                        clusters[bestCluster].push_back(color);
+                    }
+                }
+
+                // 更新质心
+                std::vector<Color> newCentroids{};
+                bool               changed = false;
+
+                for (int i = 0; i < k; ++i) {
+                    if (clusters[i].empty()) {
+                        newCentroids.push_back(centroids[i]);
+                        continue;
+                    }
+
+                    double totalR = 0, totalG = 0, totalB = 0;
+                    int    totalCount = 0;
+
+                    for (const auto& color : clusters[i]) {
+                        totalR += color.r;
+                        totalG += color.g;
+                        totalB += color.b;
+                        totalCount++;
+                    }
+
+                    Color newCentroid
+                        = {static_cast<uint8_t>(totalR / totalCount),
+                           static_cast<uint8_t>(totalG / totalCount),
+                           static_cast<uint8_t>(totalB / totalCount),
+                           1,
+                           calculateBrightness(
+                               static_cast<uint8_t>(totalR / totalCount),
+                               static_cast<uint8_t>(totalG / totalCount),
+                               static_cast<uint8_t>(totalB / totalCount)
+                           )};
+
+                    if (colorDistance(newCentroid, centroids[i]) > 1.0) {
+                        changed = true;
+                    }
+
+                    newCentroids.push_back(newCentroid);
+                }
+
+                centroids = newCentroids;
+
+                if (!changed) {
+                    break;
+                }
+            }
+        }
+
+        const std::vector<Color>& getCentroids() const {
+            return centroids;
+        }
+
+        const std::vector<std::vector<Color>>& getClusters() const {
+            return clusters;
+        }
+
+    private:
+
+        void initializeCentroids(const std::vector<Color>& colors, int k) {
+            centroids.clear();
+
+            if (colors.empty()) {
+                return;
+            }
+
+            // 使用随机选择初始化质心
+            std::random_device              rd{};
+            std::mt19937                    gen{rd()};
+            std::uniform_int_distribution<> dis{0, colors.size() - 1};
+
+            for (int i = 0; i < k; ++i) {
+                centroids.push_back(colors[dis(gen)]);
+            }
+        }
+    };
+
+    class GradientColorAnalyzer {
+    private:
+
+        Color              primaryColor;
+        std::vector<Color> dominantColors;
+
+    public:
+
+        struct AnalysisResult {
+            Color              primary;
+            std::vector<Color> allDominant;
+        };
+
+        AnalysisResult analyzeForGradient(const std::vector<Color>& colors, int numClusters = 12) {
+            dominantColors.clear();
+
+            // 1. 使用改进的聚类算法
+            performWeightedClustering(colors, numClusters);
+
+            // 2. 提取主色调（基于流行度和视觉权重）
+            selectPrimaryColor();
+
+            return AnalysisResult{primaryColor, dominantColors};
+        }
+
+    private:
+
+        void performWeightedClustering(const std::vector<Color>& colors, int k) {
+            if (colors.empty() || k <= 0) {
+                return;
+            }
+
+            // 使用改进的K-means，考虑颜色权重
+            KMeansCluster clusterer{};
+            clusterer.cluster(colors, k);
+
+            dominantColors = clusterer.getCentroids();
+
+            // 按视觉重要性排序（考虑亮度、饱和度和流行度）
+            std::sort(
+                dominantColors.begin(),
+                dominantColors.end(),
+                [](const Color& a, const Color& b) {
+                    return calculateVisualScore(a) > calculateVisualScore(b);
+                }
+            );
+        }
+
+        static double calculateVisualScore(const Color& color) {
+            double h, s, l;
+            rgbToHsl(color.r, color.g, color.b, h, s, l);
+
+            // 综合考虑饱和度、亮度和颜色流行度
+            double saturationScore = s * 0.4;
+            double lightnessScore  = (1.0 - std::abs(l - 0.6)) * 0.3; // 偏好中等亮度
+            double populationScore = std::log1p(color.count) * 0.3;
+
+            return saturationScore + lightnessScore + populationScore;
+        }
+
+        void selectPrimaryColor() {
+            if (dominantColors.empty()) {
+                primaryColor = Color{0, 0, 0, 1, 128.0};
+                return;
+            }
+
+            // 选择视觉评分最高的颜色作为主色调
+            primaryColor = dominantColors[0];
+        }
+    };
 
     /// [dataSize] 如果指定 dataSize == 0，则不检查；否则应当比需要遍历的宽高乘积数据大
     inline std::shared_ptr<AnalysePictureColorResult> analysePictureColorFromDecodedData(
@@ -202,11 +437,25 @@ namespace analyse_tool {
         // 排序
         LXX_DEBEG("sort color...");
         std::vector<Color> allColors{};
-        for (auto& pair : colorMap) {
+        for (const auto& pair : colorMap) {
             allColors.push_back(pair.second);
         }
         std::sort(allColors.begin(), allColors.end(), compareColor);
+        {
+            GradientColorAnalyzer analyzer{};
+            auto                  result = analyzer.analyzeForGradient(allColors);
 
+            // 使用结果
+            std::cout << "主色调: RGB(" << (int)result.primary.r << ", " << (int)result.primary.g
+                      << ", " << (int)result.primary.b << ")\n";
+
+            std::cout << "调色板:\n";
+            for (const auto& color : result.allDominant) {
+                std::cout << "  RGB(" << (int)color.r << ", " << (int)color.g << ", "
+                          << (int)color.b << ")\n";
+            }
+            return nullptr;
+        }
         // 分类主色调、亮色调、暗色调
         if (!allColors.empty()) {
             auto result       = std::make_shared<AnalysePictureColorResult>();
@@ -214,7 +463,7 @@ namespace analyse_tool {
             int index         = 0;
             int lightIndex    = 0;
             int darkIndex     = 0;
-            for (auto& color : allColors) {
+            for (const auto& color : allColors) {
                 if (index < 4) {
                     result->dominantColors[index] = color;
                 }
