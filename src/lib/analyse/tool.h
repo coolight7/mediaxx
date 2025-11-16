@@ -56,7 +56,7 @@ namespace analyse_tool {
     struct Color {
         uint8_t r, g, b;
         int     count;
-        double  brightness;
+        int     brightness;
 
         void toJson(simdjson::builder::string_builder& sb) const {
             sb.start_object();
@@ -80,10 +80,10 @@ namespace analyse_tool {
     class AnalysePictureColorResult {
     public:
 
-        Color mainColor;
-        Color lightColors[4];
-        Color darkColors[4];
-        Color dominantColors[4];
+        Color                mainColor;
+        std::array<Color, 4> lightColors{};
+        std::array<Color, 4> darkColors{};
+        std::array<Color, 8> dominantColors{};
 
         simdjson::builder::string_builder toJson() const {
             LXX_DEBEG("AnalysePictureColorResult.toJson ......");
@@ -274,16 +274,17 @@ namespace analyse_tool {
                         totalCount++;
                     }
 
-                    Color newCentroid
-                        = {static_cast<uint8_t>(totalR / totalCount),
-                           static_cast<uint8_t>(totalG / totalCount),
-                           static_cast<uint8_t>(totalB / totalCount),
-                           1,
-                           calculateBrightness(
-                               static_cast<uint8_t>(totalR / totalCount),
-                               static_cast<uint8_t>(totalG / totalCount),
-                               static_cast<uint8_t>(totalB / totalCount)
-                           )};
+                    auto newCentroid = Color{
+                        static_cast<uint8_t>(totalR / totalCount),
+                        static_cast<uint8_t>(totalG / totalCount),
+                        static_cast<uint8_t>(totalB / totalCount),
+                        1,
+                        int(calculateBrightness(
+                            static_cast<uint8_t>(totalR / totalCount),
+                            static_cast<uint8_t>(totalG / totalCount),
+                            static_cast<uint8_t>(totalB / totalCount)
+                        ))
+                    };
 
                     if (colorDistance(newCentroid, centroids[i]) > 1.0) {
                         changed = true;
@@ -390,7 +391,7 @@ namespace analyse_tool {
 
         void selectPrimaryColor() {
             if (dominantColors.empty()) {
-                primaryColor = Color{0, 0, 0, 1, 128.0};
+                primaryColor = Color{0, 0, 0, 1, 128};
                 return;
             }
 
@@ -424,7 +425,7 @@ namespace analyse_tool {
                 const uint8_t  b     = pixel[2];
 
                 uint32_t key        = (r << 16) | (g << 8) | b;
-                double   brightness = calculateBrightness(r, g, b);
+                int      brightness = int(calculateBrightness(r, g, b));
 
                 if (colorMap.find(key) != colorMap.end()) {
                     colorMap[key].count++;
@@ -435,36 +436,23 @@ namespace analyse_tool {
         }
 
         // 排序
-        LXX_DEBEG("sort color...");
         std::vector<Color> allColors{};
+        allColors.reserve(colorMap.size());
         for (const auto& pair : colorMap) {
             allColors.push_back(pair.second);
         }
-        std::sort(allColors.begin(), allColors.end(), compareColor);
-        {
-            GradientColorAnalyzer analyzer{};
-            auto                  result = analyzer.analyzeForGradient(allColors);
-
-            // 使用结果
-            std::cout << "主色调: RGB(" << (int)result.primary.r << ", " << (int)result.primary.g
-                      << ", " << (int)result.primary.b << ")\n";
-
-            std::cout << "调色板:\n";
-            for (const auto& color : result.allDominant) {
-                std::cout << "  RGB(" << (int)color.r << ", " << (int)color.g << ", "
-                          << (int)color.b << ")\n";
-            }
-            return nullptr;
-        }
         // 分类主色调、亮色调、暗色调
         if (!allColors.empty()) {
+            GradientColorAnalyzer analyzer{};
+            auto                  analyseResult = analyzer.analyzeForGradient(allColors, 8);
+
             auto result       = std::make_shared<AnalysePictureColorResult>();
-            result->mainColor = allColors[0];
+            result->mainColor = analyseResult.primary;
             int index         = 0;
             int lightIndex    = 0;
             int darkIndex     = 0;
-            for (const auto& color : allColors) {
-                if (index < 4) {
+            for (const auto& color : analyseResult.allDominant) {
+                if (index < int(result->dominantColors.size())) {
                     result->dominantColors[index] = color;
                 }
                 if (color.brightness > 180 && lightIndex < 4) {
