@@ -149,7 +149,7 @@ namespace analyse_tool {
     };
 
     struct BufferData {
-        const uint8_t* ptr;  // 指向图片二进制数据的指针
+        const uint8_t* ptr;  // 指向图片二进制数据
         size_t         size; // 数据大小
         size_t         pos;  // 当前读取位置
     };
@@ -318,7 +318,7 @@ namespace analyse_tool {
                 return;
             }
 
-            // 使用随机选择初始化质心
+            // 随机选择初始化质心
             std::random_device              rd{};
             std::mt19937                    gen{rd()};
             std::uniform_int_distribution<> dis{0, int(colors.size() - 1)};
@@ -345,10 +345,10 @@ namespace analyse_tool {
         AnalysisResult analyzeForGradient(const std::vector<Color>& colors, int numClusters = 12) {
             dominantColors.clear();
 
-            // 1. 使用改进的聚类算法
+            // 聚类
             performWeightedClustering(colors, numClusters);
 
-            // 2. 提取主色调（基于流行度和视觉权重）
+            // 提取主色调
             selectPrimaryColor();
 
             return AnalysisResult{primaryColor, dominantColors};
@@ -361,13 +361,12 @@ namespace analyse_tool {
                 return;
             }
 
-            // 使用改进的K-means，考虑颜色权重
             KMeansCluster clusterer{};
             clusterer.cluster(colors, k);
 
             dominantColors = clusterer.getCentroids();
 
-            // 按视觉重要性排序（考虑亮度、饱和度和流行度）
+            // 按视觉重要性排序（亮度、饱和度和流行度）
             std::sort(
                 dominantColors.begin(),
                 dominantColors.end(),
@@ -383,7 +382,8 @@ namespace analyse_tool {
 
             // 综合考虑饱和度、亮度和颜色流行度
             double saturationScore = s * 0.4;
-            double lightnessScore  = (1.0 - std::abs(l - 0.6)) * 0.3; // 偏好中等亮度
+            // 偏好中等亮度
+            double lightnessScore  = (1.0 - std::abs(l - 0.6)) * 0.3;
             double populationScore = std::log1p(color.count) * 0.3;
 
             return saturationScore + lightnessScore + populationScore;
