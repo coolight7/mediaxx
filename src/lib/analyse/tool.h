@@ -320,7 +320,7 @@ namespace analyse_tool {
             // 使用随机选择初始化质心
             std::random_device              rd{};
             std::mt19937                    gen{rd()};
-            std::uniform_int_distribution<> dis{0, colors.size() - 1};
+            std::uniform_int_distribution<> dis{0, int(colors.size() - 1)};
 
             for (int i = 0; i < k; ++i) {
                 centroids.push_back(colors[dis(gen)]);
