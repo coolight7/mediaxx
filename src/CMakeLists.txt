@@ -341,6 +341,17 @@ elseif (_ISANDROID)
       "-Wl,--version-script=${mediaxx_EXPORT_IDS}"
     )
   endif()
+elseif (_ISLINUX)
+  if (EXPORT_ALL_SYMBOL)
+    target_link_options(mediaxx PRIVATE 
+      "-Wl,--export-dynamic,--whole-archive,--allow-multiple-definition"
+    )
+  else ()
+    target_link_options(mediaxx PRIVATE 
+      "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
+      "-Wl,--version-script=${mediaxx_EXPORT_IDS}"
+    )
+  endif()
 endif()
 
 if (DEFINED LUMENXX_BUILD_TYPE)
