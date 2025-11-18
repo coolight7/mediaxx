@@ -330,7 +330,7 @@ elseif (_ISANDROID)
   # Support Android 15 16k page size
   target_link_options(mediaxx PRIVATE 
     "-Wl,-z,max-page-size=16384"
-    "-Wl,-rpath='\$ORIGIN'"
+    "-Wl,-rpath=\$ORIGIN"
   )
   if (EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
@@ -344,7 +344,7 @@ elseif (_ISANDROID)
   endif()
 elseif (_ISLINUX)
   target_link_options(mediaxx PRIVATE 
-    "-Wl,-rpath='\$ORIGIN'"
+    "-Wl,-rpath=\$ORIGIN"
   )
   if (EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
