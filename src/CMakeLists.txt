@@ -178,8 +178,7 @@ if (STATIC_LINK_FFMPEG)
 
   set(PKG_CONFIG_FLAGS "--static")
 
-  pkg_check_modules(AVCODEC REQUIRED libavcodec)
-  pkg_check_modules(AVDEVICE REQUIRED libavdevice)
+  pkg_check_modules(AVCODEC REQUIRED libavcodec) 
   pkg_check_modules(AVFILTER REQUIRED libavfilter)
   pkg_check_modules(AVFORMAT REQUIRED libavformat)
   pkg_check_modules(AVUTIL REQUIRED libavutil)
@@ -193,7 +192,6 @@ if (STATIC_LINK_FFMPEG)
   set(ffmpeg_mpv_CFLAGS 
     ${LIBMPV_CFLAGS}
     ${AVCODEC_CFLAGS}
-    ${AVDEVICE_CFLAGS}
     ${AVFILTER_CFLAGS}
     ${AVFORMAT_CFLAGS}
     ${AVUTIL_CFLAGS}
@@ -203,7 +201,6 @@ if (STATIC_LINK_FFMPEG)
   set(ffmpeg_mpv_BINARY_DIR 
     ${LIBMPV_LIBRARY_DIRS}
     ${AVCODEC_LIBRARY_DIRS}
-    ${AVDEVICE_LIBRARY_DIRS}
     ${AVFILTER_LIBRARY_DIRS}
     ${AVFORMAT_LIBRARY_DIRS}
     ${AVUTIL_LIBRARY_DIRS}
@@ -213,14 +210,12 @@ if (STATIC_LINK_FFMPEG)
   set(ffmpeg_mpv_LIBRARIES 
     ${LIBMPV_LIBRARIES}
     avcodec
-    avdevice
     avfilter
     avformat
     avutil
     swresample
     swscale
     ${AVCODEC_LIBRARIES}
-    ${AVDEVICE_LIBRARIES}
     ${AVFILTER_LIBRARIES}
     ${AVFORMAT_LIBRARIES}
     ${AVUTIL_LIBRARIES}
@@ -231,7 +226,6 @@ if (STATIC_LINK_FFMPEG)
   set(ffmpeg_mpv_INCLUDE_DIR 
     ${LIBMPV_INCLUDE_DIRS}
     ${AVCODEC_INCLUDE_DIRS}
-    ${AVDEVICE_INCLUDE_DIRS}
     ${AVFILTER_INCLUDE_DIRS}
     ${AVFORMAT_INCLUDE_DIRS}
     ${AVUTIL_INCLUDE_DIRS}
