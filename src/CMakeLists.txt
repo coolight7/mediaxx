@@ -422,7 +422,7 @@ elseif (_ISLINUX)
       )
     endif()
   endif()
-elseif (_ISIOS or _ISMACOS)
+elseif (_ISIOS OR _ISMACOS)
   target_link_options(mediaxx PRIVATE 
     "-Wl,-rpath=\$ORIGIN"
   )
