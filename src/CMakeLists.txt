@@ -314,6 +314,9 @@ elseif (_ISLINUX)
     set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-linux.lds")
     set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-linux-symbols.txt")
   endif ()
+elseif (_ISIOS or _ISMACOS)
+  set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.lds")
+  set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple-symbols.txt")
 endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
@@ -395,6 +398,20 @@ elseif (_ISANDROID)
     )
   endif()
 elseif (_ISLINUX)
+  target_link_options(mediaxx PRIVATE 
+    "-Wl,-rpath=\$ORIGIN"
+  )
+  if (EXPORT_ALL_SYMBOL)
+    target_link_options(mediaxx PRIVATE 
+      "-Wl,--export-dynamic,--whole-archive,--allow-multiple-definition"
+    )
+  else ()
+    target_link_options(mediaxx PRIVATE 
+      "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
+      "-Wl,--version-script=${mediaxx_EXPORT_IDS}"
+    )
+  endif()
+elseif (_ISIOS or _ISMACOS)
   target_link_options(mediaxx PRIVATE 
     "-Wl,-rpath=\$ORIGIN"
   )
