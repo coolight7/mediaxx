@@ -46,11 +46,14 @@ namespace analyse_tool {
             }
             mediaxx_free(temp);
         }
-
-        template<typename... _Args>
-        void setLog(std::format_string<_Args...> fmt, _Args&&... args) {
-            setLog(std::format(fmt, std::forward<_Args>(args)...));
-        }
+#ifndef SET_LOG
+/// macos 13.3 以下: 不支持，代替为宏处理：
+///    template<typename... _Args>
+///    void setLog(std::format_string<_Args...> fmt, _Args&&... args) {
+///        setLog(std::format(fmt, std::forward<_Args>(args)...));
+///    }
+#define SET_LOG(log, fmt, ...) log.setLog(std::format(fmt, ##__VA_ARGS__));
+#endif
     };
 
     struct Color {
@@ -478,7 +481,8 @@ namespace analyse_tool {
         LXX_DEBEG("analysePictureColor: ");
         int ret = avformat_find_stream_info(formatCtx, nullptr);
         if (ret < 0) {
-            logItem.setLog(
+            SET_LOG(
+                logItem,
                 "avformat_find_stream_info: 无法获取流信息 | {}",
                 utilxx::av_err2str(ret)
             );
@@ -518,7 +522,8 @@ namespace analyse_tool {
         }
         ret = avcodec_parameters_to_context(codecCtx, codecPar);
         if (ret < 0) {
-            logItem.setLog(
+            SET_LOG(
+                logItem,
                 "avcodec_parameters_to_context: 解码器参数复制到上下文失败 | {}",
                 utilxx::av_err2str(ret)
             );
@@ -529,7 +534,7 @@ namespace analyse_tool {
 
         ret = avcodec_open2(codecCtx, codec, nullptr);
         if (ret < 0) {
-            logItem.setLog("avcodec_open2: 打开解码器失败 | {}", utilxx::av_err2str(ret));
+            SET_LOG(logItem, "avcodec_open2: 打开解码器失败 | {}", utilxx::av_err2str(ret));
             avcodec_free_context(&codecCtx);
             avformat_close_input(&formatCtx);
             return nullptr;
@@ -546,7 +551,8 @@ namespace analyse_tool {
             if (pkt->stream_index == videoStreamIndex) {
                 ret = avcodec_send_packet(codecCtx, pkt);
                 if (ret < 0) {
-                    logItem.setLog(
+                    SET_LOG(
+                        logItem,
                         "avcodec_send_packet: 发送数据包失败 | {}",
                         utilxx::av_err2str(ret)
                     );
@@ -660,7 +666,7 @@ namespace analyse_tool {
         analyse_tool::AnalyseLogItem_c& logItem
     ) {
         if (nullptr == data || dataSize == 0) {
-            logItem.setLog("输入数据无效, dataPtr: {}, dataSize: {}", (void*)data, dataSize);
+            SET_LOG(logItem, "输入数据无效, dataPtr: {}, dataSize: {}", (void*)data, dataSize);
             return nullptr;
         }
 
@@ -695,7 +701,7 @@ namespace analyse_tool {
         formatCtx->pb = avioCtx;
         int ret       = avformat_open_input(&formatCtx, NULL, NULL, NULL);
         if (ret != 0) {
-            logItem.setLog("avformat_open_input: 无法打开数据 | {}", utilxx::av_err2str(ret));
+            SET_LOG(logItem, "avformat_open_input: 无法打开数据 | {}", utilxx::av_err2str(ret));
             avformat_free_context(formatCtx);
             avio_context_free(&avioCtx);
             return nullptr;
@@ -711,7 +717,7 @@ namespace analyse_tool {
         AVFormatContext* formatCtx = nullptr;
         auto             ret       = avformat_open_input(&formatCtx, picturePath, nullptr, nullptr);
         if (ret != 0) {
-            logItem.setLog("avformat_open_input: 无法打开文件 | {}", utilxx::av_err2str(ret));
+            SET_LOG(logItem, "avformat_open_input: 无法打开文件 | {}", utilxx::av_err2str(ret));
             return nullptr;
         }
         return analysePictureColor(formatCtx, logItem);
