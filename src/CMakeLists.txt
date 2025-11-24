@@ -79,7 +79,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "
       endif ()
     endif ()
 
-    if (_ISANDROID OR _ISIOS OR _ISMACOS OR _ISLINUX) 
+    if (_ISANDROID OR _ISLINUX) 
       # static link to ffmpeg.a
       # windows 不需要
       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
