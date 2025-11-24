@@ -100,6 +100,7 @@ if (DEFINED LUMENXX_BUILD_TYPE)
 endif()
 
 include(ExternalProject)
+
 ExternalProject_Add(
   simdjson_repo
   SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/simdjson/"
@@ -174,6 +175,7 @@ ExternalProject_Add(
       "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
       "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
       -DFMT_PEDANTIC=OFF
+      -DFMT_INSTALL=OFF
       -DFMT_WERROR=OFF
       -DBUILD_SHARED_LIBS=OFF
       -DFMT_DOC=OFF
@@ -337,6 +339,7 @@ add_library(mediaxx SHARED
 )
 
 add_dependencies(mediaxx simdjson_repo)
+add_dependencies(mediaxx fmt_repo)
 
 target_link_directories(mediaxx PUBLIC 
   ${ffmpeg_mpv_BINARY_DIR}
@@ -345,9 +348,10 @@ target_link_directories(mediaxx PUBLIC
 )
 
 target_link_libraries(mediaxx PUBLIC
-  simdjson
-  fmt
   ${ffmpeg_mpv_LIBRARIES}
+  simdjson
+  fmtd
+  fmt
 )
 
 target_compile_options(mediaxx PRIVATE 

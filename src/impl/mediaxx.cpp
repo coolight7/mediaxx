@@ -149,9 +149,9 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
         auto result = analyse_tool::analysePictureColorFromDecodedData(
             (const uint8_t*)data,
             dataSize,
-            dataSize / 4,
+            int(dataSize / 4),
             1,
-            dataSize,
+            int(dataSize),
             4
         );
         if (nullptr != result) {
