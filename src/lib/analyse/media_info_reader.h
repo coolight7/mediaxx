@@ -420,12 +420,12 @@ public:
 
     // 将AVFrame保存为JPEG文件
     bool saveFrameAsJPEG(
-        MediaInfoItem_c&             item,
-        AVFrame*                     frame,
-        const std::filesystem::path& outputPath,
-        int                          clipWidth  = -1,
-        int                          clipHeight = -1,
-        int                          quality    = 2
+        MediaInfoItem_c&        item,
+        AVFrame*                frame,
+        const std::string_view& outputPath,
+        int                     clipWidth  = -1,
+        int                     clipHeight = -1,
+        int                     quality    = 2
     ) {
         const AVCodec*  encoder   = NULL;
         AVCodecContext* encodeCtx = NULL;
@@ -520,13 +520,13 @@ public:
             }
 
             // 写入文件
-            std::ofstream file{outputPath, std::ios::binary};
+            std::ofstream file{std::string{outputPath}, std::ios::binary};
             if (file.is_open()) {
                 file.write(reinterpret_cast<const char*>(pkt->data), pkt->size);
                 file.close();
                 result = true;
             } else {
-                item.setLog(fmt::format("输出文件打开失败: {}", outputPath.generic_string()));
+                item.setLog(fmt::format("输出文件打开失败: {}", outputPath));
                 result = true;
             }
         } while (false);
@@ -539,11 +539,11 @@ public:
 
     // 缩放并保存帧为JPEG
     bool saveFrameAsJPEGWithScale(
-        MediaInfoItem_c&             item,
-        AVFrame*                     frame,
-        const std::filesystem::path& outputPath,
-        int                          targetMinLineSize,
-        int                          quality = 2
+        MediaInfoItem_c&        item,
+        AVFrame*                frame,
+        const std::string_view& outputPath,
+        int                     targetMinLineSize,
+        int                     quality = 2
     ) {
         struct SwsContext* swsCtx      = NULL;
         AVFrame*           scaledFrame = NULL;
@@ -719,13 +719,13 @@ public:
     }
 
     bool savePictureScaleByStream(
-        MediaInfoItem_c&             item,
-        AVPacket*                    pkt,
-        AVStream*                    stream,
-        const std::filesystem::path& outputPath,
-        const int                    targetMinLine,
-        const int                    quality    = 2,
-        AVCodecID                    useCodecId = AVCodecID::AV_CODEC_ID_NONE
+        MediaInfoItem_c&       item,
+        AVPacket*              pkt,
+        AVStream*              stream,
+        const std::string_view outputPath,
+        const int              targetMinLine,
+        const int              quality    = 2,
+        AVCodecID              useCodecId = AVCodecID::AV_CODEC_ID_NONE
     ) {
         bool            result         = false;
         const bool      hasSetCodecId  = (AVCodecID::AV_CODEC_ID_NONE != useCodecId);
@@ -832,39 +832,37 @@ public:
     int tryGetPicture(
         MediaInfoItem_c&       item,
         AVStream*              stream,
-        const std::string_view outputStr,
-        const std::string_view output96Str
+        const std::string_view outputPath,
+        const std::string_view output96Path
     ) {
-        if (outputStr.empty()) {
+        if (outputPath.empty()) {
             item.setLog("缺少输出路径");
             return 0;
         }
         auto const fmtCtx = item.fmtCtx;
 
-        int             result       = 0;
-        const AVCodec*  decoder      = nullptr;
-        AVCodecContext* decodeCtx    = nullptr;
-        auto            outputPath   = std::filesystem::path(outputStr);
-        auto            outputPath96 = std::filesystem::path(output96Str);
+        int             result    = 0;
+        const AVCodec*  decoder   = nullptr;
+        AVCodecContext* decodeCtx = nullptr;
         do {
             // 提取图片封面
             if (stream->disposition & AV_DISPOSITION_ATTACHED_PIC) {
                 LXX_DEBEG("tryGetPicture: ATTACHED_PIC");
                 AVPacket pkt = stream->attached_pic;
 
-                std::ofstream file{outputPath, std::ios::binary};
+                std::ofstream file{std::string{outputPath}, std::ios::binary};
                 if (file.is_open()) {
                     file.write(reinterpret_cast<const char*>(pkt.data), pkt.size);
                     file.close();
                     result = 1;
-                    if (false == output96Str.empty()) {
+                    if (false == output96Path.empty()) {
                         LXX_DEBEG("tryGetPicture: savePictureScaleByStream-96");
-                        if (savePictureScaleByStream(item, &pkt, stream, outputPath96, 96, 8)) {
+                        if (savePictureScaleByStream(item, &pkt, stream, output96Path, 96, 8)) {
                             result = 2;
                         }
                     }
                 } else {
-                    item.setLog(fmt::format("输出文件打开失败: {}", outputStr));
+                    item.setLog(fmt::format("输出文件打开失败: {}", outputPath));
                     result = 0;
                 }
                 break;
@@ -936,8 +934,8 @@ public:
 
                     if (saveFrameAsJPEG(item, useFrame, outputPath, -1, -1, 2)) {
                         result = 1;
-                        if (false == output96Str.empty()) {
-                            if (saveFrameAsJPEGWithScale(item, useFrame, outputPath96, 96, 8)) {
+                        if (false == output96Path.empty()) {
+                            if (saveFrameAsJPEGWithScale(item, useFrame, output96Path, 96, 8)) {
                                 result = 2;
                             }
                         }
