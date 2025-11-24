@@ -5,3 +5,7 @@
 [submodule "src/third_party/vulkan-header"]
 	path = src/third_party/vulkan-header
 	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "src/third_party/fmt"]
+	path = src/third_party/fmt
+	url = https://github.com/fmtlib/fmt
+	branch = 12.1.0

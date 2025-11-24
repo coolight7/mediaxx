@@ -141,6 +141,51 @@ set(simdjson_SOURCE_DIR "${SOURCE_DIR}")
 ExternalProject_Get_Property(simdjson_repo BINARY_DIR)
 set(simdjson_INSTALL_DIR "${BINARY_DIR}/")
 
+ExternalProject_Add(
+  fmt_repo
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/"
+  UPDATE_COMMAND ""
+  CMAKE_ARGS 
+      -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
+      -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
+      "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+      "-DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}"
+      "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}"
+      "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}" 
+      "-DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}"
+
+      "-DCMAKE_ANDROID_ARCH_ABI=${CMAKE_ANDROID_ARCH_ABI}"
+      "-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
+      "-DANDROID_ABI=${ANDROID_ABI}"
+      "-DANDROID_NDK=${ANDROID_NDK}"
+      "-DANDROID_STL=${ANDROID_STL}"
+
+      "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}"
+      "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+      "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
+      "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
+
+      "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+      "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+      "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
+      "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+      "-DCMAKE_C_FLAGS_PROFILE=${CMAKE_C_FLAGS_PROFILE}"
+      "-DCMAKE_CXX_FLAGS_PROFILE=${CMAKE_CXX_FLAGS_PROFILE}"
+      "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
+      "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+      -DFMT_PEDANTIC=OFF
+      -DFMT_WERROR=OFF
+      -DBUILD_SHARED_LIBS=OFF
+      -DFMT_DOC=OFF
+      -DFMT_TEST=OFF
+      -DFMT_CUDA_TEST=OFF
+  INSTALL_COMMAND ""
+)
+ExternalProject_Get_Property(fmt_repo SOURCE_DIR)
+set(fmt_SOURCE_DIR "${SOURCE_DIR}")
+ExternalProject_Get_Property(fmt_repo BINARY_DIR)
+set(fmt_INSTALL_DIR "${BINARY_DIR}/")
+
 # - .vscode/c_cpp_properties.json 默认取 android
 # - 两种模式，动态链接 ffmpeg 和 静态链接 ffmpeg
 #   - 静态链接时需要各种 ffmpeg 的依赖库，因此只在发布 release 时上 docker 内编译，最终合并 ffmpeg 到 mediaxx 内整合为一个动态库
@@ -272,6 +317,7 @@ endif ()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
 include_directories(${simdjson_SOURCE_DIR}/include/)
+include_directories(${fmt_SOURCE_DIR}/include/)
 include_directories(${vulkan_INCLUDE_DIR})
 include_directories(${third_party_DIR})
 include_directories(${ffmpeg_mpv_INCLUDE_DIR})
@@ -295,10 +341,12 @@ add_dependencies(mediaxx simdjson_repo)
 target_link_directories(mediaxx PUBLIC 
   ${ffmpeg_mpv_BINARY_DIR}
   ${simdjson_INSTALL_DIR}
+  ${fmt_INSTALL_DIR}
 )
 
 target_link_libraries(mediaxx PUBLIC
   simdjson
+  fmt
   ${ffmpeg_mpv_LIBRARIES}
 )
 

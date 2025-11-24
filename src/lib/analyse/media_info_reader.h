@@ -14,6 +14,7 @@ extern "C" {
 }
 
 #include "analyse/tool.h"
+#include "fmt/format.h"
 #include "simdjson.h"
 #include "util/json_helper.h"
 #include "util/log.h"
@@ -21,7 +22,6 @@ extern "C" {
 #include "util/utilxx.h"
 #include <algorithm>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -108,7 +108,7 @@ public:
         int ret = avformat_open_input(&item.fmtCtx, item.filepath.c_str(), nullptr, &item.options);
         if (ret != 0) {
             item.setLog(
-                std::format("无法打开文件: {}, 错误: {}", item.filepath, utilxx::av_err2str(ret))
+                fmt::format("无法打开文件: {}, 错误: {}", item.filepath, utilxx::av_err2str(ret))
             );
             return false;
         }
@@ -116,7 +116,7 @@ public:
         LXX_DEBEG("openFile | find info ...... : {}", item.filepath);
         ret = avformat_find_stream_info(item.fmtCtx, nullptr);
         if (ret < 0) {
-            item.setLog(std::format("无法获取流信息: {}", item.filepath, utilxx::av_err2str(ret)));
+            item.setLog(fmt::format("无法获取流信息: {}", item.filepath, utilxx::av_err2str(ret)));
             return false;
         }
 
@@ -237,15 +237,15 @@ public:
                 result.append_key_value<"start_time">(stream->start_time);
                 result.append_comma();
                 result.append_key_value<"r_frame_rate">(
-                    std::format("{}/{}", stream->r_frame_rate.num, stream->r_frame_rate.den)
+                    fmt::format("{}/{}", stream->r_frame_rate.num, stream->r_frame_rate.den)
                 );
                 result.append_comma();
                 result.append_key_value<"avg_frame_rate">(
-                    std::format("{}/{}", stream->avg_frame_rate.num, stream->avg_frame_rate.den)
+                    fmt::format("{}/{}", stream->avg_frame_rate.num, stream->avg_frame_rate.den)
                 );
                 result.append_comma();
                 result.append_key_value<"time_base">(
-                    std::format("{}/{}", stream->time_base.num, stream->time_base.den)
+                    fmt::format("{}/{}", stream->time_base.num, stream->time_base.den)
                 );
                 result.append_comma();
                 if (stream->time_base.den && stream->time_base.num) {
@@ -294,10 +294,10 @@ public:
                         result.append_key_value<"height">(codecPar->height);
                         result.append_comma();
                         result.append_key_value<"framerate">(
-                            std::format("{}/{}", codecPar->framerate.num, codecPar->framerate.den)
+                            fmt::format("{}/{}", codecPar->framerate.num, codecPar->framerate.den)
                         );
                         result.append_comma();
-                        result.append_key_value<"sample_aspect_ratio">(std::format(
+                        result.append_key_value<"sample_aspect_ratio">(fmt::format(
                             "{}/{}",
                             stream->sample_aspect_ratio.num,
                             stream->sample_aspect_ratio.den
@@ -453,14 +453,14 @@ public:
             {
                 auto maxLine = std::max(encodeCtx->width, encodeCtx->height);
                 if (maxLine <= 0) {
-                    item.setLog(std::format(
+                    item.setLog(fmt::format(
                         "saveFrameAsJPEG: encodeCtx/maxLine <= 0: {}, reset to 96",
                         maxLine
                     ));
                     maxLine = 96;
                 }
                 if (encodeCtx->width <= 0) {
-                    item.setLog(std::format(
+                    item.setLog(fmt::format(
                         "saveFrameAsJPEG: encodeCtx->width <= 0: {}, reset to maxLine: {}",
                         encodeCtx->width,
                         maxLine
@@ -468,7 +468,7 @@ public:
                     encodeCtx->width = maxLine;
                 }
                 if (encodeCtx->height <= 0) {
-                    item.setLog(std::format(
+                    item.setLog(fmt::format(
                         "saveFrameAsJPEG: encodeCtx->height <= 0: {}, reset to maxLine: {}",
                         encodeCtx->height,
                         maxLine
@@ -490,7 +490,7 @@ public:
             // 打开编码器
             auto ret = avcodec_open2(encodeCtx, encoder, NULL);
             if (ret != 0) {
-                item.setLog(std::format("无法打开JPEG编码器: {}/{}", ret, utilxx::av_err2str(ret)));
+                item.setLog(fmt::format("无法打开JPEG编码器: {}/{}", ret, utilxx::av_err2str(ret)));
                 result = false;
                 break;
             }
@@ -506,7 +506,7 @@ public:
             // 发送帧到编码器
             ret = avcodec_send_frame(encodeCtx, frame);
             if (ret != 0) {
-                item.setLog(std::format("发送帧到编码器失败: {}/{}", ret, utilxx::av_err2str(ret)));
+                item.setLog(fmt::format("发送帧到编码器失败: {}/{}", ret, utilxx::av_err2str(ret)));
                 result = false;
                 break;
             }
@@ -514,7 +514,7 @@ public:
             // 接收编码后的包
             ret = avcodec_receive_packet(encodeCtx, pkt);
             if (ret != 0) {
-                item.setLog(std::format("从编码器接收包失败: {}/{}", ret, utilxx::av_err2str(ret)));
+                item.setLog(fmt::format("从编码器接收包失败: {}/{}", ret, utilxx::av_err2str(ret)));
                 result = false;
                 break;
             }
@@ -526,7 +526,7 @@ public:
                 file.close();
                 result = true;
             } else {
-                item.setLog(std::format("输出文件打开失败: {}", outputPath.generic_string()));
+                item.setLog(fmt::format("输出文件打开失败: {}", outputPath.generic_string()));
                 result = true;
             }
         } while (false);
@@ -554,7 +554,7 @@ public:
         int srcHeight  = frame->height;
         int srcMinLine = std::min(srcWidth, srcHeight);
         if (srcMinLine <= 0) {
-            item.setLog(std::format(
+            item.setLog(fmt::format(
                 "saveFrameAsJPEGWithScale: src 最小宽度 <=0 : w {} / h {}",
                 srcWidth,
                 srcHeight
@@ -577,7 +577,7 @@ public:
             auto targetWidth  = (int)((double)srcWidth * scalePercent);
             auto targetHeight = (int)((double)srcHeight * scalePercent);
             if (targetHeight <= 0 || targetWidth <= 0) {
-                item.setLog(std::format(
+                item.setLog(fmt::format(
                     "saveFrameAsJPEGWithScale: target 最小宽度 <=0 : w {} / h {} / scale {}",
                     srcWidth,
                     srcHeight,
@@ -740,7 +740,7 @@ public:
             LXX_DEBEG("savePictureScaleByStream: try decoder: {}", int(useCodecId));
             const AVCodec* decoder = avcodec_find_decoder(useCodecId);
             if (!decoder) {
-                item.setLog(std::format("找不到解码器: {}", int(useCodecId)));
+                item.setLog(fmt::format("找不到解码器: {}", int(useCodecId)));
                 retryByCodecId = true;
                 result         = false;
                 break;
@@ -749,7 +749,7 @@ public:
             // 初始化解码器上下文
             decCtx = avcodec_alloc_context3(decoder);
             if (!decCtx) {
-                item.setLog(std::format("无法分配解码器上下文: {}", int(useCodecId)));
+                item.setLog(fmt::format("无法分配解码器上下文: {}", int(useCodecId)));
                 result = false;
                 break;
             }
@@ -757,7 +757,7 @@ public:
             // 复制流参数到解码器上下文
             int ret = avcodec_parameters_to_context(decCtx, stream->codecpar);
             if (ret < 0) {
-                item.setLog(std::format("复制流参数失败: {}/{}", ret, utilxx::av_err2str(ret)));
+                item.setLog(fmt::format("复制流参数失败: {}/{}", ret, utilxx::av_err2str(ret)));
                 result = false;
                 break;
             }
@@ -771,7 +771,7 @@ public:
             // 打开解码器
             ret = avcodec_open2(decCtx, decoder, nullptr);
             if (ret != 0) {
-                item.setLog(std::format("无法打开解码器: {}/{}", ret, utilxx::av_err2str(ret)));
+                item.setLog(fmt::format("无法打开解码器: {}/{}", ret, utilxx::av_err2str(ret)));
                 retryByCodecId = true;
                 result         = false;
                 break;
@@ -789,7 +789,7 @@ public:
             ret = avcodec_send_packet(decCtx, pkt);
             if (ret != 0) {
                 item.setLog(
-                    std::format("发送数据包到解码器失败: {}/{}", ret, utilxx::av_err2str(ret))
+                    fmt::format("发送数据包到解码器失败: {}/{}", ret, utilxx::av_err2str(ret))
                 );
                 retryByCodecId = true;
                 result         = false;
@@ -799,7 +799,7 @@ public:
             // 接收解码后的帧（封面通常只有一帧）
             ret = avcodec_receive_frame(decCtx, frame);
             if (ret != 0) {
-                item.setLog(std::format("接收解码帧失败: {}/{}", ret, utilxx::av_err2str(ret)));
+                item.setLog(fmt::format("接收解码帧失败: {}/{}", ret, utilxx::av_err2str(ret)));
                 retryByCodecId = true;
                 result         = false;
                 break;
@@ -864,7 +864,7 @@ public:
                         }
                     }
                 } else {
-                    item.setLog(std::format("输出文件打开失败: {}", outputStr));
+                    item.setLog(fmt::format("输出文件打开失败: {}", outputStr));
                     result = 0;
                 }
                 break;
@@ -921,7 +921,7 @@ public:
                         );
 
                         if (!jpegFrame) {
-                            item.setLog(std::format(
+                            item.setLog(fmt::format(
                                 "转换像素格式从 {} 到 YUVJ420P 失败",
                                 targetFrame->format
                             ));

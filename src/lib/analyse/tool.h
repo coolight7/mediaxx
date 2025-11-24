@@ -6,6 +6,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+#include "fmt/format.h"
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -49,10 +50,10 @@ namespace analyse_tool {
 #ifndef SET_LOG
 /// macos 13.3 以下: 不支持，代替为宏处理：
 ///    template<typename... _Args>
-///    void setLog(std::format_string<_Args...> fmt, _Args&&... args) {
-///        setLog(std::format(fmt, std::forward<_Args>(args)...));
+///    void setLog(fmt::format_string<_Args...> fmt, _Args&&... args) {
+///        setLog(fmt::format(fmt, std::forward<_Args>(args)...));
 ///    }
-#define SET_LOG(log, fmt, ...) log.setLog(std::format(fmt, ##__VA_ARGS__));
+#define SET_LOG(log, str, ...) log.setLog(fmt::format(str, ##__VA_ARGS__));
 #endif
     };
 

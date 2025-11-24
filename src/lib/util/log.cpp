@@ -1,5 +1,6 @@
 #include "log.h"
-#include <format>
+#include "fmt/format.h"
+#include <ctime>
 
 #if _ISLINUX
 #include <csignal>
@@ -52,7 +53,7 @@ void logxx::printStack() {
 }
 
 void signal_handler(int signo) {
-    const std::string filename = std::format("crash-{}.log", std::time(nullptr));
+    const std::string filename = fmt::format("crash-{}.log", std::time(nullptr));
 
 #define _printToConsoleAndFile(fp, str, ...) \
     printf(str, ##__VA_ARGS__);              \
