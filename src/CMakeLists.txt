@@ -79,7 +79,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "
       endif ()
     endif ()
 
-    if (_ISANDROID OR _ISIOS OR _ISMACOS OR _ISLINUX) 
+    if (_ISANDROID OR _ISLINUX) 
       # static link to ffmpeg.a
       # windows 不需要
       set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-Bsymbolic")
@@ -353,9 +353,17 @@ target_link_directories(mediaxx PUBLIC
 target_link_libraries(mediaxx PUBLIC
   ${ffmpeg_mpv_LIBRARIES}
   simdjson
-  fmtd
-  fmt
 )
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # 仅单配置构建、debug 时使用
+  target_link_libraries(mediaxx PUBLIC
+    fmtd
+  )
+else ()
+  target_link_libraries(mediaxx PUBLIC
+    fmt
+  )
+endif()
 
 target_compile_options(mediaxx PRIVATE 
     ${ffmpeg_mpv_CFLAGS}
@@ -401,15 +409,18 @@ elseif (_ISLINUX)
   target_link_options(mediaxx PRIVATE 
     "-Wl,-rpath=\$ORIGIN"
   )
-  if (EXPORT_ALL_SYMBOL)
-    target_link_options(mediaxx PRIVATE 
-      "-Wl,--export-dynamic,--whole-archive,--allow-multiple-definition"
-    )
-  else ()
-    target_link_options(mediaxx PRIVATE 
-      "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
-      "-Wl,--version-script=${mediaxx_EXPORT_IDS}"
-    )
+  if (NOT DEFINED LUMENXX_BUILD_TYPE)
+    # 指定 LUMENXX_BUILD_TYPE 时不指定导出符号，否则可能导致链接器报错 /usr/bin/ld: read in flex scanner failed
+    if (EXPORT_ALL_SYMBOL)
+      target_link_options(mediaxx PRIVATE 
+        "-Wl,--export-dynamic,--whole-archive,--allow-multiple-definition"
+      )
+    else ()
+      target_link_options(mediaxx PRIVATE 
+        "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
+        "-Wl,--version-script=${mediaxx_EXPORT_IDS}"
+      )
+    endif()
   endif()
 elseif (_ISIOS or _ISMACOS)
   target_link_options(mediaxx PRIVATE 

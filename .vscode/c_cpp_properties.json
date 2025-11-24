@@ -21,7 +21,7 @@
             ],
             "windowsSdkVersion": "10.0.22000.0",
             "compilerPath": "cl.exe",
-            "cStandard": "c17",
+            "cStandard": "c23",
             "cppStandard": "c++23"
         },
         {
@@ -45,7 +45,7 @@
                 "_UNICODE",
                 "ANDROID"
             ],
-            "cStandard": "c17",
+            "cStandard": "c23",
             "cppStandard": "c++23"
         }
     ],
