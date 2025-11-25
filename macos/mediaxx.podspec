@@ -5,13 +5,13 @@
 Pod::Spec.new do |s|
   s.name             = 'mediaxx'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter FFI plugin project.'
+  s.summary          = 'Mediax analyse tools'
   s.description      = <<-DESC
-A new Flutter FFI plugin project.
+Mediax analyse tools.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/coolight7/mediaxx'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'coolight' => 'email@2465045051@qq.com' }
 
   # This will ensure the source files in Classes/ are included in the native
   # builds of apps using this FFI plugin. Podspec does not support relative
@@ -28,7 +28,7 @@ A new Flutter FFI plugin project.
 
   s.dependency 'FlutterMacOS'
 
-  s.platform = :osx, '10.11'
+  s.platform = :osx, '11.0'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.0'
 end
