@@ -55,7 +55,8 @@ void test() {
         const char* log    = nullptr;
         auto        ret    = mediaxx_get_media_info_malloc(
             // "./temp/李艺皓+-+嚣张.wav",
-            "./temp/林力尧 - 初恋旧爱新欢.flac",
+            // "./temp/林力尧 - 初恋旧爱新欢.flac",
+            "./temp/Great Voyage_洛天依.mp3",
             "",
             "./temp/output.jpg",
             "./temp/output96.jpg",

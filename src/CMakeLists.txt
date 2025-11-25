@@ -322,8 +322,13 @@ elseif (_ISIOS)
   set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.exp")
   set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple-symbols.txt")
 elseif (_ISMACOS)
-  set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.exp")
-  set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple-symbols.txt")
+  if (NOT STATIC_LINK_FFMPEG)
+    set(ffmpeg_mpv_BINARY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/libs-macos/")
+    set(ffmpeg_mpv_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ffmpeg/include-macos/")
+  else ()
+    set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.exp")
+    set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple-symbols.txt")
+  endif()
 endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
@@ -447,15 +452,17 @@ elseif (_ISMACOS)
   target_link_options(mediaxx PRIVATE 
     "-Wl,-rpath,@loader_path"
   )
-  if (EXPORT_ALL_SYMBOL)
-    target_link_options(mediaxx PRIVATE 
-      "-Wl,-export_dynamic,-all_load,-m"
-    )
-  else ()
-    target_link_options(mediaxx PRIVATE 
-      "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
-      "-Wl,-exported_symbols_list,${mediaxx_EXPORT_IDS}"
-    )
+  if (NOT DEFINED LUMENXX_BUILD_TYPE)
+    if (EXPORT_ALL_SYMBOL)
+      target_link_options(mediaxx PRIVATE 
+        "-Wl,-export_dynamic,-all_load,-m"
+      )
+    else ()
+      target_link_options(mediaxx PRIVATE 
+        "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
+        "-Wl,-exported_symbols_list,${mediaxx_EXPORT_IDS}"
+      )
+    endif()
   endif()
 endif()
 
@@ -488,6 +495,14 @@ if (DEFINED LUMENXX_BUILD_TYPE)
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/libva-drm.so.2" DESTINATION "${EXE_INSTALL_PREFIX}")
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/libva-x11.so.2" DESTINATION "${EXE_INSTALL_PREFIX}")
     install(FILES "${ffmpeg_mpv_BINARY_DIR}/libvdpau.so.1" DESTINATION "${EXE_INSTALL_PREFIX}")
+  elseif (_ISMACOS)
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavcodec.dylib" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavdevice.dylib" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavfilter.dylib" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavformat.dylib" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libavutil.dylib" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libswresample.dylib" DESTINATION "${EXE_INSTALL_PREFIX}")
+    install(FILES "${ffmpeg_mpv_BINARY_DIR}/libswscale.dylib" DESTINATION "${EXE_INSTALL_PREFIX}")
   endif ()
 elseif (STATIC_LINK_FFMPEG)
   install(TARGETS mediaxx RUNTIME)

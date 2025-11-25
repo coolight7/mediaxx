@@ -133,7 +133,7 @@ const String _libName = 'mediaxx';
 /// The dynamic library in which the symbols for [MediaxxBindings] can be found.
 final DynamicLibrary _dylib = () {
   if (Platform.isMacOS || Platform.isIOS) {
-    return DynamicLibrary.open('$_libName.framework/$_libName');
+    return DynamicLibrary.open('lib$_libName.dylib');
   }
   if (Platform.isAndroid || Platform.isLinux) {
     return DynamicLibrary.open('lib$_libName.so');
@@ -323,7 +323,6 @@ Future<SendPort> _helperIsolateSendPort = () async {
           result.value = nullptr;
           final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
           log.value = nullptr;
-
           final ret = _bindings.mediaxx_get_media_info_malloc(
             filepathPtr,
             headersPtr,
