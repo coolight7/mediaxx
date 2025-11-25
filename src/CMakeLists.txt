@@ -454,7 +454,7 @@ elseif (_ISMACOS)
   else ()
     target_link_options(mediaxx PRIVATE 
       "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
-      # "-Wl,-exported_symbols_list,${mediaxx_EXPORT_IDS}"
+      "-Wl,-exported_symbols_list,${mediaxx_EXPORT_IDS}"
     )
   endif()
 endif()
