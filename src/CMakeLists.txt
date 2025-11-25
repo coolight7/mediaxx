@@ -322,11 +322,6 @@ elseif (_ISIOS)
   set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.exp")
   set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple-symbols.txt")
 elseif (_ISMACOS)
-  set (ffmpeg_mpv_LIBRARIES ${ffmpeg_mpv_LIBRARIES} 
-    "-framework CoreAudio"
-    "-framework AudioToolbox"
-    "-framework CoreFoundation"
-  )
   set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.exp")
   set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple-symbols.txt")
 endif ()
@@ -459,7 +454,7 @@ elseif (_ISMACOS)
   else ()
     target_link_options(mediaxx PRIVATE 
       "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
-      "-Wl,-exported_symbols_list,${mediaxx_EXPORT_IDS}"
+      # "-Wl,-exported_symbols_list,${mediaxx_EXPORT_IDS}"
     )
   endif()
 endif()
