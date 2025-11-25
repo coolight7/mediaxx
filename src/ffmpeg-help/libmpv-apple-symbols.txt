@@ -1,3 +1,6 @@
+-undefined _cfstr_from_cstr
+-undefined _cfstr_get_cstr
+
 -undefined _mediaxx_malloc
 -undefined _mediaxx_free
 -undefined _mediaxx_get_log_level
