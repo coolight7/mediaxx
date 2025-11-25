@@ -315,10 +315,10 @@ elseif (_ISLINUX)
     set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-linux-symbols.txt")
   endif ()
 elseif (_ISIOS)
-  set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.lds")
+  set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.exp")
   set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple-symbols.txt")
 elseif (_ISMACOS)
-  set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.lds")
+  set(mediaxx_EXPORT_IDS "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple.exp")
   set(mediaxx_EXPORT_KEEP_SYMBOL "${CMAKE_CURRENT_SOURCE_DIR}/ffmpeg-help/libmpv-apple-symbols.txt")
 endif ()
 
@@ -431,12 +431,12 @@ elseif (_ISIOS)
   )
   if (EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
-      "-Wl,--export-dynamic,--whole-archive,--allow-multiple-definition"
+      "-Wl,-export_dynamic,-all_load,-m"
     )
   else ()
     target_link_options(mediaxx PRIVATE 
       "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
-      "-Wl,--version-script=${mediaxx_EXPORT_IDS}"
+      "-Wl,-exported_symbols_list,${mediaxx_EXPORT_IDS}"
     )
   endif()
 elseif (_ISMACOS) 
@@ -445,12 +445,12 @@ elseif (_ISMACOS)
   )
   if (EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
-      "-Wl,--export-dynamic,--whole-archive,--allow-multiple-definition"
+      "-Wl,-export_dynamic,-all_load,-m"
     )
   else ()
     target_link_options(mediaxx PRIVATE 
       "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
-      "-Wl,--version-script=${mediaxx_EXPORT_IDS}"
+      "-Wl,-exported_symbols_list,${mediaxx_EXPORT_IDS}"
     )
   endif()
 endif()
