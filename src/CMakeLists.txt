@@ -426,8 +426,8 @@ elseif (_ISLINUX)
     endif()
   endif()
 elseif (_ISIOS)
-  target_link_options(mediaxx PRIVATE 
-    "-Wl,-rpath=\$ORIGIN"
+  target_link_options(mediaxx PRIVATE
+    "-Wl,-rpath,@loader_path"
   )
   if (EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
@@ -441,7 +441,7 @@ elseif (_ISIOS)
   endif()
 elseif (_ISMACOS) 
   target_link_options(mediaxx PRIVATE 
-    "-Wl,-rpath=\$ORIGIN"
+    "-Wl,-rpath,@loader_path"
   )
   if (EXPORT_ALL_SYMBOL)
     target_link_options(mediaxx PRIVATE 
