@@ -39,7 +39,6 @@ _mpv_get_wakeup_pipe
 _mpv_hook_add
 _mpv_hook_continue
 _mpv_initialize
-_mpv_lavc_set_java_vm
 _mpv_load_config_file
 _mpv_observe_property
 _mpv_render_context_create

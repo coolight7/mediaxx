@@ -41,7 +41,6 @@
     mpv_hook_add;
     mpv_hook_continue;
     mpv_initialize;
-    mpv_lavc_set_java_vm;
     mpv_load_config_file;
     mpv_observe_property;
     mpv_render_context_create;
