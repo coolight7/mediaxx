@@ -23,7 +23,7 @@ extern "C" {
 #include "util/string_util.h"
 #include "util/utilxx.h"
 
-namespace analyse_tool {
+namespace analyse_image {
     class AnalyseLogItem_c {
     public:
 
@@ -478,7 +478,7 @@ namespace analyse_tool {
     }
 
     inline std::shared_ptr<AnalysePictureColorResult>
-        analysePictureColor(AVFormatContext* formatCtx, analyse_tool::AnalyseLogItem_c& logItem) {
+        analysePictureColor(AVFormatContext* formatCtx, analyse_image::AnalyseLogItem_c& logItem) {
         LXX_DEBEG("analysePictureColor: ");
         int ret = avformat_find_stream_info(formatCtx, nullptr);
         if (ret < 0) {
@@ -664,7 +664,7 @@ namespace analyse_tool {
     inline std::shared_ptr<AnalysePictureColorResult> analyzePictureColorFromData(
         const char*                     data,
         size_t                          dataSize,
-        analyse_tool::AnalyseLogItem_c& logItem
+        analyse_image::AnalyseLogItem_c& logItem
     ) {
         if (nullptr == data || dataSize == 0) {
             SET_LOG(logItem, "输入数据无效, dataPtr: {}, dataSize: {}", (void*)data, dataSize);
@@ -713,7 +713,7 @@ namespace analyse_tool {
 
     inline std::shared_ptr<AnalysePictureColorResult> analysePictureColorFromPath(
         const char*                     picturePath,
-        analyse_tool::AnalyseLogItem_c& logItem
+        analyse_image::AnalyseLogItem_c& logItem
     ) {
         AVFormatContext* formatCtx = nullptr;
         auto             ret       = avformat_open_input(&formatCtx, picturePath, nullptr, nullptr);
@@ -723,4 +723,4 @@ namespace analyse_tool {
         }
         return analysePictureColor(formatCtx, logItem);
     }
-}; // namespace analyse_tool
+}; // namespace analyse_image

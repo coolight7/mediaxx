@@ -2,14 +2,15 @@ extern "C" {
 #include "libavcodec/codec.h"
 }
 
+#include "analyse/analyse_image.h"
 #include "analyse/codec_info.h"
-#include "analyse/tool.h"
 #include "mediaxx.h"
 #include "simdjson.h"
 #include "util/log.h"
 #include <fstream>
 #include <iostream>
 #include <map>
+
 
 using namespace std;
 
@@ -72,8 +73,8 @@ void test() {
 
     {
         const char* log     = nullptr;
-        auto        logItem = analyse_tool::AnalyseLogItem_c{&log};
-        auto result = analyse_tool::analysePictureColorFromPath("./temp/output.jpg", logItem);
+        auto        logItem = analyse_image::AnalyseLogItem_c{&log};
+        auto result = analyse_image::analysePictureColorFromPath("./temp/output.jpg", logItem);
         if (nullptr != *logItem.log) {
             std::cout << "log: " << *logItem.log << std::endl;
         }
@@ -98,9 +99,9 @@ void test() {
                       << " size:" << buffer.size() << std::endl;
             file.close();
             const char* log     = nullptr;
-            auto        logItem = analyse_tool::AnalyseLogItem_c{&log};
+            auto        logItem = analyse_image::AnalyseLogItem_c{&log};
             auto        result
-                = analyse_tool::analyzePictureColorFromData(buffer.data(), buffer.size(), logItem);
+                = analyse_image::analyzePictureColorFromData(buffer.data(), buffer.size(), logItem);
             if (nullptr != *logItem.log) {
                 std::cout << "log: " << *logItem.log << std::endl;
             }

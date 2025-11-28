@@ -1,9 +1,9 @@
 
 #include "mediaxx.h"
+#include "analyse/analyse_image.h"
 #include "analyse/audio_visualization.h"
 #include "analyse/codec_info.h"
 #include "analyse/media_info_reader.h"
-#include "analyse/tool.h"
 #include "simdjson.h"
 #include "util/log.h"
 #include "util/string_util.h"
@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <string_view>
+
 
 FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size) {
     return malloc(size);
@@ -116,15 +117,15 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color(
     assert(nullptr != outResult);
     assert(nullptr != outLog);
 
-    auto logItem = analyse_tool::AnalyseLogItem_c{outLog};
+    auto logItem = analyse_image::AnalyseLogItem_c{outLog};
     if (nullptr != data) {
-        auto result = analyse_tool::analyzePictureColorFromData(data, dataSize, logItem);
+        auto result = analyse_image::analyzePictureColorFromData(data, dataSize, logItem);
         if (nullptr != result) {
             *outResult = stringxx::stringCopyMalloc(result->toJson().view().value_unsafe()).data();
             return 1;
         }
     } else if (nullptr != filepath) {
-        auto result = analyse_tool::analysePictureColorFromPath(filepath, logItem);
+        auto result = analyse_image::analysePictureColorFromPath(filepath, logItem);
         if (nullptr != result) {
             *outResult = stringxx::stringCopyMalloc(result->toJson().view().value_unsafe()).data();
             return 1;
@@ -144,9 +145,9 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
     assert(nullptr != outResult);
     assert(nullptr != outLog);
 
-    // auto logItem = analyse_tool::AnalyseLogItem_c{outLog};
+    // auto logItem = analyse_image::AnalyseLogItem_c{outLog};
     if (nullptr != data) {
-        auto result = analyse_tool::analysePictureColorFromDecodedData(
+        auto result = analyse_image::analysePictureColorFromDecodedData(
             (const uint8_t*)data,
             dataSize,
             int(dataSize / 4),

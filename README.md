@@ -1,8 +1,11 @@
 # mediaxx
 
-- 结合`ffmpeg`实现：
-  - 读取音视频文件的基本信息（标题、艺术家、内嵌LRC歌词、时长、专辑、年份等）
-  - 提取音视频的封面保存到文件
+- 该项目来自 [拟声](https://github.com/coolight7/musicxx) 和 [流明](https://github.com/coolight7/lumenxx-docx) 的开发
+- 功能:
+  - 结合`ffmpeg`实现：
+    1. 读取音视频文件的基本信息（标题、艺术家、内嵌LRC歌词、时长、专辑、年份等）
+    2. 提取音视频的封面保存到文件
+    3. 读取链接的 ffmpeg 支持的编解码器、硬件加速列表信息
   - 分析图片颜色，归类出 主色调、亮色调4种、暗色调4种、综合颜色占比排序最高的4种
 
 ## 适配支持
@@ -60,6 +63,9 @@ add_library(mediaxx SHARED
 )
 ```
 - 另外 windows 生成动态库时，一般还会生成导入库 libmediaxx.lib 这里虽然后缀是 .lib 但不是静态库，它只是声明了动态库的符号等信息，用于其他程序编译时可以链接，因此 win 端链接动态库时，可以只需要对应的导入库，而不需要动态库文件。如果还需要 .def 文件，可以从动态库生成，方法见 [win_create_dll_def.bat](script/win_create_dll_def.bat)
+
+### Linux
+- 整体类似于 Android
 
 ### IOS/Macos
 - apple 端的动态库名称为 libmediaxx.dylib ，后缀不同于其他系统

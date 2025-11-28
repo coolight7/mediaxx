@@ -13,7 +13,7 @@ extern "C" {
 #include "libswscale/swscale.h"
 }
 
-#include "analyse/tool.h"
+#include "analyse/analyse_image.h"
 #include "fmt/format.h"
 #include "simdjson.h"
 #include "util/json_helper.h"
@@ -47,7 +47,7 @@ inline static const SignatureInfo cImgSignatureTable[] = {
     {nullptr,                             0, AV_CODEC_ID_NONE,  nullptr               }  // 结束标记
 };
 
-class MediaInfoItem_c : public analyse_tool::AnalyseLogItem_c {
+class MediaInfoItem_c : public analyse_image::AnalyseLogItem_c {
 public:
 
     inline static const auto cDefUserAgent = std::string_view{
@@ -59,7 +59,7 @@ public:
     AVDictionary*     options = nullptr;
 
     MediaInfoItem_c(const std::string_view in_filepath, const char** in_log) :
-        analyse_tool::AnalyseLogItem_c(in_log),
+        analyse_image::AnalyseLogItem_c(in_log),
         filepath(in_filepath) {}
 
     void setOptions(const std::string_view headers) {
