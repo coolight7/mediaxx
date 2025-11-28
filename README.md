@@ -23,15 +23,48 @@
 - 调整编译脚本即可控制动态、静态链接 ffmpeg、libmpv
 - 静态链接时，需要考虑清楚c++标准库的链接方式
 
-## 问题
-  - `安卓`
-  - 如果主程序启用了R8裁剪代码，则需要添加规则避免删除了`mediaxx`的代码
+## 简要说明
+### 相通点
+- 五大系统平台上的动态库尽管差别不小，但相同点也不少，其中 android和linux 基本互通，ios和macos基本相同，windows的编译是在 linux 上使用 clang 交叉编译出来的，所以在 CMakeLists.txt 中不少参数指定也跟 linux 差不多
+- 关于控制动态库的符号导出：
+  - 只导出需要的符号，可以帮助链接器了解哪些符号是没用的，以便最终生成动态库时可以删除无用的代码和数据段
+  - 控制符号导出主要是两步：
+    - 一是强制声明需要的符号是未定义的 `--undefined=symbol_hello`，因为要导出的符号有些并没有在代码中被使用，如果不声明，可能在编译期就被裁剪删除了，声明后可以留到链接期，由链接器将需要的符号定义找出来
+    - 二是待导出符号表的声明，不同系统平台有各自的方法。前面编译后，整体有很多 .o 文件，内有很多符号，有的符号其实代码中已经声明了需要导出，有的可能没有，默认情况下，未声明要不要导出的符号可以由编译器参数决定，`-fvisibility=default`控制导出所有`非 static`声明的符号，`-Wl,--version-script=符号表文件`可以控制精确哪些符号需要导出
+
+### 安卓 Android
+- 如果主程序启用了R8裁剪代码，则需要添加规则避免删除了`mediaxx`的代码
   - 已处理修复，如果仍有问题尝试以下做法：
   - 一般是在`主程序代码目录/android/app/proguard-rules.pro`内添加：
-```pro
--keep class run.bool.** { *;}
-```
+  ```pro
+  -keep class run.bool.** { *;}
+  ```
   - 已知如果不添加，插件附带的java代码会被删除，导致不能在程序启动时自动将App的`Context`传递到c/c++层，因此当直接读取安卓的Content-URl时会失败，ffmpeg 提示 `av_jni_set_android_app_ctx` 未设置
+- 动态库符号导出控制：
+  - 安卓端分了 arm32、arm64 和 x86_64，有时可能需要导出不同的符号，但我们只使用了一个符号表文件 libmpv-android-symbols.txt，当然区分开搞多个文件是可以的，也可以在 [libmpv-android-symbols.txt](src/ffmpeg-help/libmpv-android-symbols.txt) 内添加一行，允许链接时找不到符号也不报错：
+```sh
+--undefined-version
+```
+
+### Windows
+- win端的动态库名称为 libmediaxx.dll
+- 导出符号控制方式与其他系统不同，使用 .def 文件声明要导出的符号，并在 CMakeLists.txt 中编译时直接指定即可，见 [CMakeLists.txt](src/CMakeLists.txt):
+```cmake
+add_library(mediaxx SHARED
+  ${DIR_IMPL}
+  ${DIR_IMPL_ANDROID}
+  ${DIR_UTIL}
+  ${DIR_ANALYSE}
+
+  ${mediaxx_EXPORT_DEF} # 这里直接在编译时指定导出符号
+)
+```
+- 另外 windows 生成动态库时，一般还会生成导入库 libmediaxx.lib 这里虽然后缀是 .lib 但不是静态库，它只是声明了动态库的符号等信息，用于其他程序编译时可以链接，因此 win 端链接动态库时，可以只需要对应的导入库，而不需要动态库文件。如果还需要 .def 文件，可以从动态库生成，方法见 [win_create_dll_def.bat](script/win_create_dll_def.bat)
+
+### IOS/Macos
+- apple 端的动态库名称为 libmediaxx.dylib ，后缀不同于其他系统
+- 另外动态库的导出符号需要前缀下划线，见:
+  - [libmpv-apple.symbols.txt](src/ffmpeg-help/libmpv-apple.symbols.txt) 和 [libmpv-apple.exp](src/ffmpeg-help/libmpv-apple.exp)
 
 ## LICENSE
 - MIT
