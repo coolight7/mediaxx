@@ -17,9 +17,3 @@ extern "C" {
 #include <stdint.h>
 #include <util/utilxx.h>
 #include <vector>
-
-AudioVisualization_c AudioVisualization_c::instance = AudioVisualization_c();
-
-bool AudioVisualization_c::analyse(const char* input_filename, const char* output_filename) {
-    return true;
-}

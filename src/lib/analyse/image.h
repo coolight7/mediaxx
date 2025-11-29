@@ -23,7 +23,25 @@ extern "C" {
 #include "util/string_util.h"
 #include "util/utilxx.h"
 
-namespace analyse_image {
+namespace mediaxx {
+    // 常见图片格式的文件签名
+    struct ImageSignatureInfo {
+        const uint8_t* signature;
+        size_t         length;
+        AVCodecID      codec_id;
+        const char*    description;
+    };
+
+    inline const ImageSignatureInfo cImgSignatureTable[7] = {
+        {(const uint8_t*)"\xFF\xD8\xFF",      3, AV_CODEC_ID_MJPEG, "JPEG"                },
+        {(const uint8_t*)"\x89PNG\r\n\x1A\n", 8, AV_CODEC_ID_PNG,   "PNG"                 },
+        {(const uint8_t*)"GIF8",              4, AV_CODEC_ID_GIF,   "GIF"                 },
+        {(const uint8_t*)"BM",                2, AV_CODEC_ID_BMP,   "BMP"                 },
+        {(const uint8_t*)"II*\x00",           4, AV_CODEC_ID_TIFF,  "TIFF (little endian)"},
+        {(const uint8_t*)"MM\x00*",           4, AV_CODEC_ID_TIFF,  "TIFF (big endian)"   },
+        {nullptr,                             0, AV_CODEC_ID_NONE,  nullptr               }  // 结束标记
+    };
+
     class AnalyseLogItem_c {
     public:
 
@@ -478,7 +496,7 @@ namespace analyse_image {
     }
 
     inline std::shared_ptr<AnalysePictureColorResult>
-        analysePictureColor(AVFormatContext* formatCtx, analyse_image::AnalyseLogItem_c& logItem) {
+        analysePictureColor(AVFormatContext* formatCtx, mediaxx::AnalyseLogItem_c& logItem) {
         LXX_DEBEG("analysePictureColor: ");
         int ret = avformat_find_stream_info(formatCtx, nullptr);
         if (ret < 0) {
@@ -662,9 +680,9 @@ namespace analyse_image {
     }
 
     inline std::shared_ptr<AnalysePictureColorResult> analyzePictureColorFromData(
-        const char*                     data,
-        size_t                          dataSize,
-        analyse_image::AnalyseLogItem_c& logItem
+        const char*                data,
+        size_t                     dataSize,
+        mediaxx::AnalyseLogItem_c& logItem
     ) {
         if (nullptr == data || dataSize == 0) {
             SET_LOG(logItem, "输入数据无效, dataPtr: {}, dataSize: {}", (void*)data, dataSize);
@@ -711,10 +729,8 @@ namespace analyse_image {
         return analysePictureColor(formatCtx, logItem);
     }
 
-    inline std::shared_ptr<AnalysePictureColorResult> analysePictureColorFromPath(
-        const char*                     picturePath,
-        analyse_image::AnalyseLogItem_c& logItem
-    ) {
+    inline std::shared_ptr<AnalysePictureColorResult>
+        analysePictureColorFromPath(const char* picturePath, mediaxx::AnalyseLogItem_c& logItem) {
         AVFormatContext* formatCtx = nullptr;
         auto             ret       = avformat_open_input(&formatCtx, picturePath, nullptr, nullptr);
         if (ret != 0) {
@@ -723,4 +739,4 @@ namespace analyse_image {
         }
         return analysePictureColor(formatCtx, logItem);
     }
-}; // namespace analyse_image
+}; // namespace mediaxx

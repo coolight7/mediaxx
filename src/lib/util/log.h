@@ -26,8 +26,10 @@
 
 #endif
 
-namespace logxx {
-    void printStack();
+namespace mediaxx {
+    namespace logxx {
+        void printStack();
 
-    void signal_error(std::string_view exepath);
-}; // namespace logxx
+        void signal_error(std::string_view exepath);
+    }; // namespace logxx
+}; // namespace mediaxx

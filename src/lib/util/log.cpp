@@ -2,13 +2,15 @@
 #include "fmt/format.h"
 #include <ctime>
 
+using namespace mediaxx;
+
 #if _ISLINUX
 #include <csignal>
 #include <execinfo.h>
 
 static std::string _exe_path{};
 
-void logxx::printStack() {
+void mediaxx::logxx::printStack() {
 
 #define _printToConsoleAndFile(str, ...) printf(str, ##__VA_ARGS__);
 
@@ -107,15 +109,15 @@ void signal_handler(int signo) {
 #undef _printToConsoleAndFile
 }
 
-void logxx::signal_error(std::string_view exepath) {
+void mediaxx::logxx::signal_error(std::string_view exepath) {
     _exe_path = exepath;
     signal(SIGSEGV, signal_handler);
 }
 
 #else
 
-void logxx::printStack() {}
+void mediaxx::logxx::printStack() {}
 
-void logxx::signal_error(std::string_view exepath) {}
+void mediaxx::logxx::signal_error(std::string_view exepath) {}
 
 #endif

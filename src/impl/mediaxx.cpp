@@ -1,9 +1,9 @@
 
 #include "mediaxx.h"
-#include "analyse/analyse_image.h"
 #include "analyse/audio_visualization.h"
 #include "analyse/codec_info.h"
-#include "analyse/media_info_reader.h"
+#include "analyse/image.h"
+#include "analyse/media_info.h"
 #include "simdjson.h"
 #include "util/log.h"
 #include "util/string_util.h"
@@ -13,6 +13,7 @@
 #include <string>
 #include <string_view>
 
+using namespace mediaxx;
 
 FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size) {
     return malloc(size);
@@ -56,19 +57,19 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_info_malloc(
     assert(nullptr != outLog);
     LXX_DEBEG("mediaxx_get_media_info_malloc : {} ......", filepath);
 
-    auto item  = MediaInfoItem_c{std::string_view{filepath}, outLog};
+    auto item  = mediaxx::MediaInfoEntity_c{std::string_view{filepath}, outLog};
     int  ret   = 0;
     *outResult = nullptr;
-    if (MediaInfoReader_c::instance.openFile(item, headers)) {
+    if (mediaxx::MediaInfoReader_c::instance.openFile(item, headers)) {
         // 读取信息
-        auto jsonsb    = MediaInfoReader_c::instance.toInfoMap(item);
+        auto jsonsb    = mediaxx::MediaInfoReader_c::instance.toInfoMap(item);
         auto pOutput   = std::string_view{pictureOutputPath};
         auto p96Output = std::string_view{picture96OutputPath};
-        *outResult     = stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
+        *outResult     = mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
 
         if (false == pOutput.empty()) {
             // 读取图片
-            ret = MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
+            ret = mediaxx::MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
         } else {
             ret = 0;
         }
@@ -92,13 +93,13 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     assert(nullptr != headers);
     assert(nullptr != pictureOutputPath);
     assert(nullptr != picture96OutputPath);
-    auto item   = MediaInfoItem_c{std::string_view{filepath}, outLog};
+    auto item   = mediaxx::MediaInfoEntity_c{std::string_view{filepath}, outLog};
     int  result = 0;
     // 完整封面路径必须非空
     auto pOutput   = std::string_view{pictureOutputPath};
     auto p96Output = std::string_view{picture96OutputPath};
-    if (false == pOutput.empty() && MediaInfoReader_c::instance.openFile(item, headers)) {
-        result = MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
+    if (false == pOutput.empty() && mediaxx::MediaInfoReader_c::instance.openFile(item, headers)) {
+        result = mediaxx::MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
     } else {
         result = 0;
     }
@@ -117,17 +118,19 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color(
     assert(nullptr != outResult);
     assert(nullptr != outLog);
 
-    auto logItem = analyse_image::AnalyseLogItem_c{outLog};
+    auto logItem = mediaxx::AnalyseLogItem_c{outLog};
     if (nullptr != data) {
-        auto result = analyse_image::analyzePictureColorFromData(data, dataSize, logItem);
+        auto result = mediaxx::analyzePictureColorFromData(data, dataSize, logItem);
         if (nullptr != result) {
-            *outResult = stringxx::stringCopyMalloc(result->toJson().view().value_unsafe()).data();
+            *outResult = mediaxx::stringxx::stringCopyMalloc(result->toJson().view().value_unsafe())
+                             .data();
             return 1;
         }
     } else if (nullptr != filepath) {
-        auto result = analyse_image::analysePictureColorFromPath(filepath, logItem);
+        auto result = mediaxx::analysePictureColorFromPath(filepath, logItem);
         if (nullptr != result) {
-            *outResult = stringxx::stringCopyMalloc(result->toJson().view().value_unsafe()).data();
+            *outResult = mediaxx::stringxx::stringCopyMalloc(result->toJson().view().value_unsafe())
+                             .data();
             return 1;
         }
     }
@@ -145,9 +148,9 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
     assert(nullptr != outResult);
     assert(nullptr != outLog);
 
-    // auto logItem = analyse_image::AnalyseLogItem_c{outLog};
+    // auto logItem = mediaxx::AnalyseLogItem_c{outLog};
     if (nullptr != data) {
-        auto result = analyse_image::analysePictureColorFromDecodedData(
+        auto result = analysePictureColorFromDecodedData(
             (const uint8_t*)data,
             dataSize,
             int(dataSize / 4),
@@ -156,7 +159,8 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
             4
         );
         if (nullptr != result) {
-            *outResult = stringxx::stringCopyMalloc(result->toJson().view().value_unsafe()).data();
+            *outResult = mediaxx::stringxx::stringCopyMalloc(result->toJson().view().value_unsafe())
+                             .data();
             return 1;
         }
     }
@@ -165,16 +169,12 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
 }
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
-    auto jsonsb = CodecInfo_c::findAvailCodec();
-    return stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
+    auto jsonsb = mediaxx::CodecInfo_c::findAvailCodec();
+    return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
 }
 
 FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(const char* filepath, const char* output) {
     assert(nullptr != filepath);
     assert(nullptr != output);
-    auto ret = AudioVisualization_c::instance.analyse(filepath, output);
-    if (ret) {
-        return 1;
-    }
     return 0;
 }

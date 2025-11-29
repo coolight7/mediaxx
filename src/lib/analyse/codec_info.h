@@ -8,81 +8,85 @@ extern "C" {
 #include "util/string_util.h"
 #include <vector>
 
-class CodecInfo_c {
-public:
+namespace mediaxx {
 
-    static simdjson::builder::string_builder findAvailCodec() {
-        std::vector<const AVCodec*>       hardware_codecs{};
-        simdjson::builder::string_builder result{};
-        const AVCodec*                    codec           = nullptr;
-        void*                             iteration_state = nullptr;
+    class CodecInfo_c {
+    public:
 
-        result.start_array();
+        static simdjson::builder::string_builder findAvailCodec() {
+            std::vector<const AVCodec*>       hardware_codecs{};
+            simdjson::builder::string_builder result{};
+            const AVCodec*                    codec           = nullptr;
+            void*                             iteration_state = nullptr;
 
-        bool isFirstItem = true;
-        while ((codec = av_codec_iterate(&iteration_state)) != nullptr) {
-            switch (codec->type) {
-            case AVMediaType::AVMEDIA_TYPE_VIDEO:
-            case AVMediaType::AVMEDIA_TYPE_AUDIO:
-                {
-                    if (false == isFirstItem) {
+            result.start_array();
+
+            bool isFirstItem = true;
+            while ((codec = av_codec_iterate(&iteration_state)) != nullptr) {
+                switch (codec->type) {
+                case AVMediaType::AVMEDIA_TYPE_VIDEO:
+                case AVMediaType::AVMEDIA_TYPE_AUDIO:
+                    {
+                        if (false == isFirstItem) {
+                            result.append_comma();
+                        }
+                        isFirstItem = false;
+                        result.start_object();
+
+                        result.append_key_value<"type">(int(codec->type));
                         result.append_comma();
-                    }
-                    isFirstItem = false;
-                    result.start_object();
 
-                    result.append_key_value<"type">(int(codec->type));
-                    result.append_comma();
-
-                    result.append_key_value<"coder_type">(
-                        int(av_codec_is_encoder(codec)   ? 1
-                            : av_codec_is_decoder(codec) ? 2
-                                                         : 0)
-                    );
-                    result.append_comma();
-
-                    result.append_key_value<"name">(stringxx::toStringNotNull(codec->name));
-                    result.append_comma();
-
-                    if (nullptr != codec->long_name) {
-                        result.append_key_value<"long_name">(codec->long_name);
+                        result.append_key_value<"coder_type">(
+                            int(av_codec_is_encoder(codec)   ? 1
+                                : av_codec_is_decoder(codec) ? 2
+                                                             : 0)
+                        );
                         result.append_comma();
-                    }
 
-                    result.escape_and_append_with_quotes("hw");
-                    result.append_colon();
-                    result.start_array();
-                    bool isFirst = true;
-                    for (int i = 0;; i++) {
-                        const AVCodecHWConfig* config = avcodec_get_hw_config(codec, i);
-                        if (!config) {
-                            break;
+                        result.append_key_value<"name">(stringxx::toStringNotNull(codec->name));
+                        result.append_comma();
+
+                        if (nullptr != codec->long_name) {
+                            result.append_key_value<"long_name">(codec->long_name);
+                            result.append_comma();
                         }
 
-                        const char* hw_type_str = av_hwdevice_get_type_name(config->device_type);
-                        if (hw_type_str) {
-                            if (false == isFirst) {
-                                result.append_comma();
+                        result.escape_and_append_with_quotes("hw");
+                        result.append_colon();
+                        result.start_array();
+                        bool isFirst = true;
+                        for (int i = 0;; i++) {
+                            const AVCodecHWConfig* config = avcodec_get_hw_config(codec, i);
+                            if (!config) {
+                                break;
                             }
-                            isFirst = false;
-                            result.escape_and_append_with_quotes(hw_type_str);
+
+                            const char* hw_type_str
+                                = av_hwdevice_get_type_name(config->device_type);
+                            if (hw_type_str) {
+                                if (false == isFirst) {
+                                    result.append_comma();
+                                }
+                                isFirst = false;
+                                result.escape_and_append_with_quotes(hw_type_str);
+                            }
                         }
+                        result.end_array();
+
+                        result.end_object();
                     }
-                    result.end_array();
-
-                    result.end_object();
+                    break;
+                case AVMediaType::AVMEDIA_TYPE_UNKNOWN:
+                case AVMediaType::AVMEDIA_TYPE_DATA:
+                case AVMediaType::AVMEDIA_TYPE_SUBTITLE:
+                case AVMediaType::AVMEDIA_TYPE_ATTACHMENT:
+                case AVMediaType::AVMEDIA_TYPE_NB:
+                    break;
                 }
-                break;
-            case AVMediaType::AVMEDIA_TYPE_UNKNOWN:
-            case AVMediaType::AVMEDIA_TYPE_DATA:
-            case AVMediaType::AVMEDIA_TYPE_SUBTITLE:
-            case AVMediaType::AVMEDIA_TYPE_ATTACHMENT:
-            case AVMediaType::AVMEDIA_TYPE_NB:
-                break;
             }
-        }
 
-        result.end_array();
-        return result;
-    }
-};
+            result.end_array();
+            return result;
+        }
+    };
+}; // namespace mediaxx

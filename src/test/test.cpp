@@ -2,15 +2,15 @@ extern "C" {
 #include "libavcodec/codec.h"
 }
 
-#include "analyse/analyse_image.h"
 #include "analyse/codec_info.h"
+#include "analyse/image.h"
+#include "analyse/media_info.h"
 #include "mediaxx.h"
 #include "simdjson.h"
 #include "util/log.h"
 #include <fstream>
 #include <iostream>
 #include <map>
-
 
 using namespace std;
 
@@ -28,20 +28,22 @@ void test() {
     }
 
     {
-        assert(stringxx::utf8IsAvail(nullptr) == false);
-        assert(stringxx::utf8IsAvail("\0") == false);
-        assert(stringxx::utf8IsAvail("1"));
-        assert(stringxx::utf8IsAvail("ww 测试 cc"));
-        // assert(stringxx::isAvailUtf8("ww 测试 cc �") == false);
-        assert(stringxx::utf8IsAvail(std::vector<char>{-49, -7, -43, -59}.data()) == false);
+        assert(mediaxx::stringxx::utf8IsAvail(nullptr) == false);
+        assert(mediaxx::stringxx::utf8IsAvail("\0") == false);
+        assert(mediaxx::stringxx::utf8IsAvail("1"));
+        assert(mediaxx::stringxx::utf8IsAvail("ww 测试 cc"));
+        // assert(mediaxx::stringxx::isAvailUtf8("ww 测试 cc �") == false);
+        assert(
+            mediaxx::stringxx::utf8IsAvail(std::vector<char>{-49, -7, -43, -59}.data()) == false
+        );
         // 多字节后续字节格式错误，后续字节固定为 10xxxxxx
-        assert(stringxx::utf8IsAvail("12 \xE4\x28\x01 fd") == false);
+        assert(mediaxx::stringxx::utf8IsAvail("12 \xE4\x28\x01 fd") == false);
         // 非最短编码检查
-        assert(stringxx::utf8IsAvail("12 \xE0\x80\xAF fd") == false);
-        assert(stringxx::utf8IsAvail("12 \xC0\x80 fd") == false);
+        assert(mediaxx::stringxx::utf8IsAvail("12 \xE0\x80\xAF fd") == false);
+        assert(mediaxx::stringxx::utf8IsAvail("12 \xC0\x80 fd") == false);
         // 5、6字节编码无效
-        assert(stringxx::utf8IsAvail("12 \xF8\xF7 fd") == false);
-        assert(stringxx::utf8IsAvail("12 \xFC\xFD fd") == false);
+        assert(mediaxx::stringxx::utf8IsAvail("12 \xF8\xF7 fd") == false);
+        assert(mediaxx::stringxx::utf8IsAvail("12 \xFC\xFD fd") == false);
     }
 
     mediaxx_set_log_level(AV_LOG_TRACE);
@@ -73,8 +75,8 @@ void test() {
 
     {
         const char* log     = nullptr;
-        auto        logItem = analyse_image::AnalyseLogItem_c{&log};
-        auto result = analyse_image::analysePictureColorFromPath("./temp/output.jpg", logItem);
+        auto        logItem = mediaxx::AnalyseLogItem_c{&log};
+        auto        result  = mediaxx::analysePictureColorFromPath("./temp/output.jpg", logItem);
         if (nullptr != *logItem.log) {
             std::cout << "log: " << *logItem.log << std::endl;
         }
@@ -99,9 +101,9 @@ void test() {
                       << " size:" << buffer.size() << std::endl;
             file.close();
             const char* log     = nullptr;
-            auto        logItem = analyse_image::AnalyseLogItem_c{&log};
+            auto        logItem = mediaxx::AnalyseLogItem_c{&log};
             auto        result
-                = analyse_image::analyzePictureColorFromData(buffer.data(), buffer.size(), logItem);
+                = mediaxx::analyzePictureColorFromData(buffer.data(), buffer.size(), logItem);
             if (nullptr != *logItem.log) {
                 std::cout << "log: " << *logItem.log << std::endl;
             }
@@ -150,7 +152,7 @@ void test() {
 
 int main(int argn, char** argv) {
 #if _ISLINUX
-    logxx::signal_error(argv[0]);
+    mediaxx::logxx::signal_error(argv[0]);
 #endif
     std::cout << "======= Test Start =======" << std::endl;
     test();
