@@ -1,12 +1,29 @@
 {
     "configurations": [
         {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/src/third_party/ffmpeg/include-linux/",
+                "${workspaceFolder}/src/third_party/",
+                "${workspaceFolder}/src/lib/",
+                "${workspaceFolder}/src/",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_ISLINUX",
+                "LUMENXX_BUILD_TYPE",
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22000.0",
+            "compilerPath": "cl.exe",
+            "cStandard": "c23",
+            "cppStandard": "c++23"
+        },
+        {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/src/third_party/lcms2/include/",
-                "${workspaceFolder}/src/third_party/libiconv/include/",
-                "${workspaceFolder}/src/third_party/openssl/include/",
-                "${workspaceFolder}/src/third_party/rubberband/",
                 "${workspaceFolder}/src/third_party/ffmpeg/include-win/",
                 "${workspaceFolder}/src/third_party/",
                 "${workspaceFolder}/src/lib/",
@@ -14,6 +31,8 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [
+                "_ISWIN",
+                "LUMENXX_BUILD_TYPE",
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
@@ -28,10 +47,6 @@
             "name": "Android",
             "includePath": [
                 "${workspaceFolder}/src/third_party/ffmpeg/include-android/",
-                "${workspaceFolder}/src/third_party/lcms2/include/",
-                "${workspaceFolder}/src/third_party/libiconv/include/",
-                "${workspaceFolder}/src/third_party/openssl/include/",
-                "${workspaceFolder}/src/third_party/rubberband/",
                 "${workspaceFolder}/src/third_party/",
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/src/",
@@ -40,10 +55,12 @@
                 "${ANDROID_HOME}/ndk/27.3.13750724/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/aarch64-linux-android/"
             ],
             "defines": [
+                "_ISANDROID",
+                "ANDROID",
+                "LUMENXX_BUILD_TYPE",
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE",
-                "ANDROID"
+                "_UNICODE"
             ],
             "cStandard": "c23",
             "cppStandard": "c++23"

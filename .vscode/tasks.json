@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compileDebugCxx",
+            "type": "shell",
+            "command": "${workspaceFolder}/script/debug_build.sh",
+            "args": [
+                "--not-run-test"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}

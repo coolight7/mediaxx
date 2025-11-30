@@ -24,4 +24,6 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-LD_LIBRARY_PATH=$build_dir/exec $build_dir/exec/test
+if [[ $1 != "--not-run-test" ]]; then
+    LD_LIBRARY_PATH=$build_dir/exec $build_dir/exec/test
+fi
