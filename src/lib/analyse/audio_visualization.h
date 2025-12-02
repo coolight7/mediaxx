@@ -33,7 +33,15 @@ public:
     inline static constexpr size_t DEF_SPECTRUM_SIZE       = 256;
     inline static constexpr size_t DEF_HANNING_WINDOW_SIZE = DEF_SPECTRUM_SIZE * 2;
     inline static constexpr size_t DEF_FPS                 = 10;
+    inline static constexpr size_t DEF_FFT_SIZE            = DEF_SPECTRUM_SIZE * 2;
+    inline static constexpr size_t DEF_FFT_LOG2_SIZE       = 9; // log2(512) = 9，位反转计算
+    inline static constexpr float  DEF_2PI                 = 2.0f * static_cast<float>(M_PI);
 
+    // 预计算的旋转因子表（W_N^k = cosθ - i*sinθ，θ=2kπ/N）
+    std::array<float, DEF_FFT_SIZE / 2> fftTwiddleCos{}; // 实部（cosθ）
+    std::array<float, DEF_FFT_SIZE / 2> fftTwiddleSin{}; // 虚部（-sinθ，提前存储负号）
+
+    std::array<size_t, DEF_FFT_SIZE>           fftBitRevTable{};
     std::array<float, DEF_HANNING_WINDOW_SIZE> hanningWindow{};
 
     AudioSpectrumAnalyzer() {
@@ -53,48 +61,88 @@ public:
         hanningWindow.fill(0);
         for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; i++) {
             hanningWindow[i]
-                = 0.5f * (1.0f - std::cos(2.0f * M_PI * i / (DEF_HANNING_WINDOW_SIZE - 1)));
+                = 0.5f * (1.0f - std::cos(DEF_2PI * i / (DEF_HANNING_WINDOW_SIZE - 1)));
         }
     }
 
-    void init() {
-        createHanningWindow();
+    void precomputeFFTTables() {
+        // 预计算位反转表（针对 512 点 FFT，9 位地址）
+        for (size_t i = 0; i < DEF_FFT_SIZE; ++i) {
+            size_t bitRev = 0;
+            for (size_t j = 0; j < DEF_FFT_LOG2_SIZE; ++j) {
+                // 逐位反转：将 i 的第 j 位放到 bitRev 的第 (DEF_FFT_LOG2_SIZE-1-j) 位
+                bitRev |= ((i >> j) & 1) << (DEF_FFT_LOG2_SIZE - 1 - j);
+            }
+            fftBitRevTable[i] = bitRev;
+        }
+
+        // 预计算旋转因子表（W_N^k = cos(2πk/N) - i*sin(2πk/N)）
+        // 只需要计算前 N/2 个（后续可复用），提前存储虚部的负号
+        for (size_t k = 0; k < DEF_FFT_SIZE / 2; ++k) {
+            const float theta = DEF_2PI * k / DEF_FFT_SIZE;
+            fftTwiddleCos[k]  = std::cos(theta);
+            // 提前带负号，减少计算
+            fftTwiddleSin[k] = -std::sin(theta);
+        }
+
+        LXX_DEBEG(
+            "FFT tables precomputed: bitRevTable size={}, twiddleTable size={}",
+            fftBitRevTable.size(),
+            fftTwiddleCos.size()
+        );
     }
 
-    // 快速傅里叶变换,仅支持2的幂长度
-    void fft(std::vector<std::complex<float>>& data) {
-        int n = data.size();
-        if (n <= 1 || (n & (n - 1)) != 0) {
-            // 校验长度为2的幂
-            LXX_WARN("fft: data size ({}) is not power of 2", n);
+    // 快速傅里叶变换
+    void fft(std::vector<std::complex<float>>& data) const {
+        if (data.size() != DEF_FFT_SIZE) {
+            LXX_WARN("fft: only support size={}, current={}", DEF_FFT_SIZE, data.size());
             return;
         }
 
-        for (int i = 1, j = 0; i < n; i++) {
-            int bit = n >> 1;
-            for (; j & bit; bit >>= 1) {
-                j ^= bit;
-            }
-            j ^= bit;
+        // 位反转重排（使用预计算表，O(N) 时间）
+        for (size_t i = 0; i < DEF_FFT_SIZE; ++i) {
+            const size_t j = fftBitRevTable[i];
             if (i < j) {
                 std::swap(data[i], data[j]);
             }
         }
 
-        for (int len = 2; len <= n; len <<= 1) {
-            float               angle = -2.0f * M_PI / len;
-            std::complex<float> wlen{std::cos(angle), std::sin(angle)};
-            for (int i = 0; i < n; i += len) {
-                std::complex<float> w{1};
-                for (int j = 0; j < len / 2; j++) {
-                    std::complex<float> u  = data[i + j];
-                    std::complex<float> v  = data[i + j + len / 2] * w;
-                    data[i + j]            = u + v;
-                    data[i + j + len / 2]  = u - v;
-                    w                     *= wlen;
+        // 迭代 FFT
+        // 循环分组 len（2^1, 2^2, ..., 2^9=512）
+        for (size_t len = 2; len <= DEF_FFT_SIZE; len <<= 1) {
+            const size_t halfLen = len / 2;
+            // 旋转因子步长
+            const size_t step = DEF_FFT_SIZE / len;
+
+            for (size_t i = 0; i < DEF_FFT_SIZE; i += len) {
+                // 组内蝶形运算
+                for (size_t j = 0; j < halfLen; ++j) {
+                    // 从预计算表中获取旋转因子（W_N^(j*step)）
+                    const float wCos = fftTwiddleCos[j * step];
+                    const float wSin = fftTwiddleSin[j * step];
+
+                    // 获取蝶形的两个节点
+                    const size_t               idxU = i + j;
+                    const size_t               idxV = idxU + halfLen;
+                    const std::complex<float>& u    = data[idxU];
+                    const std::complex<float>& v    = data[idxV];
+
+                    // 计算 v * W
+                    // (v.real * wCos - v.imag * wSin) + i*(v.imag * wCos + v.real * wSin)
+                    const float vwReal = v.real() * wCos - v.imag() * wSin;
+                    const float vwImag = v.imag() * wCos + v.real() * wSin;
+
+                    data[idxU] = std::complex<float>(u.real() + vwReal, u.imag() + vwImag);
+                    data[idxV] = std::complex<float>(u.real() - vwReal, u.imag() - vwImag);
                 }
             }
         }
+    }
+
+    void init() {
+        createHanningWindow();
+        // 预计算 FFT 旋转因子表和位反转表
+        precomputeFFTTables();
     }
 
     bool computeSpectrum(
@@ -104,30 +152,54 @@ public:
     ) {
         result.fill(0);
 
-        if (dataSize < DEF_HANNING_WINDOW_SIZE) {
-            LXX_WARN(
-                "computeSpectrum: audio data size ({}) < required ({})",
-                dataSize,
-                DEF_HANNING_WINDOW_SIZE
-            );
+        if (dataSize == 0) {
+            LXX_WARN("computeSpectrum: input data size is 0");
             return false;
         }
 
-        auto fftData = std::vector<std::complex<float>>{};
-        fftData.resize(DEF_HANNING_WINDOW_SIZE);
+        // 统一线性插值适配汉宁窗大小
+        std::vector<float> windowInput(DEF_HANNING_WINDOW_SIZE, 0.0f);
+        for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; ++i) {
+            // 将原始M个采样点映射到N=512个窗口点
+            // 计算当前目标点在原始数据中的 [归一化位置]（0~M-1）
+            const float srcPos
+                = static_cast<float>(i) * (dataSize - 1) / (DEF_HANNING_WINDOW_SIZE - 1);
+            // 左邻点索引
+            const size_t srcIdx = static_cast<size_t>(srcPos);
+            // 插值权重（0~1，表示距离左邻点的比例）
+            const float alpha = srcPos - srcIdx;
 
-        for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; i++) {
-            fftData[i] = std::complex<float>{*(dataStart + i) * hanningWindow[i], 0.0f};
+            // 线性插值：保持原始信号的趋势，避免失真
+            if (srcIdx < dataSize - 1) {
+                // (1-alpha)*左邻点 + alpha*右邻点
+                windowInput[i]
+                    = (1.0f - alpha) * *(dataStart + srcIdx) + alpha * *(dataStart + srcIdx + 1);
+            } else {
+                // 最后一个目标点直接取原始数据最后一个值
+                windowInput[i] = *(dataStart + dataSize - 1);
+            }
+        }
+
+        std::vector<std::complex<float>> fftData(DEF_FFT_SIZE);
+        for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; ++i) {
+            fftData[i] = std::complex<float>{windowInput[i] * hanningWindow[i], 0.0f};
         }
 
         fft(fftData);
 
         for (size_t i = 0; i < DEF_SPECTRUM_SIZE; i++) {
-            float magnitude  = std::abs(fftData[i]);
-            float db         = 20.0f * std::log10(magnitude + 1e-6f);
-            float normalized = (db + 80.0f) / 80.0f;
-            normalized       = std::clamp(normalized, 0.0f, 1.0f);
-            result[i]        = static_cast<unsigned char>(normalized * 255);
+            float magnitude = std::abs(fftData[i]);
+
+            // 实信号FFT共轭对称，正频率分量幅度×2
+            if (i > 0 && i < DEF_SPECTRUM_SIZE) {
+                magnitude *= 2.0f;
+            }
+
+            // 分贝转换，归一化 255
+            const float db         = 20.0f * std::log10(magnitude + 1e-6f);
+            float       normalized = (db + 80.0f) / 80.0f;
+            normalized             = std::clamp(normalized, 0.0f, 1.0f);
+            result[i]              = static_cast<unsigned char>(normalized * 255);
         }
 
         return true;
@@ -150,7 +222,6 @@ public:
             return false;
         }
 
-        // 音频流
         audioStreamIndex
             = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
         if (audioStreamIndex < 0) {
@@ -159,7 +230,6 @@ public:
             return false;
         }
 
-        // 解码器参数
         AVCodecParameters* codecParameters = formatContext->streams[audioStreamIndex]->codecpar;
         const AVCodec*     codec           = avcodec_find_decoder(codecParameters->codec_id);
         if (!codec) {
@@ -168,7 +238,6 @@ public:
             return false;
         }
 
-        // 初始化解码器上下文
         codecContext = avcodec_alloc_context3(codec);
         if (!codecContext) {
             LXX_ERR("avcodec_alloc_context3 failed");
@@ -182,14 +251,12 @@ public:
             return false;
         }
 
-        // 解码器
         if (avcodec_open2(codecContext, codec, nullptr) < 0) {
             LXX_ERR("avcodec_open2 failed");
             cleanup();
             return false;
         }
 
-        // 初始化重采样器
         swrContext = swr_alloc();
         if (!swrContext) {
             LXX_ERR("swr_alloc failed");
@@ -219,7 +286,7 @@ public:
     bool decodeAudioFrame(
         std::vector<float>& data,
         AVPacket*           packet,
-        AVFrame*            decoedeFrame,
+        AVFrame*            decodedFrame,
         AVFrame*            resampledFrame
     ) {
         if (!codecContext || !packet) {
@@ -235,12 +302,12 @@ public:
             return false;
         }
 
-        if (!decoedeFrame) {
-            LXX_AVERR("decoedeFrame not available");
+        if (!decodedFrame) {
+            LXX_AVERR("decodedFrame not available");
             return false;
         }
 
-        ret = avcodec_receive_frame(codecContext, decoedeFrame);
+        ret = avcodec_receive_frame(codecContext, decodedFrame);
         if (ret == 0) {
             // 重采样
             if (!resampledFrame) {
@@ -248,11 +315,11 @@ public:
                 return false;
             }
 
-            resampledFrame->sample_rate = decoedeFrame->sample_rate;
+            resampledFrame->sample_rate = decodedFrame->sample_rate;
             resampledFrame->format      = AV_SAMPLE_FMT_FLT;
             resampledFrame->ch_layout   = AV_CHANNEL_LAYOUT_MONO;
 
-            ret = swr_convert_frame(swrContext, resampledFrame, decoedeFrame);
+            ret = swr_convert_frame(swrContext, resampledFrame, decodedFrame);
             if (ret == 0) {
                 // 校验数据
                 if (resampledFrame->data[0] && resampledFrame->nb_samples > 0) {
@@ -355,7 +422,6 @@ public:
 
     void cleanup() {
         LXX_DEBEG("AudioVisuallizationAnalyzer / cleanup ...");
-        // 释放顺序：依赖资源先释放（swrContext依赖codecContext）
         if (swrContext) {
             swr_free(&swrContext);
             swrContext = nullptr;
