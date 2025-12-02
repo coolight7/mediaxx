@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fmt/format.h"
+#include "util/utilxx.h"
 #include <iostream>
 #include <string_view>
 
@@ -14,6 +15,8 @@
 
 #define LXX_ERR(str, ...) (std::cerr << fmt::format(str, ##__VA_ARGS__) << std::endl);
 
+#define LXX_AVERR(str) LXX_ERR("{}: {}/{}", str, ret, mediaxx::utilxx::av_err2str(ret));
+
 #else
 
 #define LXX_DEBEG(str, ...) ;
@@ -23,6 +26,8 @@
 #define LXX_WARN(str, ...) ;
 
 #define LXX_ERR(str, ...) ;
+
+#define LXX_AVERR(str) ;
 
 #endif
 

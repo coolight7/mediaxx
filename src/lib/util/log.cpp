@@ -111,6 +111,7 @@ void signal_handler(int signo) {
 
 void mediaxx::logxx::signal_error(std::string_view exepath) {
     _exe_path = exepath;
+    printf("# Signal error handler: %s\n", exepath.data());
     signal(SIGSEGV, signal_handler);
 }
 
