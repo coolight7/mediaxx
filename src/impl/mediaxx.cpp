@@ -178,7 +178,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
     assert(nullptr != outLog);
 
     mediaxx::AudioSpectrumAnalyzer analyzer{};
-    std::vector<std::array<u_int8_t, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
+    std::vector<std::array<uint8_t, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
         spectrumData{};
     if (analyzer.processAudio(filepath, spectrumData)) {
         std::cout << "成功生成 " << spectrumData.size() << " 帧频谱数据" << std::endl;
