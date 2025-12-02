@@ -422,7 +422,8 @@ elseif (_ISLINUX)
     "-Wl,-rpath=\$ORIGIN"
   )
   if (NOT DEFINED LUMENXX_BUILD_TYPE)
-    # 指定 LUMENXX_BUILD_TYPE 时不指定导出符号，否则可能导致链接器报错 /usr/bin/ld: read in flex scanner failed
+    # - 指定 LUMENXX_BUILD_TYPE 时不指定导出符号，此时可能只连接了ffmpeg，且为动态链接
+    # 可能导致链接器报错 指定了需要的符号，却找不到符号实现 /usr/bin/ld: read in flex scanner failed
     if (EXPORT_ALL_SYMBOL)
       target_link_options(mediaxx PRIVATE 
         "-Wl,--export-dynamic,--whole-archive,--allow-multiple-definition"

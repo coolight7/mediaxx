@@ -85,6 +85,9 @@ namespace mediaxx {
             avformat_network_deinit();
         }
 
+        MediaInfoReader_c(const MediaInfoReader_c&)            = delete;
+        MediaInfoReader_c& operator=(const MediaInfoReader_c&) = delete;
+
         bool openFile(MediaInfoEntity_c& item, const std::string_view headers) {
             if (item.filepath.empty()) {
                 item.setLog("缺少文件路径");

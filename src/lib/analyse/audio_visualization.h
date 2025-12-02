@@ -12,6 +12,7 @@ extern "C" {
 #include "util/log.h"
 #include <algorithm>
 #include <array>
+#include <assert.h>
 #include <cmath>
 #include <complex>
 #include <iostream>
@@ -22,26 +23,114 @@ extern "C" {
 class AudioSpectrumAnalyzer {
 private:
 
-    AVFormatContext* formatContext;
-    AVCodecContext*  codecContext;
-    int              audioStreamIndex;
-    SwrContext*      swrContext;
+    AVFormatContext* formatContext    = nullptr;
+    AVCodecContext*  codecContext     = nullptr;
+    SwrContext*      swrContext       = nullptr;
+    int              audioStreamIndex = -1;
 
 public:
 
-    inline static const size_t DEF_SPECTRUM_SIZE = 256;
-    inline static const size_t DEF_FPS           = 10;
+    inline static constexpr size_t DEF_SPECTRUM_SIZE       = 256;
+    inline static constexpr size_t DEF_HANNING_WINDOW_SIZE = DEF_SPECTRUM_SIZE * 2;
+    inline static constexpr size_t DEF_FPS                 = 10;
 
-    AudioSpectrumAnalyzer() :
-        formatContext(nullptr),
-        codecContext(nullptr),
-        audioStreamIndex(-1),
-        swrContext(nullptr) {
+    std::array<float, DEF_HANNING_WINDOW_SIZE> hanningWindow{};
+
+    AudioSpectrumAnalyzer() {
         // avformat_network_init();
     }
 
     ~AudioSpectrumAnalyzer() {
         cleanup();
+    }
+
+    AudioSpectrumAnalyzer(const AudioSpectrumAnalyzer&)            = delete;
+    AudioSpectrumAnalyzer& operator=(const AudioSpectrumAnalyzer&) = delete;
+
+    // 汉宁窗口
+    void createHanningWindow() {
+        assert(hanningWindow.size() == DEF_HANNING_WINDOW_SIZE);
+        hanningWindow.fill(0);
+        for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; i++) {
+            hanningWindow[i]
+                = 0.5f * (1.0f - std::cos(2.0f * M_PI * i / (DEF_HANNING_WINDOW_SIZE - 1)));
+        }
+    }
+
+    void init() {
+        createHanningWindow();
+    }
+
+    // 快速傅里叶变换,仅支持2的幂长度
+    void fft(std::vector<std::complex<float>>& data) {
+        int n = data.size();
+        if (n <= 1 || (n & (n - 1)) != 0) {
+            // 校验长度为2的幂
+            LXX_WARN("fft: data size ({}) is not power of 2", n);
+            return;
+        }
+
+        for (int i = 1, j = 0; i < n; i++) {
+            int bit = n >> 1;
+            for (; j & bit; bit >>= 1) {
+                j ^= bit;
+            }
+            j ^= bit;
+            if (i < j) {
+                std::swap(data[i], data[j]);
+            }
+        }
+
+        for (int len = 2; len <= n; len <<= 1) {
+            float               angle = -2.0f * M_PI / len;
+            std::complex<float> wlen{std::cos(angle), std::sin(angle)};
+            for (int i = 0; i < n; i += len) {
+                std::complex<float> w{1};
+                for (int j = 0; j < len / 2; j++) {
+                    std::complex<float> u  = data[i + j];
+                    std::complex<float> v  = data[i + j + len / 2] * w;
+                    data[i + j]            = u + v;
+                    data[i + j + len / 2]  = u - v;
+                    w                     *= wlen;
+                }
+            }
+        }
+    }
+
+    bool computeSpectrum(
+        const size_t                                  dataSize,
+        const std::vector<float>::iterator            dataStart,
+        std::array<unsigned char, DEF_SPECTRUM_SIZE>& result
+    ) {
+        result.fill(0);
+
+        if (dataSize < DEF_HANNING_WINDOW_SIZE) {
+            LXX_WARN(
+                "computeSpectrum: audio data size ({}) < required ({})",
+                dataSize,
+                DEF_HANNING_WINDOW_SIZE
+            );
+            return false;
+        }
+
+        auto fftData = std::vector<std::complex<float>>{};
+        fftData.resize(DEF_HANNING_WINDOW_SIZE);
+
+        for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; i++) {
+            fftData[i] = std::complex<float>{*(dataStart + i) * hanningWindow[i], 0.0f};
+        }
+
+        fft(fftData);
+
+        for (size_t i = 0; i < DEF_SPECTRUM_SIZE; i++) {
+            float magnitude  = std::abs(fftData[i]);
+            float db         = 20.0f * std::log10(magnitude + 1e-6f);
+            float normalized = (db + 80.0f) / 80.0f;
+            normalized       = std::clamp(normalized, 0.0f, 1.0f);
+            result[i]        = static_cast<unsigned char>(normalized * 255);
+        }
+
+        return true;
     }
 
     bool openAudioFile(const char* filepath) {
@@ -127,7 +216,12 @@ public:
         return true;
     }
 
-    bool decodeAudioFrame(std::vector<float>& data, AVPacket* packet) {
+    bool decodeAudioFrame(
+        std::vector<float>& data,
+        AVPacket*           packet,
+        AVFrame*            decoedeFrame,
+        AVFrame*            resampledFrame
+    ) {
         if (!codecContext || !packet) {
             LXX_ERR("decodeAudioFrame: invalid parameters");
             return false;
@@ -141,27 +235,24 @@ public:
             return false;
         }
 
-        AVFrame* frame = av_frame_alloc();
-        if (!frame) {
-            LXX_AVERR("av_frame_alloc failed");
+        if (!decoedeFrame) {
+            LXX_AVERR("decoedeFrame not available");
             return false;
         }
 
-        ret = avcodec_receive_frame(codecContext, frame);
+        ret = avcodec_receive_frame(codecContext, decoedeFrame);
         if (ret == 0) {
             // 重采样
-            AVFrame* resampledFrame = av_frame_alloc();
             if (!resampledFrame) {
-                LXX_AVERR("av_frame_alloc (resampledFrame) failed");
-                av_frame_free(&frame);
+                LXX_AVERR("resampledFrame not available");
                 return false;
             }
 
-            resampledFrame->sample_rate = frame->sample_rate;
+            resampledFrame->sample_rate = decoedeFrame->sample_rate;
             resampledFrame->format      = AV_SAMPLE_FMT_FLT;
             resampledFrame->ch_layout   = AV_CHANNEL_LAYOUT_MONO;
 
-            ret = swr_convert_frame(swrContext, resampledFrame, frame);
+            ret = swr_convert_frame(swrContext, resampledFrame, decoedeFrame);
             if (ret == 0) {
                 // 校验数据
                 if (resampledFrame->data[0] && resampledFrame->nb_samples > 0) {
@@ -176,94 +267,11 @@ public:
             } else {
                 LXX_AVERR("swr_convert_frame failed");
             }
-
-            av_frame_free(&resampledFrame);
         } else if (ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
             LXX_AVERR("avcodec_receive_frame failed");
         }
 
-        av_frame_free(&frame);
         return ret == 0;
-    }
-
-    // 汉宁窗口
-    std::vector<float> createHanningWindow(int size) {
-        std::vector<float> window(size, 0.0f);
-        for (int i = 0; i < size; i++) {
-            window[i] = 0.5f * (1.0f - std::cos(2.0f * M_PI * i / (size - 1)));
-        }
-        return window;
-    }
-
-    // 快速傅里叶变换,仅支持2的幂长度
-    void fft(std::vector<std::complex<float>>& data) {
-        int n = data.size();
-        if (n <= 1 || (n & (n - 1)) != 0) { // 新增：校验长度为2的幂
-            LXX_WARN("fft: data size ({}) is not power of 2", n);
-            return;
-        }
-
-        for (int i = 1, j = 0; i < n; i++) {
-            int bit = n >> 1;
-            for (; j & bit; bit >>= 1) {
-                j ^= bit;
-            }
-            j ^= bit;
-            if (i < j) {
-                std::swap(data[i], data[j]);
-            }
-        }
-
-        for (int len = 2; len <= n; len <<= 1) {
-            float               angle = -2.0f * M_PI / len;
-            std::complex<float> wlen{std::cos(angle), std::sin(angle)};
-            for (int i = 0; i < n; i += len) {
-                std::complex<float> w{1};
-                for (int j = 0; j < len / 2; j++) {
-                    std::complex<float> u  = data[i + j];
-                    std::complex<float> v  = data[i + j + len / 2] * w;
-                    data[i + j]            = u + v;
-                    data[i + j + len / 2]  = u - v;
-                    w                     *= wlen;
-                }
-            }
-        }
-    }
-
-    bool computeSpectrum(
-        const size_t                                  dataSize,
-        const std::vector<float>::iterator            dataStart,
-        std::array<unsigned char, DEF_SPECTRUM_SIZE>& result
-    ) {
-        const size_t requiredSize = DEF_SPECTRUM_SIZE * 2;
-        result.fill(0);
-
-        if (dataSize < requiredSize) {
-            LXX_WARN(
-                "computeSpectrum: audio data size ({}) < required ({})",
-                dataSize,
-                requiredSize
-            );
-            return false;
-        }
-
-        auto window  = createHanningWindow(requiredSize);
-        auto fftData = std::vector<std::complex<float>>(requiredSize);
-        for (size_t i = 0; i < requiredSize; i++) {
-            fftData[i] = std::complex<float>{*(dataStart + i) * window[i], 0.0f};
-        }
-
-        fft(fftData);
-
-        for (size_t i = 0; i < DEF_SPECTRUM_SIZE; i++) {
-            float magnitude  = std::abs(fftData[i]);
-            float db         = 20.0f * std::log10(magnitude + 1e-6f);
-            float normalized = (db + 80.0f) / 80.0f;
-            normalized       = std::clamp(normalized, 0.0f, 1.0f);
-            result[i]        = static_cast<unsigned char>(normalized * 255);
-        }
-
-        return true;
     }
 
     bool processAudio(
@@ -297,12 +305,15 @@ public:
             return false;
         }
 
+        init();
+        AVFrame*           decodedFrame   = av_frame_alloc();
+        AVFrame*           resampledFrame = av_frame_alloc();
         std::vector<float> accumulatedAudio{};
 
         while (av_read_frame(formatContext, packet) >= 0) {
             if (packet->stream_index == audioStreamIndex) {
                 // 解码并积累音频数据
-                if (decodeAudioFrame(accumulatedAudio, packet)) {
+                if (decodeAudioFrame(accumulatedAudio, packet, decodedFrame, resampledFrame)) {
                     while (accumulatedAudio.size() >= samplesPerFrame) {
                         outputSpectrum.emplace_back();
                         computeSpectrum(
@@ -318,10 +329,14 @@ public:
                         );
                     }
                 }
+                av_frame_unref(decodedFrame);
+                av_frame_unref(resampledFrame);
             }
             av_packet_unref(packet);
         }
         av_packet_free(&packet);
+        av_frame_free(&decodedFrame);
+        av_frame_free(&resampledFrame);
 
         // 处理剩余数据,不足一帧时填充0
         if (false == accumulatedAudio.empty()) {

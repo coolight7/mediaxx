@@ -17,28 +17,6 @@ using namespace std;
 
 void test() {
     {
-        std::cout << "AudioSpectrumAnalyzer ....... ====================" << std::endl;
-        AudioSpectrumAnalyzer analyzer{};
-        std::vector<std::array<unsigned char, AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
-            spectrumData{};
-
-        if (analyzer.processAudio("./temp/Great Voyage_洛天依.mp3", spectrumData)) {
-            std::cout << "成功生成 " << spectrumData.size() << " 帧频谱数据" << std::endl;
-
-            int i = 0;
-            for (auto& spectrum : spectrumData) {
-                std::cout << ++i << ": " << spectrum.size() << std::endl;
-            }
-
-            // 使用频谱数据...
-            // 注意：spectrumPointers的有效性依赖于spectrumData
-
-        } else {
-            std::cerr << "处理音频文件失败" << std::endl;
-        }
-        return;
-    }
-    {
         std::map<std::string, std::string> data{
             {"name",     "simdjson"    },
             {"type",     "parser"      },
@@ -70,6 +48,25 @@ void test() {
     }
 
     mediaxx_set_log_level(AV_LOG_TRACE);
+
+    {
+        std::cout << "AudioSpectrumAnalyzer ....... ====================" << std::endl;
+        AudioSpectrumAnalyzer analyzer{};
+        std::vector<std::array<unsigned char, AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
+            spectrumData{};
+
+        if (analyzer.processAudio("./temp/Great Voyage_洛天依.mp3", spectrumData)) {
+            std::cout << "成功生成 " << spectrumData.size() << " 帧频谱数据" << std::endl;
+
+            int i = 0;
+            for (auto& spectrum : spectrumData) {
+                std::cout << ++i << ": " << spectrum.size() << std::endl;
+            }
+        } else {
+            std::cerr << "处理音频文件失败" << std::endl;
+        }
+        return;
+    }
 
     auto result = mediaxx_get_available_hwcodec_list();
     if (nullptr != result) {
