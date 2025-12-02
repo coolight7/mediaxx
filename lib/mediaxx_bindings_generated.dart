@@ -256,6 +256,34 @@ class MediaxxBindings {
             )
           >();
 
+  int mediaxx_get_audio_visualization(
+    ffi.Pointer<ffi.Char> filepath,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outResult,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
+  ) {
+    return _mediaxx_get_audio_visualization(filepath, outResult, outLog);
+  }
+
+  late final _mediaxx_get_audio_visualizationPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+          )
+        >
+      >('mediaxx_get_audio_visualization');
+  late final _mediaxx_get_audio_visualization =
+      _mediaxx_get_audio_visualizationPtr
+          .asFunction<
+            int Function(
+              ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            )
+          >();
+
   ffi.Pointer<ffi.Char> mediaxx_get_available_hwcodec_list() {
     return _mediaxx_get_available_hwcodec_list();
   }
@@ -267,23 +295,4 @@ class MediaxxBindings {
   late final _mediaxx_get_available_hwcodec_list =
       _mediaxx_get_available_hwcodec_listPtr
           .asFunction<ffi.Pointer<ffi.Char> Function()>();
-
-  int mediaxx_get_audio_visualization(
-    ffi.Pointer<ffi.Char> filepath,
-    ffi.Pointer<ffi.Char> output,
-  ) {
-    return _mediaxx_get_audio_visualization(filepath, output);
-  }
-
-  late final _mediaxx_get_audio_visualizationPtr =
-      _lookup<
-        ffi.NativeFunction<
-          ffi.Int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)
-        >
-      >('mediaxx_get_audio_visualization');
-  late final _mediaxx_get_audio_visualization =
-      _mediaxx_get_audio_visualizationPtr
-          .asFunction<
-            int Function(ffi.Pointer<ffi.Char>, ffi.Pointer<ffi.Char>)
-          >();
 }
