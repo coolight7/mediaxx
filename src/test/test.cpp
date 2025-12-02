@@ -51,8 +51,8 @@ void test() {
 
     {
         std::cout << "AudioSpectrumAnalyzer ....... ====================" << std::endl;
-        AudioSpectrumAnalyzer analyzer{};
-        std::vector<std::array<unsigned char, AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
+        mediaxx::AudioSpectrumAnalyzer analyzer{};
+        std::vector<std::array<unsigned char, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
             spectrumData{};
 
         if (analyzer.processAudio("./temp/Great Voyage_洛天依.mp3", spectrumData)) {
@@ -65,7 +65,6 @@ void test() {
         } else {
             std::cerr << "处理音频文件失败" << std::endl;
         }
-        return;
     }
 
     auto result = mediaxx_get_available_hwcodec_list();

@@ -72,6 +72,9 @@ add_library(mediaxx SHARED
 - 另外动态库的导出符号需要前缀下划线，见:
   - [libmpv-apple.symbols.txt](src/ffmpeg-help/libmpv-apple.symbols.txt) 和 [libmpv-apple.exp](src/ffmpeg-help/libmpv-apple.exp)
 
+## 开发
+- 修改导出的头文件(src/mediaxx.h)[src/mediaxx.h]内的函数声明后，需要执行 `dart run ffigen --config ffigen.yaml` 更新生成的dart代码
+
 ## LICENSE
 - MIT
 - 如果静态、动态链接 ffmpeg、libmpv 等库时，可能会附带他们对应启用的 LGPL、GPLv2、GPLv3 

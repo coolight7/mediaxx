@@ -168,13 +168,39 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
     return 0;
 }
 
+FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
+    const char*  filepath,
+    const char** outResult,
+    const char** outLog
+) {
+    assert(nullptr != filepath);
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
+
+    mediaxx::AudioSpectrumAnalyzer analyzer{};
+    std::vector<std::array<u_int8_t, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
+        spectrumData{};
+    if (analyzer.processAudio(filepath, spectrumData)) {
+        std::cout << "成功生成 " << spectrumData.size() << " 帧频谱数据" << std::endl;
+        const auto len    = mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE * spectrumData.size();
+        auto       result = new char[len];
+        int        index  = 0;
+        for (auto& spectrum : spectrumData) {
+            std::memcpy(
+                (void*)(result + index),
+                spectrum.data(),
+                mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE
+            );
+            index += mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE;
+        }
+        *outResult = result;
+        return len;
+    }
+    *outResult = nullptr;
+    return 0;
+}
+
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
     auto jsonsb = mediaxx::CodecInfo_c::findAvailCodec();
     return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
-}
-
-FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(const char* filepath, const char* output) {
-    assert(nullptr != filepath);
-    assert(nullptr != output);
-    return 0;
 }
