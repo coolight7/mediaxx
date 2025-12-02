@@ -121,6 +121,22 @@ mediaxx_analyse_picture_color_from_decoded_data(Uint8List data) async {
   return (result.ret, result.result, result.log);
 }
 
+Future<(int ret, Uint8List? result, String? log)>
+mediaxx_get_audio_visualization(final String? filepath) async {
+  assert(null != filepath);
+  final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
+  final int requestId = _nextAsyncxxRequestId++;
+  final request = _AsyncxxRequestAnalyseAudioVisualization(
+    requestId,
+    filepath: filepath,
+  );
+  final completer = Completer<_AsyncxxResponseUInt8List>();
+  _asyncxxRequests[requestId] = completer;
+  helperIsolateSendPort.send(request);
+  final result = await completer.future;
+  return (result.ret, result.result, result.log);
+}
+
 String mediaxx_get_available_hwcodec_list() {
   final result = _bindings.mediaxx_get_available_hwcodec_list();
   final str = result.cast<Utf8>().tryToDartString();
@@ -169,6 +185,25 @@ class _AsyncxxRequestMediaInfo {
     pictureOutputPathPtr = pictureOutputPath.toNativeUtf8().cast<Char>();
     picture96OutputPathPtr = picture96OutputPath.toNativeUtf8().cast<Char>();
   }
+}
+
+class _AsyncxxResponseUInt8List {
+  final int id;
+  final int ret;
+  final int resultLen;
+  final Pointer<Char>? resultPtr;
+  final Pointer<Char>? logPtr;
+
+  Uint8List? result;
+  String? log;
+
+  _AsyncxxResponseUInt8List(
+    this.id, {
+    required this.ret,
+    required this.resultLen,
+    this.resultPtr,
+    this.logPtr,
+  });
 }
 
 class _AsyncxxResponseMediaInfo {
@@ -246,6 +281,21 @@ class _AsyncxxRequestAnalysePictureColor {
   }
 }
 
+class _AsyncxxRequestAnalyseAudioVisualization {
+  final int id;
+
+  late Pointer<Char>? filepathPtr;
+
+  bool isDispose = false;
+
+  _AsyncxxRequestAnalyseAudioVisualization(
+    this.id, {
+    required String? filepath,
+  }) {
+    filepathPtr = filepath?.toNativeUtf8().cast<Char>();
+  }
+}
+
 class _AsyncxxResponseDefault {
   final int id;
   final int result;
@@ -276,7 +326,25 @@ Future<SendPort> _helperIsolateSendPort = () async {
       }
 
       // App接收数据，在这里才转 dartStr，减少拷贝
-      if (data is _AsyncxxResponseMediaInfo) {
+      if (data is _AsyncxxResponseUInt8List) {
+        final completer = _asyncxxRequests[data.id]!;
+        _asyncxxRequests.remove(data.id);
+
+        data.result = data.resultPtr
+            ?.cast<Uint8>()
+            .asTypedList(data.resultLen)
+            .sublist(0);
+        data.log = data.logPtr?.cast<Utf8>().tryToDartString();
+        completer.complete(data);
+
+        if (null != data.resultPtr) {
+          malloc.free(data.resultPtr!);
+        }
+        if (null != data.logPtr && nullptr != data.logPtr) {
+          malloc.free(data.logPtr!);
+        }
+        return;
+      } else if (data is _AsyncxxResponseMediaInfo) {
         final completer = _asyncxxRequests[data.id]!;
         _asyncxxRequests.remove(data.id);
 
@@ -427,7 +495,39 @@ Future<SendPort> _helperIsolateSendPort = () async {
           );
           sendPort.send(response);
           return;
+        } else if (data is _AsyncxxRequestAnalyseAudioVisualization) {
+          // AnalyseAudioVisualization
+          final filepathPtr = data.filepathPtr;
+          final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+          result.value = nullptr;
+          final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+          log.value = nullptr;
+          assert(null != filepathPtr);
+          int ret = 0;
+          ret = _bindings.mediaxx_get_audio_visualization(
+            filepathPtr ?? nullptr,
+            result,
+            log,
+          );
+          final resultPtr = result.value;
+          final logPtr = log.value;
+
+          if (null != filepathPtr) {
+            malloc.free(filepathPtr);
+          }
+          malloc.free(result);
+          malloc.free(log);
+          final response = _AsyncxxResponseUInt8List(
+            data.id,
+            ret: ret,
+            resultLen: ret, // 返回值为长度
+            resultPtr: (nullptr != resultPtr) ? resultPtr : null,
+            logPtr: (nullptr != logPtr) ? logPtr : null,
+          );
+          sendPort.send(response);
+          return;
         }
+
         throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
       });
 
