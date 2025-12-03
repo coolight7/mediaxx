@@ -184,12 +184,13 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
                                spectrumData{};
     std::vector<unsigned char> waveformData{};
     if (analyzer.processAudio(filepath, spectrumData, waveformData)) {
+        assert(spectrumData.size() == waveformData.size());
         const auto len = mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE * spectrumData.size();
 
-        auto resultWavefrom = new char[waveformData.size()];
+        auto resultWavefrom = (char*)malloc(waveformData.size());
         std::memcpy((void*)resultWavefrom, waveformData.data(), waveformData.size());
 
-        auto resultSpectrums = new char[len];
+        auto resultSpectrums = (char*)malloc(len);
         int  index           = 0;
         for (auto& spectrum : spectrumData) {
             std::memcpy(

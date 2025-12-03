@@ -76,6 +76,23 @@ void test() {
         } else {
             std::cerr << "处理音频文件失败" << std::endl;
         }
+    }
+    {
+        std::cout
+            << "AudioSpectrumAnalyzer/mediaxx_get_audio_visualization ....... ===================="
+            << std::endl;
+        const char* result         = nullptr;
+        const char* resultWaveform = nullptr;
+        const char* log            = nullptr;
+        auto        ret            = mediaxx_get_audio_visualization(
+            "./temp/Great Voyage_洛天依.mp3",
+            &result,
+            &resultWaveform,
+            &log
+        );
+        mediaxx_free(result);
+        mediaxx_free(resultWaveform);
+        mediaxx_free(log);
         return;
     }
 
