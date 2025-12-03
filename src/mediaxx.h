@@ -81,7 +81,8 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
 
 FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
     const char*  filepath,
-    const char** outResult,
+    const char** outSpectrums,
+    const char** outWavefrom,
     const char** outLog
 );
 
