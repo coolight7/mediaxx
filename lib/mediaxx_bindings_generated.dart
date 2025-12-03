@@ -258,10 +258,16 @@ class MediaxxBindings {
 
   int mediaxx_get_audio_visualization(
     ffi.Pointer<ffi.Char> filepath,
-    ffi.Pointer<ffi.Pointer<ffi.Char>> outResult,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outSpectrums,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outWavefrom,
     ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
   ) {
-    return _mediaxx_get_audio_visualization(filepath, outResult, outLog);
+    return _mediaxx_get_audio_visualization(
+      filepath,
+      outSpectrums,
+      outWavefrom,
+      outLog,
+    );
   }
 
   late final _mediaxx_get_audio_visualizationPtr =
@@ -269,6 +275,7 @@ class MediaxxBindings {
         ffi.NativeFunction<
           ffi.Int Function(
             ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
             ffi.Pointer<ffi.Pointer<ffi.Char>>,
             ffi.Pointer<ffi.Pointer<ffi.Char>>,
           )
@@ -279,6 +286,7 @@ class MediaxxBindings {
           .asFunction<
             int Function(
               ffi.Pointer<ffi.Char>,
+              ffi.Pointer<ffi.Pointer<ffi.Char>>,
               ffi.Pointer<ffi.Pointer<ffi.Char>>,
               ffi.Pointer<ffi.Pointer<ffi.Char>>,
             )

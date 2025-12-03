@@ -121,7 +121,9 @@ mediaxx_analyse_picture_color_from_decoded_data(Uint8List data) async {
   return (result.ret, result.result, result.log);
 }
 
-Future<(int ret, Uint8List? result, String? log)>
+Future<
+  (int ret, Uint8List? resultSpectrums, Uint8List? resultWaveform, String? log)
+>
 mediaxx_get_audio_visualization(final String? filepath) async {
   assert(null != filepath);
   final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
@@ -134,7 +136,12 @@ mediaxx_get_audio_visualization(final String? filepath) async {
   _asyncxxRequests[requestId] = completer;
   helperIsolateSendPort.send(request);
   final result = await completer.future;
-  return (result.ret, result.result, result.log);
+  return (
+    result.ret,
+    result.resultSpectrums,
+    result.resultWaveform,
+    result.log,
+  );
 }
 
 String mediaxx_get_available_hwcodec_list() {
@@ -190,18 +197,23 @@ class _AsyncxxRequestMediaInfo {
 class _AsyncxxResponseUInt8List {
   final int id;
   final int ret;
-  final int resultLen;
-  final Pointer<Char>? resultPtr;
+  final int resultSpectrumsLen;
+  final Pointer<Char>? resultSpectrumsPtr;
+  final int resultWaveformLen;
+  final Pointer<Char>? resultWaveformPtr;
   final Pointer<Char>? logPtr;
 
-  Uint8List? result;
+  Uint8List? resultSpectrums;
+  Uint8List? resultWaveform;
   String? log;
 
   _AsyncxxResponseUInt8List(
     this.id, {
     required this.ret,
-    required this.resultLen,
-    this.resultPtr,
+    required this.resultSpectrumsLen,
+    this.resultSpectrumsPtr,
+    required this.resultWaveformLen,
+    this.resultWaveformPtr,
     this.logPtr,
   });
 }
@@ -315,39 +327,42 @@ final Map<int, Completer<dynamic>> _asyncxxRequests =
 
 /// The SendPort belonging to the helper isolate.
 Future<SendPort> _helperIsolateSendPort = () async {
-  final Completer<SendPort> completer = Completer<SendPort>();
+  final Completer<SendPort> sendCompleter = Completer<SendPort>();
 
   /// App
   final ReceivePort receivePort = ReceivePort()
     ..listen((dynamic data) {
       if (data is SendPort) {
-        completer.complete(data);
+        sendCompleter.complete(data);
         return;
       }
 
+      final completer = _asyncxxRequests[data.id]!;
+      _asyncxxRequests.remove(data.id);
       // App接收数据，在这里才转 dartStr，减少拷贝
       if (data is _AsyncxxResponseUInt8List) {
-        final completer = _asyncxxRequests[data.id]!;
-        _asyncxxRequests.remove(data.id);
-
-        data.result = data.resultPtr
+        data.resultSpectrums = data.resultSpectrumsPtr
             ?.cast<Uint8>()
-            .asTypedList(data.resultLen)
+            .asTypedList(data.resultSpectrumsLen)
+            .sublist(0);
+        data.resultWaveform = data.resultWaveformPtr
+            ?.cast<Uint8>()
+            .asTypedList(data.resultWaveformLen)
             .sublist(0);
         data.log = data.logPtr?.cast<Utf8>().tryToDartString();
         completer.complete(data);
 
-        if (null != data.resultPtr) {
-          malloc.free(data.resultPtr!);
+        if (null != data.resultSpectrumsPtr) {
+          malloc.free(data.resultSpectrumsPtr!);
+        }
+        if (null != data.resultWaveformPtr) {
+          malloc.free(data.resultWaveformPtr!);
         }
         if (null != data.logPtr && nullptr != data.logPtr) {
           malloc.free(data.logPtr!);
         }
         return;
       } else if (data is _AsyncxxResponseMediaInfo) {
-        final completer = _asyncxxRequests[data.id]!;
-        _asyncxxRequests.remove(data.id);
-
         data.result = data.resultPtr?.cast<Utf8>().tryToDartString();
         data.log = data.logPtr?.cast<Utf8>().tryToDartString();
         completer.complete(data);
@@ -360,9 +375,6 @@ Future<SendPort> _helperIsolateSendPort = () async {
         }
         return;
       } else if (data is _AsyncxxResponseDefault) {
-        final Completer<dynamic> completer = _asyncxxRequests[data.id]!;
-        _asyncxxRequests.remove(data.id);
-
         data.log = data.logPtr?.cast<Utf8>().tryToDartString();
         completer.complete(data);
 
@@ -498,30 +510,42 @@ Future<SendPort> _helperIsolateSendPort = () async {
         } else if (data is _AsyncxxRequestAnalyseAudioVisualization) {
           // AnalyseAudioVisualization
           final filepathPtr = data.filepathPtr;
-          final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
-          result.value = nullptr;
+          final Pointer<Pointer<Char>> resultSpectrums =
+              malloc<Pointer<Char>>();
+          resultSpectrums.value = nullptr;
+          final Pointer<Pointer<Char>> resultWaveform = malloc<Pointer<Char>>();
+          resultWaveform.value = nullptr;
           final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
           log.value = nullptr;
           assert(null != filepathPtr);
           int ret = 0;
           ret = _bindings.mediaxx_get_audio_visualization(
             filepathPtr ?? nullptr,
-            result,
+            resultSpectrums,
+            resultWaveform,
             log,
           );
-          final resultPtr = result.value;
+          final resultSpectrumsPtr = resultSpectrums.value;
+          final resultWaveformPtr = resultWaveform.value;
           final logPtr = log.value;
 
           if (null != filepathPtr) {
             malloc.free(filepathPtr);
           }
-          malloc.free(result);
+          malloc.free(resultSpectrums);
+          malloc.free(resultWaveform);
           malloc.free(log);
           final response = _AsyncxxResponseUInt8List(
             data.id,
             ret: ret,
-            resultLen: ret, // 返回值为长度
-            resultPtr: (nullptr != resultPtr) ? resultPtr : null,
+            resultSpectrumsLen: ret, // 返回值为长度
+            resultSpectrumsPtr: (nullptr != resultSpectrumsPtr)
+                ? resultSpectrumsPtr
+                : null,
+            resultWaveformLen: ret ~/ 256,
+            resultWaveformPtr: (nullptr != resultWaveformPtr)
+                ? resultWaveformPtr
+                : null,
             logPtr: (nullptr != logPtr) ? logPtr : null,
           );
           sendPort.send(response);
@@ -537,5 +561,5 @@ Future<SendPort> _helperIsolateSendPort = () async {
 
   // Wait until the helper isolate has sent us back the SendPort on which we
   // can start sending requests.
-  return completer.future;
+  return sendCompleter.future;
 }();
