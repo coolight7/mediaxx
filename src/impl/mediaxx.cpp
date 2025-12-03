@@ -170,32 +170,46 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
 
 FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
     const char*  filepath,
-    const char** outResult,
+    const char** outSpectrums,
+    const char** outWavefrom,
     const char** outLog
 ) {
     assert(nullptr != filepath);
-    assert(nullptr != outResult);
+    assert(nullptr != outSpectrums);
+    assert(nullptr != outWavefrom);
     assert(nullptr != outLog);
 
     mediaxx::AudioSpectrumAnalyzer analyzer{};
     std::vector<std::array<uint8_t, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
-        spectrumData{};
-    if (analyzer.processAudio(filepath, spectrumData)) {
-        const auto len    = mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE * spectrumData.size();
-        auto       result = new char[len];
-        int        index  = 0;
+                               spectrumData{};
+    std::vector<unsigned char> waveformData{};
+    if (analyzer.processAudio(filepath, spectrumData, waveformData)) {
+        const auto len = mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE * spectrumData.size();
+
+        auto resultWavefrom = new char[spectrumData.size()];
+        std::memcpy(
+            (void*)resultWavefrom,
+            waveformData.data(),
+            mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE
+        );
+
+        auto resultSpectrums = new char[len];
+        int  index           = 0;
         for (auto& spectrum : spectrumData) {
             std::memcpy(
-                (void*)(result + index),
+                (void*)(resultSpectrums + index),
                 spectrum.data(),
                 mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE
             );
             index += mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE;
         }
-        *outResult = result;
+
+        *outWavefrom  = resultWavefrom;
+        *outSpectrums = resultSpectrums;
         return len;
     }
-    *outResult = nullptr;
+    *outSpectrums = nullptr;
+    *outWavefrom  = nullptr;
     return 0;
 }
 

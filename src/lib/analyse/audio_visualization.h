@@ -38,6 +38,9 @@ namespace mediaxx {
         inline static constexpr size_t DEF_FFT_SIZE            = DEF_SPECTRUM_SIZE * 2;
         inline static constexpr size_t DEF_FFT_LOG2_SIZE = 9; // log2(512) = 9，位反转计算
         inline static constexpr float  DEF_2PI           = 2.0f * static_cast<float>(M_PI);
+        // 新增：波形振幅计算的分贝参数（与频谱保持一致，统一数据范围）
+        inline static constexpr float DEF_WAVE_MIN_DB = -80.0f;
+        inline static constexpr float DEF_WAVE_MAX_DB = 20.0f;
 
         // 预计算的旋转因子表（W_N^k = cosθ - i*sinθ，θ=2kπ/N）
         std::array<float, DEF_FFT_SIZE / 2> fftTwiddleCos{}; // 实部（cosθ）
@@ -150,7 +153,8 @@ namespace mediaxx {
         bool computeSpectrum(
             const size_t                                  dataSize,
             const std::vector<float>::iterator            dataStart,
-            std::array<unsigned char, DEF_SPECTRUM_SIZE>& result
+            std::array<unsigned char, DEF_SPECTRUM_SIZE>& result,
+            unsigned char&                                wave
         ) {
             result.fill(0);
 
@@ -159,6 +163,8 @@ namespace mediaxx {
                 return false;
             }
 
+            // 当前帧的峰值
+            float frameMaxPoint = 0.0f;
             // 统一线性插值适配汉宁窗大小
             std::vector<float> windowInput(DEF_HANNING_WINDOW_SIZE, 0.0f);
             for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; ++i) {
@@ -166,20 +172,35 @@ namespace mediaxx {
                 // 计算当前目标点在原始数据中的 [归一化位置]（0~M-1）
                 const float srcPos
                     = static_cast<float>(i) * (dataSize - 1) / (DEF_HANNING_WINDOW_SIZE - 1);
+
                 // 左邻点索引
                 const size_t srcIdx = static_cast<size_t>(srcPos);
                 // 插值权重（0~1，表示距离左邻点的比例）
                 const float alpha = srcPos - srcIdx;
-
                 // 线性插值：保持原始信号的趋势，避免失真
+                float sampleAbs = 0;
                 if (srcIdx < dataSize - 1) {
+                    sampleAbs = std::abs(*(dataStart + srcIdx));
                     // (1-alpha)*左邻点 + alpha*右邻点
                     windowInput[i] = (1.0f - alpha) * *(dataStart + srcIdx)
                                      + alpha * *(dataStart + srcIdx + 1);
                 } else {
                     // 最后一个目标点直接取原始数据最后一个值
-                    windowInput[i] = *(dataStart + dataSize - 1);
+                    sampleAbs      = *(dataStart + dataSize - 1);
+                    windowInput[i] = sampleAbs;
                 }
+
+                if (sampleAbs > frameMaxPoint) {
+                    frameMaxPoint = sampleAbs;
+                }
+            }
+
+            {
+                // 根据当前帧最大值计算 [wave] 振幅
+                const float db   = 20.0f * std::log10(frameMaxPoint + 1e-6f);
+                float normalized = (db - DEF_WAVE_MIN_DB) / (DEF_WAVE_MAX_DB - DEF_WAVE_MIN_DB);
+                normalized       = std::clamp(normalized, 0.0f, 1.0f);
+                wave             = static_cast<unsigned char>(normalized * 255);
             }
 
             std::vector<std::complex<float>> fftData(DEF_FFT_SIZE);
@@ -191,17 +212,11 @@ namespace mediaxx {
 
             for (size_t i = 0; i < DEF_SPECTRUM_SIZE; i++) {
                 float magnitude = std::abs(fftData[i]);
-
-                // 实信号FFT共轭对称，正频率分量幅度×2
-                if (i > 0 && i < DEF_SPECTRUM_SIZE) {
-                    magnitude *= 2.0f;
-                }
-
                 // 分贝转换，归一化 255
-                const float db         = 20.0f * std::log10(magnitude + 1e-6f);
-                float       normalized = (db + 80.0f) / 80.0f;
-                normalized             = std::clamp(normalized, 0.0f, 1.0f);
-                result[i]              = static_cast<unsigned char>(normalized * 255);
+                const float db   = 20.0f * std::log10(magnitude + 1e-6f);
+                float normalized = (db - DEF_WAVE_MIN_DB) / (DEF_WAVE_MAX_DB - DEF_WAVE_MIN_DB);
+                normalized       = std::clamp(normalized, 0.0f, 1.0f);
+                result[i]        = static_cast<unsigned char>(normalized * 255);
             }
 
             return true;
@@ -343,11 +358,16 @@ namespace mediaxx {
             return ret == 0;
         }
 
+        // [outputSpectrum] 时间-频率-振幅
+        // [outputWaveform] 时间-振幅数据
         bool processAudio(
             const char*                                                filepath,
-            std::vector<std::array<unsigned char, DEF_SPECTRUM_SIZE>>& outputSpectrum
+            std::vector<std::array<unsigned char, DEF_SPECTRUM_SIZE>>& outputSpectrum,
+            std::vector<unsigned char>&                                outputWaveform
         ) {
+            // 清空输出
             outputSpectrum.clear();
+            outputWaveform.clear();
 
             if (false == openAudioFile(filepath)) {
                 LXX_ERR("processAudio: openAudioFile failed");
@@ -384,12 +404,17 @@ namespace mediaxx {
                     // 解码并积累音频数据
                     if (decodeAudioFrame(accumulatedAudio, packet, decodedFrame, resampledFrame)) {
                         while (accumulatedAudio.size() >= samplesPerFrame) {
+                            // 计算频谱数据
                             outputSpectrum.emplace_back();
+                            unsigned char waveformAmplitude = 0;
                             computeSpectrum(
                                 samplesPerFrame,
                                 accumulatedAudio.begin(),
-                                outputSpectrum.back()
+                                outputSpectrum.back(),
+                                waveformAmplitude
                             );
+                            // 计算当前帧的振幅
+                            outputWaveform.push_back(waveformAmplitude);
 
                             // 移除已处理的数据
                             accumulatedAudio.erase(
@@ -410,13 +435,19 @@ namespace mediaxx {
             // 处理剩余数据,不足一帧时填充0
             if (false == accumulatedAudio.empty()) {
                 accumulatedAudio.resize(samplesPerFrame, 0.0f);
+                // 频谱数据
                 outputSpectrum.emplace_back();
+                unsigned char wave = 0;
                 computeSpectrum(
                     accumulatedAudio.size(),
                     accumulatedAudio.begin(),
-                    outputSpectrum.back()
+                    outputSpectrum.back(),
+                    wave
                 );
+                // 波形振幅数据
+                outputWaveform.push_back(wave);
             }
+            assert(outputSpectrum.size() == outputWaveform.size());
 
             cleanup();
             return true;

@@ -53,18 +53,30 @@ void test() {
         std::cout << "AudioSpectrumAnalyzer ....... ====================" << std::endl;
         mediaxx::AudioSpectrumAnalyzer analyzer{};
         std::vector<std::array<unsigned char, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
-            spectrumData{};
+                                   spectrumData{};
+        std::vector<unsigned char> waveformData{};
 
-        if (analyzer.processAudio("./temp/Great Voyage_洛天依.mp3", spectrumData)) {
+        if (analyzer.processAudio("./temp/Great Voyage_洛天依.mp3", spectrumData, waveformData)) {
             std::cout << "成功生成 " << spectrumData.size() << " 帧频谱数据" << std::endl;
 
-            int i = 0;
             for (auto& spectrum : spectrumData) {
-                std::cout << ++i << ": " << spectrum.size() << std::endl;
+                assert(spectrum.size() == 256);
             }
+            std::cout << std::endl << "[";
+            for (auto& item : spectrumData[spectrumData.size() / 2]) {
+                std::cout << (unsigned int)(item) << " ";
+            }
+            std::cout << "]" << std::endl << std::endl;
+
+            for (auto& item : waveformData) {
+                std::cout << int(item) << " ";
+            }
+            assert(spectrumData.size() == waveformData.size());
+            std::cout << std::endl;
         } else {
             std::cerr << "处理音频文件失败" << std::endl;
         }
+        return;
     }
 
     auto result = mediaxx_get_available_hwcodec_list();
