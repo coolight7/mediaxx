@@ -38,9 +38,9 @@ namespace mediaxx {
         inline static constexpr size_t DEF_FFT_SIZE            = DEF_SPECTRUM_SIZE * 2;
         inline static constexpr size_t DEF_FFT_LOG2_SIZE = 9; // log2(512) = 9，位反转计算
         inline static constexpr float  DEF_2PI           = 2.0f * static_cast<float>(M_PI);
-        // 新增：波形振幅计算的分贝参数（与频谱保持一致，统一数据范围）
-        inline static constexpr float DEF_WAVE_MIN_DB = -80.0f;
-        inline static constexpr float DEF_WAVE_MAX_DB = 20.0f;
+        // 波形振幅计算的分贝参数
+        inline static constexpr float DEF_WAVE_MIN_DB = -60.0f;
+        inline static constexpr float DEF_WAVE_MAX_DB = 10.0f;
 
         // 预计算的旋转因子表（W_N^k = cosθ - i*sinθ，θ=2kπ/N）
         std::array<float, DEF_FFT_SIZE / 2> fftTwiddleCos{}; // 实部（cosθ）
@@ -82,7 +82,7 @@ namespace mediaxx {
             }
 
             // 预计算旋转因子表（W_N^k = cos(2πk/N) - i*sin(2πk/N)）
-            // 只需要计算前 N/2 个（后续可复用），提前存储虚部的负号
+            // 只需要计算前 N/2 个，提前存储虚部的负号
             for (size_t k = 0; k < DEF_FFT_SIZE / 2; ++k) {
                 const float theta = DEF_2PI * k / DEF_FFT_SIZE;
                 fftTwiddleCos[k]  = std::cos(theta);
@@ -104,7 +104,7 @@ namespace mediaxx {
                 return;
             }
 
-            // 位反转重排（使用预计算表，O(N) 时间）
+            // 位反转重排
             for (size_t i = 0; i < DEF_FFT_SIZE; ++i) {
                 const size_t j = fftBitRevTable[i];
                 if (i < j) {
@@ -173,19 +173,17 @@ namespace mediaxx {
                 const float srcPos
                     = static_cast<float>(i) * (dataSize - 1) / (DEF_HANNING_WINDOW_SIZE - 1);
 
-                // 左邻点索引
                 const size_t srcIdx = static_cast<size_t>(srcPos);
-                // 插值权重（0~1，表示距离左邻点的比例）
-                const float alpha = srcPos - srcIdx;
-                // 线性插值：保持原始信号的趋势，避免失真
-                float sampleAbs = 0;
+                // 插值权重
+                const float alpha     = srcPos - srcIdx;
+                float       sampleAbs = 0;
                 if (srcIdx < dataSize - 1) {
                     sampleAbs = std::abs(*(dataStart + srcIdx));
                     // (1-alpha)*左邻点 + alpha*右邻点
                     windowInput[i] = (1.0f - alpha) * *(dataStart + srcIdx)
                                      + alpha * *(dataStart + srcIdx + 1);
                 } else {
-                    // 最后一个目标点直接取原始数据最后一个值
+                    // 最后一个目标点取原始数据最后一个值
                     sampleAbs      = *(dataStart + dataSize - 1);
                     windowInput[i] = sampleAbs;
                 }
