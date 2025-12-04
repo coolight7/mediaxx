@@ -38,7 +38,7 @@ namespace mediaxx {
     class MediaInfoEntity_c : public mediaxx::AnalyseLogItem_c {
     public:
 
-        inline static const auto cDefUserAgent = std::string_view{
+        inline static constexpr auto cDefUserAgent = std::string_view{
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.95 Safari/537.36"
         };
 
