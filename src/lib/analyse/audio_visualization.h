@@ -41,6 +41,9 @@ namespace mediaxx {
         // 波形振幅计算的分贝参数
         inline static constexpr float DEF_WAVE_MIN_DB = -60.0f;
         inline static constexpr float DEF_WAVE_MAX_DB = 10.0f;
+        // UINT8音频采样的中心值（归一化用）
+        inline static constexpr uint8_t DEF_U8_CENTER = 128;
+        inline static constexpr float   DEF_U8_SCALE  = 128.0f;
 
         // 预计算的旋转因子表（W_N^k = cosθ - i*sinθ，θ=2kπ/N）
         std::array<float, DEF_FFT_SIZE / 2> fftTwiddleCos{}; // 实部（cosθ）
@@ -152,7 +155,7 @@ namespace mediaxx {
 
         bool computeSpectrum(
             const size_t                                  dataSize,
-            const std::vector<float>::iterator            dataStart,
+            const std::vector<uint8_t>::iterator          dataStart,
             std::array<unsigned char, DEF_SPECTRUM_SIZE>& result,
             unsigned char&                                wave
         ) {
@@ -177,15 +180,23 @@ namespace mediaxx {
                 // 插值权重
                 const float alpha     = srcPos - srcIdx;
                 float       sampleAbs = 0;
+
+                // 处理uint8数据，归一化到-1.0f ~ 1.0f
                 if (srcIdx < dataSize - 1) {
-                    sampleAbs = std::abs(*(dataStart + srcIdx));
+                    // uint8转浮点数
+                    float val1
+                        = static_cast<float>(*(dataStart + srcIdx) - DEF_U8_CENTER) / DEF_U8_SCALE;
+                    float val2 = static_cast<float>(*(dataStart + srcIdx + 1) - DEF_U8_CENTER)
+                                 / DEF_U8_SCALE;
+                    sampleAbs = std::abs(val1);
                     // (1-alpha)*左邻点 + alpha*右邻点
-                    windowInput[i] = (1.0f - alpha) * *(dataStart + srcIdx)
-                                     + alpha * *(dataStart + srcIdx + 1);
+                    windowInput[i] = (1.0f - alpha) * val1 + alpha * val2;
                 } else {
                     // 最后一个目标点取原始数据最后一个值
-                    sampleAbs      = *(dataStart + dataSize - 1);
-                    windowInput[i] = sampleAbs;
+                    float val = static_cast<float>(*(dataStart + dataSize - 1) - DEF_U8_CENTER)
+                                / DEF_U8_SCALE;
+                    sampleAbs      = std::abs(val);
+                    windowInput[i] = val;
                 }
 
                 if (sampleAbs > frameMaxPoint) {
@@ -275,11 +286,11 @@ namespace mediaxx {
             int             in_sample_rate  = codecContext->sample_rate;
             int             out_sample_rate = codecContext->sample_rate;
             AVSampleFormat  in_sample_fmt   = codecContext->sample_fmt;
-            AVSampleFormat  out_sample_fmt  = AV_SAMPLE_FMT_FLT;
+            AVSampleFormat  out_sample_fmt  = AV_SAMPLE_FMT_U8;
 
             assert(nullptr == swrContext);
             ret = swr_alloc_set_opts2(
-                &swrContext,     // 原有上下文（nullptr表示新建）
+                &swrContext,
                 &out_ch_layout,  // 输出声道布局
                 out_sample_fmt,  // 输出采样格式
                 out_sample_rate, // 输出采样率
@@ -305,10 +316,10 @@ namespace mediaxx {
         }
 
         bool decodeAudioFrame(
-            std::vector<float>& data,
-            AVPacket*           packet,
-            AVFrame*            decodedFrame,
-            AVFrame*            resampledFrame
+            std::vector<uint8_t>& data,
+            AVPacket*             packet,
+            AVFrame*              decodedFrame,
+            AVFrame*              resampledFrame
         ) {
             if (!codecContext || !packet || !decodedFrame || !resampledFrame) {
                 LXX_ERR("decodeAudioFrame: invalid parameters");
@@ -326,15 +337,15 @@ namespace mediaxx {
             ret = avcodec_receive_frame(codecContext, decodedFrame);
             if (ret == 0) {
                 // 重采样
-                resampledFrame->sample_rate = decodedFrame->sample_rate;
-                resampledFrame->format      = AV_SAMPLE_FMT_FLT;
+                resampledFrame->sample_rate = codecContext->sample_rate;
+                resampledFrame->format      = AV_SAMPLE_FMT_U8;
                 resampledFrame->ch_layout   = (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO;
 
                 ret = swr_convert_frame(swrContext, resampledFrame, decodedFrame);
                 if (ret == 0) {
                     // 校验数据
                     if (resampledFrame->data[0] && resampledFrame->nb_samples > 0) {
-                        float* samples = reinterpret_cast<float*>(resampledFrame->data[0]);
+                        uint8_t* samples = reinterpret_cast<uint8_t*>(resampledFrame->data[0]);
                         data.insert(data.end(), samples, samples + resampledFrame->nb_samples);
                     } else {
                         LXX_WARN(
@@ -387,9 +398,9 @@ namespace mediaxx {
             }
 
             init();
-            AVFrame*           decodedFrame   = av_frame_alloc();
-            AVFrame*           resampledFrame = av_frame_alloc();
-            std::vector<float> accumulatedAudio{};
+            AVFrame*             decodedFrame   = av_frame_alloc();
+            AVFrame*             resampledFrame = av_frame_alloc();
+            std::vector<uint8_t> accumulatedAudio{};
 
             while (av_read_frame(formatContext, packet) >= 0) {
                 if (packet->stream_index == audioStreamIndex) {
@@ -425,7 +436,7 @@ namespace mediaxx {
 
             // 处理剩余数据,不足一帧时填充0
             if (false == accumulatedAudio.empty()) {
-                accumulatedAudio.resize(samplesPerFrame, 0.0f);
+                accumulatedAudio.resize(samplesPerFrame, DEF_U8_CENTER);
                 // 频谱数据
                 outputSpectrum.emplace_back();
                 unsigned char wave = 0;
