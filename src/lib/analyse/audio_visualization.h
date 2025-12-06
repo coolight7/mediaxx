@@ -226,14 +226,15 @@ namespace mediaxx {
             // 重置资源
             cleanup();
 
-            if (avformat_open_input(&formatContext, filepath, nullptr, nullptr) < 0) {
-                LXX_ERR("avformat_open_input failed");
+            int ret = avformat_open_input(&formatContext, filepath, nullptr, nullptr);
+            if (ret < 0) {
+                LXX_AVERR("avformat_open_input failed");
                 return false;
             }
 
-            if (avformat_find_stream_info(formatContext, nullptr) < 0) {
-                LXX_ERR("avformat_find_stream_info failed");
-                cleanup();
+            ret = avformat_find_stream_info(formatContext, nullptr);
+            if (ret < 0) {
+                LXX_AVERR("avformat_find_stream_info failed");
                 return false;
             }
 
@@ -241,7 +242,6 @@ namespace mediaxx {
                 = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
             if (audioStreamIndex < 0) {
                 LXX_ERR("No audio stream found");
-                cleanup();
                 return false;
             }
 
@@ -249,48 +249,54 @@ namespace mediaxx {
             const AVCodec*     codec           = avcodec_find_decoder(codecParameters->codec_id);
             if (!codec) {
                 LXX_ERR("avcodec_find_decoder failed, id:  {}", int(codecParameters->codec_id));
-                cleanup();
                 return false;
             }
 
             codecContext = avcodec_alloc_context3(codec);
             if (!codecContext) {
                 LXX_ERR("avcodec_alloc_context3 failed");
-                cleanup();
                 return false;
             }
 
-            if (avcodec_parameters_to_context(codecContext, codecParameters) < 0) {
-                LXX_ERR("avcodec_parameters_to_context failed");
-                cleanup();
+            ret = avcodec_parameters_to_context(codecContext, codecParameters);
+            if (ret < 0) {
+                LXX_AVERR("avcodec_parameters_to_context failed");
                 return false;
             }
 
-            if (avcodec_open2(codecContext, codec, nullptr) < 0) {
-                LXX_ERR("avcodec_open2 failed");
-                cleanup();
+            ret = avcodec_open2(codecContext, codec, nullptr);
+            if (ret < 0) {
+                LXX_AVERR("avcodec_open2 failed");
                 return false;
             }
 
-            swrContext = swr_alloc();
-            if (!swrContext) {
-                LXX_ERR("swr_alloc failed");
-                cleanup();
+            AVChannelLayout in_ch_layout    = codecContext->ch_layout;
+            auto            out_ch_layout   = (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO;
+            int             in_sample_rate  = codecContext->sample_rate;
+            int             out_sample_rate = codecContext->sample_rate;
+            AVSampleFormat  in_sample_fmt   = codecContext->sample_fmt;
+            AVSampleFormat  out_sample_fmt  = AV_SAMPLE_FMT_FLT;
+
+            assert(nullptr == swrContext);
+            ret = swr_alloc_set_opts2(
+                &swrContext,     // 原有上下文（nullptr表示新建）
+                &out_ch_layout,  // 输出声道布局
+                out_sample_fmt,  // 输出采样格式
+                out_sample_rate, // 输出采样率
+                &in_ch_layout,   // 输入声道布局
+                in_sample_fmt,   // 输入采样格式
+                in_sample_rate,  // 输入采样率
+                0,               // 日志级别
+                nullptr          // 日志上下文
+            );
+            if (nullptr == swrContext) {
+                LXX_AVERR("swr_alloc failed");
                 return false;
             }
 
-            auto outputChLayout = (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO;
-            av_opt_set_chlayout(swrContext, "in_chlayout", &(codecContext->ch_layout), 0);
-            av_opt_set_chlayout(swrContext, "out_chlayout", &outputChLayout, 0);
-            av_opt_set_int(swrContext, "in_sample_rate", codecContext->sample_rate, 0);
-            av_opt_set_int(swrContext, "out_sample_rate", codecContext->sample_rate, 0);
-            av_opt_set_sample_fmt(swrContext, "in_sample_fmt", codecContext->sample_fmt, 0);
-            av_opt_set_sample_fmt(swrContext, "out_sample_fmt", AV_SAMPLE_FMT_FLT, 0);
-
-            int ret = swr_init(swrContext);
+            ret = swr_init(swrContext);
             if (ret != 0) {
                 LXX_AVERR("swr_init failed");
-                cleanup();
                 return false;
             }
 
@@ -304,7 +310,7 @@ namespace mediaxx {
             AVFrame*            decodedFrame,
             AVFrame*            resampledFrame
         ) {
-            if (!codecContext || !packet) {
+            if (!codecContext || !packet || !decodedFrame || !resampledFrame) {
                 LXX_ERR("decodeAudioFrame: invalid parameters");
                 return false;
             }
@@ -317,22 +323,12 @@ namespace mediaxx {
                 return false;
             }
 
-            if (!decodedFrame) {
-                LXX_AVERR("decodedFrame not available");
-                return false;
-            }
-
             ret = avcodec_receive_frame(codecContext, decodedFrame);
             if (ret == 0) {
                 // 重采样
-                if (!resampledFrame) {
-                    LXX_AVERR("resampledFrame not available");
-                    return false;
-                }
-
                 resampledFrame->sample_rate = decodedFrame->sample_rate;
                 resampledFrame->format      = AV_SAMPLE_FMT_FLT;
-                resampledFrame->ch_layout   = AV_CHANNEL_LAYOUT_MONO;
+                resampledFrame->ch_layout   = (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO;
 
                 ret = swr_convert_frame(swrContext, resampledFrame, decodedFrame);
                 if (ret == 0) {
@@ -373,22 +369,20 @@ namespace mediaxx {
             }
             LXX_DEBEG("AudioVisuallizationAnalyzer / processAudio ...");
 
-            int    sampleRate      = codecContext->sample_rate;
-            size_t samplesPerFrame = size_t(sampleRate) / DEF_FPS;
+            const int    sampleRate      = codecContext->sample_rate;
+            const size_t samplesPerFrame = size_t(sampleRate) / DEF_FPS;
             if (sampleRate <= 0 || samplesPerFrame == 0) {
                 LXX_ERR(
                     "processAudio: invalid sampleRate ({}) or samplesPerFrame ({})",
                     sampleRate,
                     samplesPerFrame
                 );
-                cleanup();
                 return false;
             }
 
             AVPacket* packet = av_packet_alloc();
             if (nullptr == packet) {
                 LXX_ERR("processAudio: av_packet_alloc failed");
-                cleanup();
                 return false;
             }
 
@@ -413,7 +407,6 @@ namespace mediaxx {
                             );
                             // 计算当前帧的振幅
                             outputWaveform.push_back(waveformAmplitude);
-
                             // 移除已处理的数据
                             accumulatedAudio.erase(
                                 accumulatedAudio.begin(),
@@ -448,7 +441,7 @@ namespace mediaxx {
             assert(outputSpectrum.size() == outputWaveform.size());
 
             cleanup();
-            return true;
+            return (outputSpectrum.size() > 0 && outputWaveform.size() > 0);
         }
 
         void cleanup() {
