@@ -9,7 +9,7 @@ extern "C" {
 
 extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     av_jni_set_java_vm(vm, nullptr);
-    LXX_DEBEG("JNI_OnLoad");
+    XX_LOGD("JNI_OnLoad");
     return JNI_VERSION_1_6;
 }
 
@@ -19,7 +19,7 @@ extern "C" JNIEXPORT void JNICALL
         jobject thiz,
         jobject context
     ) {
-    LXX_DEBEG("Java_run_bool_mediaxx_MediaxxAndroidHelper_setApplicationContextNative");
+    XX_LOGD("Java_run_bool_mediaxx_MediaxxAndroidHelper_setApplicationContextNative");
 
     /*
      * 创建全局引用防止被GC回收

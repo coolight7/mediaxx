@@ -94,7 +94,7 @@ namespace mediaxx {
                 fftTwiddleSin[k] = -std::sin(theta);
             }
 
-            LXX_DEBEG(
+            XX_LOGD(
                 "FFT tables precomputed: bitRevTable size={}, twiddleTable size={}",
                 fftBitRevTable.size(),
                 fftTwiddleCos.size()
@@ -104,7 +104,7 @@ namespace mediaxx {
         // 快速傅里叶变换
         void fft(std::vector<std::complex<float>>& data) const {
             if (data.size() != DEF_FFT_SIZE) {
-                LXX_WARN("fft: only support size={}, current={}", DEF_FFT_SIZE, data.size());
+                XX_LOGW("fft: only support size={}, current={}", DEF_FFT_SIZE, data.size());
                 return;
             }
 
@@ -163,7 +163,7 @@ namespace mediaxx {
             result.fill(0);
 
             if (dataSize == 0) {
-                LXX_WARN("computeSpectrum: input data size is 0");
+                XX_LOGW("computeSpectrum: input data size is 0");
                 return false;
             }
 
@@ -235,52 +235,52 @@ namespace mediaxx {
         }
 
         bool openAudioFile(const char* filepath) {
-            LXX_DEBEG("AudioVisuallizationAnalyzer / openAudioFile... {}", filepath);
+            XX_LOGD("AudioVisuallizationAnalyzer / openAudioFile... {}", filepath);
 
             // 重置资源
             cleanup();
 
             int ret = avformat_open_input(&formatContext, filepath, nullptr, nullptr);
             if (ret < 0) {
-                LXX_AVERR("avformat_open_input failed");
+                XX_LOGE_AV("avformat_open_input failed");
                 return false;
             }
 
             ret = avformat_find_stream_info(formatContext, nullptr);
             if (ret < 0) {
-                LXX_AVERR("avformat_find_stream_info failed");
+                XX_LOGE_AV("avformat_find_stream_info failed");
                 return false;
             }
 
             audioStreamIndex
                 = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
             if (audioStreamIndex < 0) {
-                LXX_ERR("No audio stream found");
+                XX_LOGE("No audio stream found");
                 return false;
             }
 
             AVCodecParameters* codecParameters = formatContext->streams[audioStreamIndex]->codecpar;
             const AVCodec*     codec           = avcodec_find_decoder(codecParameters->codec_id);
             if (!codec) {
-                LXX_ERR("avcodec_find_decoder failed, id:  {}", int(codecParameters->codec_id));
+                XX_LOGE("avcodec_find_decoder failed, id:  {}", int(codecParameters->codec_id));
                 return false;
             }
 
             codecContext = avcodec_alloc_context3(codec);
             if (!codecContext) {
-                LXX_ERR("avcodec_alloc_context3 failed");
+                XX_LOGE("avcodec_alloc_context3 failed");
                 return false;
             }
 
             ret = avcodec_parameters_to_context(codecContext, codecParameters);
             if (ret < 0) {
-                LXX_AVERR("avcodec_parameters_to_context failed");
+                XX_LOGE_AV("avcodec_parameters_to_context failed");
                 return false;
             }
 
             ret = avcodec_open2(codecContext, codec, nullptr);
             if (ret < 0) {
-                LXX_AVERR("avcodec_open2 failed");
+                XX_LOGE_AV("avcodec_open2 failed");
                 return false;
             }
 
@@ -304,17 +304,17 @@ namespace mediaxx {
                 nullptr          // 日志上下文
             );
             if (nullptr == swrContext) {
-                LXX_AVERR("swr_alloc failed");
+                XX_LOGE_AV("swr_alloc failed");
                 return false;
             }
 
             ret = swr_init(swrContext);
             if (ret != 0) {
-                LXX_AVERR("swr_init failed");
+                XX_LOGE_AV("swr_init failed");
                 return false;
             }
 
-            LXX_DEBEG("openAudioFile success");
+            XX_LOGD("openAudioFile success");
             return true;
         }
 
@@ -326,14 +326,14 @@ namespace mediaxx {
             int&                  resampledDataSize
         ) {
             if (!codecContext || !packet || !decodedFrame) {
-                LXX_ERR("decodeAudioFrame: invalid parameters");
+                XX_LOGE("decodeAudioFrame: invalid parameters");
                 return false;
             }
 
             int ret = avcodec_send_packet(codecContext, packet);
             if (ret < 0) {
                 if (ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
-                    LXX_AVERR("avcodec_send_packet failed");
+                    XX_LOGE_AV("avcodec_send_packet failed");
                 }
                 return false;
             }
@@ -377,13 +377,13 @@ namespace mediaxx {
                         );
                         data.insert(data.end(), resampledData, resampledData + outSize);
                     } else {
-                        LXX_WARN("swr_convert: no valid data (nb_samples: {})", outSamplesSize);
+                        XX_LOGW("swr_convert: no valid data (nb_samples: {})", outSamplesSize);
                     }
                 } else {
-                    LXX_AVERR("swr_convert failed");
+                    XX_LOGE_AV("swr_convert failed");
                 }
             } else if (ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
-                LXX_AVERR("avcodec_receive_frame failed");
+                XX_LOGE_AV("avcodec_receive_frame failed");
             }
 
             return ret >= 0;
@@ -401,15 +401,15 @@ namespace mediaxx {
             outputWaveform.clear();
 
             if (false == openAudioFile(filepath)) {
-                LXX_ERR("processAudio: openAudioFile failed");
+                XX_LOGE("processAudio: openAudioFile failed");
                 return false;
             }
-            LXX_DEBEG("AudioVisuallizationAnalyzer / processAudio ...");
+            XX_LOGD("AudioVisuallizationAnalyzer / processAudio ...");
 
             const int    sampleRate      = codecContext->sample_rate;
             const size_t samplesPerFrame = size_t(sampleRate) / DEF_FPS;
             if (sampleRate <= 0 || samplesPerFrame == 0) {
-                LXX_ERR(
+                XX_LOGE(
                     "processAudio: invalid sampleRate ({}) or samplesPerFrame ({})",
                     sampleRate,
                     samplesPerFrame
@@ -422,7 +422,7 @@ namespace mediaxx {
             AVPacket* packet       = av_packet_alloc();
             AVFrame*  decodedFrame = av_frame_alloc();
             if (nullptr == packet || nullptr == decodedFrame) {
-                LXX_ERR("processAudio: av_packet_alloc failed");
+                XX_LOGE("processAudio: av_packet_alloc failed");
                 return false;
             }
             uint8_t*             resampledData     = nullptr;
@@ -488,7 +488,7 @@ namespace mediaxx {
         }
 
         void cleanup() {
-            LXX_DEBEG("AudioVisuallizationAnalyzer / cleanup ...");
+            XX_LOGD("AudioVisuallizationAnalyzer / cleanup ...");
             if (swrContext) {
                 swr_free(&swrContext);
                 swrContext = nullptr;

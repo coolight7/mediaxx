@@ -7,27 +7,27 @@
 
 #ifdef LUMENXX_BUILD_TYPE
 
-#define LXX_DEBEG(str, ...) (std::cerr << fmt::format(str, ##__VA_ARGS__) << std::endl);
+#define XX_LOGD(str, ...) (std::cerr << fmt::format(str, ##__VA_ARGS__) << std::endl);
 
-#define LXX_INFO(str, ...) (std::cerr << fmt::format(str, ##__VA_ARGS__) << std::endl);
+#define XX_LOGI(str, ...) (std::cerr << fmt::format(str, ##__VA_ARGS__) << std::endl);
 
-#define LXX_WARN(str, ...) (std::cerr << fmt::format(str, ##__VA_ARGS__) << std::endl);
+#define XX_LOGW(str, ...) (std::cerr << fmt::format(str, ##__VA_ARGS__) << std::endl);
 
-#define LXX_ERR(str, ...) (std::cerr << fmt::format(str, ##__VA_ARGS__) << std::endl);
+#define XX_LOGE(str, ...) (std::cerr << fmt::format(str, ##__VA_ARGS__) << std::endl);
 
-#define LXX_AVERR(str) LXX_ERR("{}: {}/{}", str, ret, mediaxx::utilxx::av_err2str(ret));
+#define XX_LOGE_AV(str) XX_LOGE("{}: {}/{}", str, ret, mediaxx::utilxx::av_err2str(ret));
 
 #else
 
-#define LXX_DEBEG(str, ...) ;
+#define XX_LOGD(str, ...) ;
 
-#define LXX_INFO(str, ...) ;
+#define XX_LOGI(str, ...) ;
 
-#define LXX_WARN(str, ...) ;
+#define XX_LOGW(str, ...) ;
 
-#define LXX_ERR(str, ...) ;
+#define XX_LOGE(str, ...) ;
 
-#define LXX_AVERR(str) ;
+#define XX_LOGE_AV(str) ;
 
 #endif
 
@@ -35,6 +35,6 @@ namespace mediaxx {
     namespace logxx {
         void printStack();
 
-        void signal_error(std::string_view exepath);
+        void signalError(std::string_view exepath);
     }; // namespace logxx
 }; // namespace mediaxx

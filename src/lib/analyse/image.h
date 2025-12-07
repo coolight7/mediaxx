@@ -108,7 +108,7 @@ namespace mediaxx {
         std::array<Color, 8> dominantColors{};
 
         simdjson::builder::string_builder toJson() const {
-            LXX_DEBEG("AnalysePictureColorResult.toJson ......");
+            XX_LOGD("AnalysePictureColorResult.toJson ......");
             simdjson::builder::string_builder sb{};
 
             sb.start_object();
@@ -435,7 +435,7 @@ namespace mediaxx {
         assert((dataSize == 0 || dataSize >= size_t(height * lineSize)));
         assert(itemSize >= 3);
         // 统计颜色
-        LXX_DEBEG("analyse color...");
+        XX_LOGD("analyse color...");
         // key: RGB值(0xRRGGBB), value: 颜色信息
         std::map<uint32_t, Color> colorMap{};
 
@@ -497,7 +497,7 @@ namespace mediaxx {
 
     inline std::shared_ptr<AnalysePictureColorResult>
         analysePictureColor(AVFormatContext* formatCtx, mediaxx::AnalyseLogItem_c& logItem) {
-        LXX_DEBEG("analysePictureColor: ");
+        XX_LOGD("analysePictureColor: ");
         int ret = avformat_find_stream_info(formatCtx, nullptr);
         if (ret < 0) {
             SET_LOG(
@@ -508,7 +508,7 @@ namespace mediaxx {
             avformat_close_input(&formatCtx);
             return nullptr;
         }
-        LXX_DEBEG("find picture stream: ");
+        XX_LOGD("find picture stream: ");
 
         int videoStreamIndex = -1;
         for (unsigned int i = 0; i < formatCtx->nb_streams; i++) {
@@ -524,7 +524,7 @@ namespace mediaxx {
             return nullptr;
         }
 
-        LXX_DEBEG("decoder picture: ");
+        XX_LOGD("decoder picture: ");
         auto codecPar = formatCtx->streams[videoStreamIndex]->codecpar;
         auto codec    = avcodec_find_decoder(codecPar->codec_id);
         if (!codec) {
@@ -558,7 +558,7 @@ namespace mediaxx {
             avformat_close_input(&formatCtx);
             return nullptr;
         }
-        LXX_DEBEG("decoder picture...");
+        XX_LOGD("decoder picture...");
 
         // 解码图片
         AVFrame*  frame    = av_frame_alloc();
@@ -599,7 +599,7 @@ namespace mediaxx {
         }
 
         // 转换为RGB格式
-        LXX_DEBEG("to RGB...");
+        XX_LOGD("to RGB...");
         struct SwsContext* swsCtx = sws_getContext(
             codecCtx->width,
             codecCtx->height,

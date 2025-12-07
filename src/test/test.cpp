@@ -238,8 +238,8 @@ void test() {
 }
 
 int main(int argn, char** argv) {
-#if _ISLINUX
-    mediaxx::logxx::signal_error(argv[0]);
+#if IS_LINUX_D
+    mediaxx::logxx::signalError(argv[0]);
 #endif
     std::cout << "======= Test Start =======" << std::endl;
     test();

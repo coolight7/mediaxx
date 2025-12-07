@@ -20,7 +20,7 @@ FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size) {
 }
 
 FFI_PLUGIN_EXPORT void mediaxx_free(const void* ptr) {
-    LXX_DEBEG("mediaxx_free : {}", ptr);
+    XX_LOGD("mediaxx_free : {}", ptr);
     // 如果此处出错，也可能是在此之前 ptr 已经越界访问，释放时 debug 检查出存在越界写入
     free(const_cast<void*>(ptr));
 }
@@ -55,7 +55,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_info_malloc(
     assert(nullptr != picture96OutputPath);
     assert(nullptr != outResult);
     assert(nullptr != outLog);
-    LXX_DEBEG("mediaxx_get_media_info_malloc : {} ......", filepath);
+    XX_LOGD("mediaxx_get_media_info_malloc : {} ......", filepath);
 
     auto item  = mediaxx::MediaInfoEntity_c{std::string_view{filepath}, outLog};
     int  ret   = 0;
@@ -78,7 +78,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_info_malloc(
         ret        = -1;
     }
     item.dispose();
-    LXX_DEBEG("mediaxx_get_media_info_malloc done: {}", (void*)(*outResult));
+    XX_LOGD("mediaxx_get_media_info_malloc done: {}", (void*)(*outResult));
     return ret;
 }
 

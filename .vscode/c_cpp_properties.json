@@ -10,7 +10,7 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [
-                "_ISLINUX",
+                "IS_LINUX_D",
                 "LUMENXX_BUILD_TYPE",
                 "_DEBUG",
                 "UNICODE",
@@ -31,7 +31,7 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [
-                "_ISWIN",
+                "IS_WIN_D",
                 "LUMENXX_BUILD_TYPE",
                 "_DEBUG",
                 "UNICODE",
@@ -55,7 +55,7 @@
                 "${ANDROID_HOME}/ndk/27.3.13750724/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/include/aarch64-linux-android/"
             ],
             "defines": [
-                "_ISANDROID",
+                "IS_ANDROID_D",
                 "ANDROID",
                 "LUMENXX_BUILD_TYPE",
                 "_DEBUG",

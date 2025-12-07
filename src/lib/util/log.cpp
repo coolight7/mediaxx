@@ -4,7 +4,7 @@
 
 using namespace mediaxx;
 
-#if _ISLINUX
+#if IS_LINUX_D
 #include <csignal>
 #include <execinfo.h>
 
@@ -12,7 +12,7 @@ static std::string _exe_path{};
 
 void mediaxx::logxx::printStack() {
 
-#define _printToConsoleAndFile(str, ...) printf(str, ##__VA_ARGS__);
+#define innerPrintToConsoleAndFile_d(str, ...) printf(str, ##__VA_ARGS__);
 
     {
         char*  buffer[64];
@@ -20,18 +20,18 @@ void mediaxx::logxx::printStack() {
 
         auto size = backtrace((void**)buffer, 64);
 
-        _printToConsoleAndFile("======= Dump stack start =======\n");
+        innerPrintToConsoleAndFile_d("======= Dump stack start =======\n");
         {
             strings = backtrace_symbols((void**)buffer, size);
             if (strings == nullptr) {
-                _printToConsoleAndFile("backtrace_symbols return nullptr");
+                innerPrintToConsoleAndFile_d("backtrace_symbols return nullptr");
             }
         }
         for (int i = 0; i < size; i++) {
             if (nullptr == strings[i]) {
-                _printToConsoleAndFile("[%02d] %p\n", i, buffer[i]);
+                innerPrintToConsoleAndFile_d("[%02d] %p\n", i, buffer[i]);
             } else {
-                _printToConsoleAndFile("[%02d] %s\n", i, strings[i]);
+                innerPrintToConsoleAndFile_d("[%02d] %s\n", i, strings[i]);
             }
             if (buffer[i] != NULL) {
                 char addr2line_cmd[256];
@@ -40,25 +40,25 @@ void mediaxx::logxx::printStack() {
                 if (addr2line_fp != NULL) {
                     char line[256]{};
                     while (fgets(line, sizeof(line), addr2line_fp) != NULL) {
-                        _printToConsoleAndFile("%s", line);
+                        innerPrintToConsoleAndFile_d("%s", line);
                     }
                     pclose(addr2line_fp);
                 }
             } else {
-                _printToConsoleAndFile("(unknown)\n");
+                innerPrintToConsoleAndFile_d("(unknown)\n");
             }
         }
-        _printToConsoleAndFile("======= Dump stack end =======\n");
+        innerPrintToConsoleAndFile_d("======= Dump stack end =======\n");
         free(strings);
     }
-#undef _printToConsoleAndFile
+#undef innerPrintToConsoleAndFile_d
 }
 
 void signal_handler(int signo) {
     const std::string filename = fmt::format("crash-{}.log", std::time(nullptr));
 
-#define _printToConsoleAndFile(fp, str, ...) \
-    printf(str, ##__VA_ARGS__);              \
+#define innerPrintToConsoleAndFile_d(fp, str, ...) \
+    printf(str, ##__VA_ARGS__);                    \
     fprintf(fp, str, ##__VA_ARGS__);
 
     {
@@ -69,19 +69,19 @@ void signal_handler(int signo) {
 
         FILE* fp = fopen(filename.c_str(), "w");
         if (fp != NULL) {
-            _printToConsoleAndFile(fp, "\n======= xx catch signal %d =======\n", signo);
-            _printToConsoleAndFile(fp, "======= Dump stack start =======\n");
+            innerPrintToConsoleAndFile_d(fp, "\n======= xx catch signal %d =======\n", signo);
+            innerPrintToConsoleAndFile_d(fp, "======= Dump stack start =======\n");
             {
                 strings = backtrace_symbols((void**)buffer, size);
                 if (strings == nullptr) {
-                    _printToConsoleAndFile(fp, "backtrace_symbols return nullptr");
+                    innerPrintToConsoleAndFile_d(fp, "backtrace_symbols return nullptr");
                 }
             }
             for (int i = 0; i < size; i++) {
                 if (nullptr == strings[i]) {
-                    _printToConsoleAndFile(fp, "[%02d] %p\n", i, buffer[i]);
+                    innerPrintToConsoleAndFile_d(fp, "[%02d] %p\n", i, buffer[i]);
                 } else {
-                    _printToConsoleAndFile(fp, "[%02d] %s\n", i, strings[i]);
+                    innerPrintToConsoleAndFile_d(fp, "[%02d] %s\n", i, strings[i]);
                 }
                 if (buffer[i] != NULL) {
                     char addr2line_cmd[256];
@@ -90,15 +90,15 @@ void signal_handler(int signo) {
                     if (addr2line_fp != NULL) {
                         char line[256]{};
                         while (fgets(line, sizeof(line), addr2line_fp) != NULL) {
-                            _printToConsoleAndFile(fp, "%s", line);
+                            innerPrintToConsoleAndFile_d(fp, "%s", line);
                         }
                         pclose(addr2line_fp);
                     }
                 } else {
-                    _printToConsoleAndFile(fp, "(unknown)\n");
+                    innerPrintToConsoleAndFile_d(fp, "(unknown)\n");
                 }
             }
-            _printToConsoleAndFile(fp, "======= Dump stack end =======\n");
+            innerPrintToConsoleAndFile_d(fp, "======= Dump stack end =======\n");
             fclose(fp);
             free(strings);
         }
@@ -106,10 +106,10 @@ void signal_handler(int signo) {
     printf("\n# See file: %s\n", filename.c_str());
     signal(signo, SIG_DFL);
     raise(signo);
-#undef _printToConsoleAndFile
+#undef innerPrintToConsoleAndFile_d
 }
 
-void mediaxx::logxx::signal_error(std::string_view exepath) {
+void mediaxx::logxx::signalError(std::string_view exepath) {
     _exe_path = exepath;
     printf("# Signal error handler: %s\n", exepath.data());
     signal(SIGSEGV, signal_handler);
@@ -119,6 +119,6 @@ void mediaxx::logxx::signal_error(std::string_view exepath) {
 
 void mediaxx::logxx::printStack() {}
 
-void mediaxx::logxx::signal_error(std::string_view exepath) {}
+void mediaxx::logxx::signalError(std::string_view exepath) {}
 
 #endif

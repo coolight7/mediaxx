@@ -7,12 +7,12 @@ add_executable(${NAME_test} ${DIR_test})
 target_link_libraries(${NAME_test}
 	mediaxx
 )
-if (_ISMACOS)
+if (IS_MACOS_D)
   target_link_options(${NAME_test} PRIVATE 
     "-Wl,-rpath,@executable_path"
   )
 endif()
-if (_ISWIN)
+if (IS_WIN_D)
 	target_compile_definitions(
 		${NAME_test} PRIVATE
 		strdup=_strdup

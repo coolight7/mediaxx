@@ -95,7 +95,7 @@ namespace mediaxx {
             }
 
             item.setOptions(headers);
-            LXX_DEBEG("openFile ...... : {}", item.filepath);
+            XX_LOGD("openFile ...... : {}", item.filepath);
             int ret
                 = avformat_open_input(&item.fmtCtx, item.filepath.c_str(), nullptr, &item.options);
             if (ret != 0) {
@@ -107,7 +107,7 @@ namespace mediaxx {
                 return false;
             }
 
-            LXX_DEBEG("openFile | find info ...... : {}", item.filepath);
+            XX_LOGD("openFile | find info ...... : {}", item.filepath);
             ret = avformat_find_stream_info(item.fmtCtx, nullptr);
             if (ret < 0) {
                 item.setLog(
@@ -116,12 +116,12 @@ namespace mediaxx {
                 return false;
             }
 
-            LXX_DEBEG("openFile success: {}", item.filepath);
+            XX_LOGD("openFile success: {}", item.filepath);
             return true;
         }
 
         simdjson::builder::string_builder toInfoMap(MediaInfoEntity_c& item) {
-            LXX_DEBEG("toInfoMap ......");
+            XX_LOGD("toInfoMap ......");
             simdjson::builder::string_builder result{};
 
             auto const fmtCtx = item.fmtCtx;
@@ -167,16 +167,16 @@ namespace mediaxx {
                 if (nullptr != ctxMetadata) {
                     AVDictionaryEntry* tag     = nullptr;
                     auto               isFirst = true;
-                    LXX_WARN("tags =============== ");
+                    XX_LOGW("tags =============== ");
                     while ((tag = av_dict_get(ctxMetadata, "", tag, AV_DICT_IGNORE_SUFFIX))) {
                         if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
                             auto key   = std::string_view{tag->key};
                             auto value = std::string_view{tag->value};
-                            LXX_WARN("tags =============== {} {}", key, value);
+                            XX_LOGW("tags =============== {} {}", key, value);
                             if (key.contains("�") || false == stringxx::utf8IsAvail(key.data())
                                 || value.contains("�")
                                 || false == stringxx::utf8IsAvail(value.data())) {
-                                LXX_WARN("tags pair contain '�': '{}': '{}'", key, value);
+                                XX_LOGW("tags pair contain '�': '{}': '{}'", key, value);
                                 continue;
                             }
                             if (false == isFirst) {
@@ -264,7 +264,7 @@ namespace mediaxx {
                                 auto key   = std::string_view{tag->key};
                                 auto value = std::string_view{tag->value};
                                 if (key.contains("�") || value.contains("�")) {
-                                    LXX_WARN("tags pair contain '�': '{}': '{}'", key, value);
+                                    XX_LOGW("tags pair contain '�': '{}': '{}'", key, value);
                                     continue;
                                 }
                                 if (false == isFirst) {
@@ -277,7 +277,7 @@ namespace mediaxx {
                         result.end_object();
                     }
 
-                    LXX_DEBEG(
+                    XX_LOGD(
                         "toInfoMap | append stream/metadata: {} ......",
                         int(codecPar->codec_type)
                     );
@@ -400,7 +400,7 @@ namespace mediaxx {
             const std::string_view outputStr,
             const std::string_view output96Str
         ) {
-            LXX_DEBEG("savePicture: {}", item.filepath);
+            XX_LOGD("savePicture: {}", item.filepath);
             auto const fmtCtx = item.fmtCtx;
             if (!fmtCtx) {
                 item.setLog("未打开文件");
@@ -570,7 +570,7 @@ namespace mediaxx {
                 srcMinLine = -1;
             }
             double scalePercent = (double)targetMinLineSize / srcMinLine;
-            LXX_DEBEG(
+            XX_LOGD(
                 "saveFrameAsJPEGWithScale: quality {} | scale to {} %",
                 quality,
                 scalePercent * 100
@@ -631,7 +631,7 @@ namespace mediaxx {
                     item.setLog("无法为缩放帧分配缓冲区");
                     break;
                 }
-                LXX_DEBEG(
+                XX_LOGD(
                     "saveFrameAsJPEGWithScale: format {} | {}",
                     frame->format,
                     scaledFrame->format
@@ -646,7 +646,7 @@ namespace mediaxx {
                     scaledFrame->data,
                     scaledFrame->linesize
                 );
-                LXX_DEBEG(
+                XX_LOGD(
                     "saveFrameAsJPEGWithScale: scale result: reheight {} | fw {} | fh {}",
                     reHeight,
                     scaledFrame->width,
@@ -745,7 +745,7 @@ namespace mediaxx {
                 if (AVCodecID::AV_CODEC_ID_NONE == useCodecId) {
                     useCodecId = stream->codecpar->codec_id;
                 }
-                LXX_DEBEG("savePictureScaleByStream: try decoder: {}", int(useCodecId));
+                XX_LOGD("savePictureScaleByStream: try decoder: {}", int(useCodecId));
                 const AVCodec* decoder = avcodec_find_decoder(useCodecId);
                 if (!decoder) {
                     item.setLog(fmt::format("找不到解码器: {}", int(useCodecId)));
@@ -855,7 +855,7 @@ namespace mediaxx {
             do {
                 // 提取图片封面
                 if (stream->disposition & AV_DISPOSITION_ATTACHED_PIC) {
-                    LXX_DEBEG("tryGetPicture: ATTACHED_PIC");
+                    XX_LOGD("tryGetPicture: ATTACHED_PIC");
                     AVPacket pkt = stream->attached_pic;
 
                     std::ofstream file{std::string{outputPath}, std::ios::binary};
@@ -864,7 +864,7 @@ namespace mediaxx {
                         file.close();
                         result = 1;
                         if (false == output96Path.empty()) {
-                            LXX_DEBEG("tryGetPicture: savePictureScaleByStream-96");
+                            XX_LOGD("tryGetPicture: savePictureScaleByStream-96");
                             if (savePictureScaleByStream(item, &pkt, stream, output96Path, 96, 8)) {
                                 result = 2;
                             }
@@ -878,7 +878,7 @@ namespace mediaxx {
 
                 // 提取视频封面
                 if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-                    LXX_DEBEG("tryGetPicture: VIDEO");
+                    XX_LOGD("tryGetPicture: VIDEO");
                     decoder = avcodec_find_decoder(stream->codecpar->codec_id);
                     if (!decoder) {
                         item.setLog("未找到解码器");
@@ -964,14 +964,14 @@ namespace mediaxx {
     public:
 
         AVCodecID findDecoderBySignature(const uint8_t* data, size_t size) {
-            LXX_DEBEG("尝试根据数据头特征[signature]寻找解码器");
+            XX_LOGD("尝试根据数据头特征[signature]寻找解码器");
             if (!data || size < 8) {
                 return AVCodecID::AV_CODEC_ID_NONE;
             }
 
             for (auto info = mediaxx::cImgSignatureTable; info->signature != nullptr; ++info) {
                 if (size >= info->length && memcmp(data, info->signature, info->length) == 0) {
-                    LXX_DEBEG(
+                    XX_LOGD(
                         "检测到文件签名匹配，尝试使用解码器: {}/{}",
                         info->description,
                         int(info->codec_id)

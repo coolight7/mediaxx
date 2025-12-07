@@ -143,7 +143,7 @@ namespace mediaxx {
 
         inline void printStringToIntList(const char* str) {
             if (nullptr == str) {
-                LXX_INFO("[]");
+                XX_LOGI("[]");
                 return;
             }
             std::cout << "[";
