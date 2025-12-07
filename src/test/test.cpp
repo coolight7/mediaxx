@@ -108,7 +108,7 @@ void test() {
             &log
         );
         assert(nullptr != result && ret > 0);
-        std::cout << "result: 不老不死_洛天依.flac | " << ret << std::endl;
+        std::cout << "result: 不老不死_洛天依.flac | " << ret / 256 << std::endl;
         mediaxx_free(result);
         mediaxx_free(resultWaveform);
         mediaxx_free(log);
@@ -127,7 +127,7 @@ void test() {
             &log
         );
         assert(nullptr != result && ret > 0);
-        std::cout << "result: A Little Story_Valentine.ape | " << ret << std::endl;
+        std::cout << "result: A Little Story_Valentine.ape | " << ret / 256 << std::endl;
         mediaxx_free(result);
         mediaxx_free(resultWaveform);
         mediaxx_free(log);
@@ -146,7 +146,7 @@ void test() {
             &log
         );
         assert(nullptr != result && ret > 0);
-        std::cout << "result: 李艺皓+-+嚣张.wav | " << ret << std::endl;
+        std::cout << "result: 李艺皓+-+嚣张.wav | " << ret / 256 << std::endl;
         mediaxx_free(result);
         mediaxx_free(resultWaveform);
         mediaxx_free(log);

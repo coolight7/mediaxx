@@ -332,56 +332,57 @@ namespace mediaxx {
 
             int ret = avcodec_send_packet(codecContext, packet);
             if (ret < 0) {
-                if (ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
-                    XX_LOGE_AV("avcodec_send_packet failed");
-                }
+                XX_LOGE_AV("avcodec_send_packet failed");
                 return false;
             }
 
-            ret = avcodec_receive_frame(codecContext, decodedFrame);
-            if (ret == 0) {
-                // 重采样
-                int outSamplesSize = swr_get_out_samples(swrContext, decodedFrame->nb_samples);
-                if (resampledDataSize < outSamplesSize || nullptr == resampledData) {
-                    av_freep(&resampledData);
-                    ret = av_samples_alloc(
+            bool haveDecoded = false;
+            do {
+                ret = avcodec_receive_frame(codecContext, decodedFrame);
+                if (ret == 0) {
+                    // 重采样
+                    int outSamplesSize = swr_get_out_samples(swrContext, decodedFrame->nb_samples);
+                    if (resampledDataSize < outSamplesSize || nullptr == resampledData) {
+                        av_freep(&resampledData);
+                        ret = av_samples_alloc(
+                            &resampledData,
+                            nullptr,
+                            1,
+                            outSamplesSize,
+                            AV_SAMPLE_FMT_U8,
+                            0
+                        );
+                        if (ret < 0) {
+                            return false;
+                        }
+                        resampledDataSize = outSamplesSize;
+                    }
+
+                    haveDecoded = true;
+                    ret         = swr_convert(
+                        swrContext,
                         &resampledData,
-                        nullptr,
-                        1,
                         outSamplesSize,
-                        AV_SAMPLE_FMT_U8,
-                        0
+                        (const uint8_t**)decodedFrame->data,
+                        decodedFrame->nb_samples
                     );
-                    if (ret < 0) {
-                        return false;
-                    }
-                    resampledDataSize = outSamplesSize;
-                }
-
-                ret = swr_convert(
-                    swrContext,
-                    &resampledData,
-                    outSamplesSize,
-                    (const uint8_t**)decodedFrame->data,
-                    decodedFrame->nb_samples
-                );
-                if (ret >= 0) {
-                    // 校验数据
-                    if (nullptr != resampledData) {
-                        int outSize
-                            = av_samples_get_buffer_size(nullptr, 1, ret, AV_SAMPLE_FMT_U8, 0);
-                        data.insert(data.end(), resampledData, resampledData + outSize);
+                    if (ret >= 0) {
+                        // 校验数据
+                        if (nullptr != resampledData) {
+                            int outSize
+                                = av_samples_get_buffer_size(nullptr, 1, ret, AV_SAMPLE_FMT_U8, 0);
+                            data.insert(data.end(), resampledData, resampledData + outSize);
+                        } else {
+                            XX_LOGW("swr_convert: no valid data (nb_samples: {})", ret);
+                        }
                     } else {
-                        XX_LOGW("swr_convert: no valid data (nb_samples: {})", ret);
+                        XX_LOGE_AV("swr_convert failed");
                     }
-                } else {
-                    XX_LOGE_AV("swr_convert failed");
+                } else if (ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
+                    XX_LOGE_AV("avcodec_receive_frame failed");
                 }
-            } else if (ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
-                XX_LOGE_AV("avcodec_receive_frame failed");
-            }
-
-            return ret >= 0;
+            } while (ret >= 0);
+            return haveDecoded;
         }
 
         // [outputSpectrum] 时间-频率-振幅
