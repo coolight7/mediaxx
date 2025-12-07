@@ -63,6 +63,26 @@ void test() {
             &log
         );
         assert(nullptr != result && ret > 0);
+        std::cout << "result: 不老不死_洛天依.flac | " << ret << std::endl;
+        mediaxx_free(result);
+        mediaxx_free(resultWaveform);
+        mediaxx_free(log);
+    }
+    {
+        std::cout
+            << "AudioSpectrumAnalyzer/mediaxx_get_audio_visualization ....... ===================="
+            << std::endl;
+        const char* result         = nullptr;
+        const char* resultWaveform = nullptr;
+        const char* log            = nullptr;
+        auto        ret            = mediaxx_get_audio_visualization(
+            "./temp/A Little Story_Valentine.ape",
+            &result,
+            &resultWaveform,
+            &log
+        );
+        assert(nullptr != result && ret > 0);
+        std::cout << "result: A Little Story_Valentine.ape | " << ret << std::endl;
         mediaxx_free(result);
         mediaxx_free(resultWaveform);
         mediaxx_free(log);
@@ -81,6 +101,7 @@ void test() {
             &log
         );
         assert(nullptr != result && ret > 0);
+        std::cout << "result: 李艺皓+-+嚣张.wav | " << ret << std::endl;
         mediaxx_free(result);
         mediaxx_free(resultWaveform);
         mediaxx_free(log);
@@ -94,6 +115,7 @@ void test() {
 
         int rebool = analyzer.processAudio("./temp/李艺皓+-+嚣张.wav", spectrumData, waveformData);
         assert(rebool == true);
+        std::cout << "result: 李艺皓+-+嚣张.wav | " << spectrumData.size() << std::endl;
         std::cout << "成功生成 " << spectrumData.size() << " 帧频谱数据" << std::endl;
 
         for (auto& spectrum : spectrumData) {

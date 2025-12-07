@@ -32,10 +32,11 @@ namespace mediaxx {
 
     public:
 
-        inline static constexpr size_t DEF_SPECTRUM_SIZE       = 256;
-        inline static constexpr size_t DEF_HANNING_WINDOW_SIZE = DEF_SPECTRUM_SIZE * 2;
-        inline static constexpr size_t DEF_FPS                 = 10;
-        inline static constexpr size_t DEF_FFT_SIZE            = DEF_SPECTRUM_SIZE * 2;
+        inline static constexpr size_t        DEF_SPECTRUM_SIZE       = 256;
+        inline static constexpr unsigned char DEF_WAVE_MAX_POINT      = 255;
+        inline static constexpr size_t        DEF_HANNING_WINDOW_SIZE = DEF_SPECTRUM_SIZE * 2;
+        inline static constexpr size_t        DEF_FPS                 = 10;
+        inline static constexpr size_t        DEF_FFT_SIZE            = DEF_SPECTRUM_SIZE * 2;
         inline static constexpr size_t DEF_FFT_LOG2_SIZE = 9; // log2(512) = 9，位反转计算
         inline static constexpr float  DEF_2PI           = 2.0f * static_cast<float>(M_PI);
         // 波形振幅计算的分贝参数
@@ -167,7 +168,7 @@ namespace mediaxx {
             }
 
             // 当前帧的峰值
-            float frameMaxPoint = 0.0f;
+            float framePointSum = 0.0f;
             // 统一线性插值适配汉宁窗大小
             std::vector<float> windowInput(DEF_HANNING_WINDOW_SIZE, 0.0f);
             for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; ++i) {
@@ -199,17 +200,19 @@ namespace mediaxx {
                     windowInput[i] = val;
                 }
 
-                if (sampleAbs > frameMaxPoint) {
-                    frameMaxPoint = sampleAbs;
-                }
+                framePointSum += sampleAbs;
             }
 
             {
-                // 根据当前帧最大值计算 [wave] 振幅
-                const float db   = 20.0f * std::log10(frameMaxPoint + 1e-6f);
-                float normalized = (db - DEF_WAVE_MIN_DB) / (DEF_WAVE_MAX_DB - DEF_WAVE_MIN_DB);
-                normalized       = std::clamp(normalized, 0.0f, 1.0f);
-                wave             = static_cast<unsigned char>(normalized * 255);
+                // 根据当前帧计算振幅 [wave]
+                const float db
+                    = 20.0f * std::log10(framePointSum / DEF_HANNING_WINDOW_SIZE + 1e-6f);
+                const float normalized = std::clamp(
+                    (db - DEF_WAVE_MIN_DB) / (DEF_WAVE_MAX_DB - DEF_WAVE_MIN_DB),
+                    0.0f,
+                    1.0f
+                );
+                wave = static_cast<unsigned char>(normalized * DEF_WAVE_MAX_POINT);
             }
 
             std::vector<std::complex<float>> fftData(DEF_FFT_SIZE);
@@ -221,11 +224,11 @@ namespace mediaxx {
 
             for (size_t i = 0; i < DEF_SPECTRUM_SIZE; i++) {
                 float magnitude = std::abs(fftData[i]);
-                // 分贝转换，归一化 255
+                // 分贝转换，归一化
                 const float db   = 20.0f * std::log10(magnitude + 1e-6f);
                 float normalized = (db - DEF_WAVE_MIN_DB) / (DEF_WAVE_MAX_DB - DEF_WAVE_MIN_DB);
                 normalized       = std::clamp(normalized, 0.0f, 1.0f);
-                result[i]        = static_cast<unsigned char>(normalized * 255);
+                result[i]        = static_cast<unsigned char>(normalized * DEF_WAVE_MAX_POINT);
             }
 
             return true;
@@ -319,9 +322,10 @@ namespace mediaxx {
             std::vector<uint8_t>& data,
             AVPacket*             packet,
             AVFrame*              decodedFrame,
-            AVFrame*              resampledFrame
+            uint8_t*&             resampledData,
+            int&                  resampledDataSize
         ) {
-            if (!codecContext || !packet || !decodedFrame || !resampledFrame) {
+            if (!codecContext || !packet || !decodedFrame) {
                 LXX_ERR("decodeAudioFrame: invalid parameters");
                 return false;
             }
@@ -337,30 +341,52 @@ namespace mediaxx {
             ret = avcodec_receive_frame(codecContext, decodedFrame);
             if (ret == 0) {
                 // 重采样
-                resampledFrame->sample_rate = codecContext->sample_rate;
-                resampledFrame->format      = AV_SAMPLE_FMT_U8;
-                resampledFrame->ch_layout   = (AVChannelLayout)AV_CHANNEL_LAYOUT_MONO;
+                int outSamplesSize = swr_get_out_samples(swrContext, decodedFrame->nb_samples);
+                if (resampledDataSize < outSamplesSize || nullptr == resampledData) {
+                    av_freep(&resampledData);
+                    ret = av_samples_alloc(
+                        &resampledData,
+                        nullptr,
+                        1,
+                        outSamplesSize,
+                        AV_SAMPLE_FMT_U8,
+                        0
+                    );
+                    if (ret < 0) {
+                        return false;
+                    }
+                    resampledDataSize = outSamplesSize;
+                }
 
-                ret = swr_convert_frame(swrContext, resampledFrame, decodedFrame);
-                if (ret == 0) {
+                ret = swr_convert(
+                    swrContext,
+                    &resampledData,
+                    outSamplesSize,
+                    (const uint8_t**)decodedFrame->data,
+                    decodedFrame->nb_samples
+                );
+                if (ret >= 0) {
                     // 校验数据
-                    if (resampledFrame->data[0] && resampledFrame->nb_samples > 0) {
-                        uint8_t* samples = reinterpret_cast<uint8_t*>(resampledFrame->data[0]);
-                        data.insert(data.end(), samples, samples + resampledFrame->nb_samples);
-                    } else {
-                        LXX_WARN(
-                            "swr_convert_frame: no valid data (nb_samples: {})",
-                            resampledFrame->nb_samples
+                    if (nullptr != resampledData && outSamplesSize > 0) {
+                        int outSize = av_samples_get_buffer_size(
+                            nullptr,
+                            1,
+                            ret,
+                            codecContext->sample_fmt,
+                            1
                         );
+                        data.insert(data.end(), resampledData, resampledData + outSize);
+                    } else {
+                        LXX_WARN("swr_convert: no valid data (nb_samples: {})", outSamplesSize);
                     }
                 } else {
-                    LXX_AVERR("swr_convert_frame failed");
+                    LXX_AVERR("swr_convert failed");
                 }
             } else if (ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
                 LXX_AVERR("avcodec_receive_frame failed");
             }
 
-            return ret == 0;
+            return ret >= 0;
         }
 
         // [outputSpectrum] 时间-频率-振幅
@@ -391,21 +417,28 @@ namespace mediaxx {
                 return false;
             }
 
-            AVPacket* packet = av_packet_alloc();
-            if (nullptr == packet) {
+            init();
+
+            AVPacket* packet       = av_packet_alloc();
+            AVFrame*  decodedFrame = av_frame_alloc();
+            if (nullptr == packet || nullptr == decodedFrame) {
                 LXX_ERR("processAudio: av_packet_alloc failed");
                 return false;
             }
-
-            init();
-            AVFrame*             decodedFrame   = av_frame_alloc();
-            AVFrame*             resampledFrame = av_frame_alloc();
+            uint8_t*             resampledData     = nullptr;
+            int                  resampledDataSize = 0;
             std::vector<uint8_t> accumulatedAudio{};
 
             while (av_read_frame(formatContext, packet) >= 0) {
                 if (packet->stream_index == audioStreamIndex) {
                     // 解码并积累音频数据
-                    if (decodeAudioFrame(accumulatedAudio, packet, decodedFrame, resampledFrame)) {
+                    if (decodeAudioFrame(
+                            accumulatedAudio,
+                            packet,
+                            decodedFrame,
+                            resampledData,
+                            resampledDataSize
+                        )) {
                         while (accumulatedAudio.size() >= samplesPerFrame) {
                             // 计算频谱数据
                             outputSpectrum.emplace_back();
@@ -426,13 +459,12 @@ namespace mediaxx {
                         }
                     }
                     av_frame_unref(decodedFrame);
-                    av_frame_unref(resampledFrame);
                 }
                 av_packet_unref(packet);
             }
             av_packet_free(&packet);
             av_frame_free(&decodedFrame);
-            av_frame_free(&resampledFrame);
+            av_freep(&resampledData);
 
             // 处理剩余数据,不足一帧时填充0
             if (false == accumulatedAudio.empty()) {
@@ -449,9 +481,9 @@ namespace mediaxx {
                 // 波形振幅数据
                 outputWaveform.push_back(wave);
             }
-            assert(outputSpectrum.size() == outputWaveform.size());
 
             cleanup();
+            assert(outputSpectrum.size() == outputWaveform.size());
             return (outputSpectrum.size() > 0 && outputWaveform.size() > 0);
         }
 
