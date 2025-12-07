@@ -48,7 +48,53 @@ void test() {
     }
 
     mediaxx_set_log_level(AV_LOG_TRACE);
+    auto result = mediaxx_get_available_hwcodec_list();
+    if (nullptr != result) {
+        std::cout << "硬件加速编解码器：" << result << std::endl;
+    }
 
+    {
+        std::cout << "AudioSpectrumAnalyzer ....... ====================" << std::endl;
+        mediaxx::AudioSpectrumAnalyzer analyzer{};
+        std::vector<std::array<unsigned char, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
+                                   spectrumData{};
+        std::vector<unsigned char> waveformData{};
+
+        int rebool
+            = analyzer.processAudio("./temp/不老不死_洛天依.flac", spectrumData, waveformData);
+        assert(rebool == true);
+        std::cout << "result: 不老不死_洛天依.flac | " << spectrumData.size() << std::endl;
+        std::cout << "成功生成 " << spectrumData.size() << " 帧频谱数据" << std::endl;
+
+        int     maxIndex = 0;
+        uint8_t maxPoint = 0;
+
+        {
+            int i = 0;
+            for (auto& item : waveformData) {
+                std::cout << int(item) << " ";
+                if (item > maxPoint) {
+                    maxPoint = item;
+                    maxIndex = i;
+                }
+                ++i;
+            }
+        }
+
+        for (auto& spectrum : spectrumData) {
+            assert(spectrum.size() == 256);
+        }
+
+        std::cout << std::endl << "[";
+        for (auto& item : spectrumData[maxIndex]) {
+            std::cout << (unsigned int)(item) << " ";
+        }
+        std::cout << "]" << std::endl << std::endl;
+
+        assert(spectrumData.size() == waveformData.size());
+        std::cout << std::endl;
+    }
+    return;
     {
         std::cout
             << "AudioSpectrumAnalyzer/mediaxx_get_audio_visualization ....... ===================="
@@ -105,39 +151,6 @@ void test() {
         mediaxx_free(result);
         mediaxx_free(resultWaveform);
         mediaxx_free(log);
-    }
-    {
-        std::cout << "AudioSpectrumAnalyzer ....... ====================" << std::endl;
-        mediaxx::AudioSpectrumAnalyzer analyzer{};
-        std::vector<std::array<unsigned char, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
-                                   spectrumData{};
-        std::vector<unsigned char> waveformData{};
-
-        int rebool = analyzer.processAudio("./temp/李艺皓+-+嚣张.wav", spectrumData, waveformData);
-        assert(rebool == true);
-        std::cout << "result: 李艺皓+-+嚣张.wav | " << spectrumData.size() << std::endl;
-        std::cout << "成功生成 " << spectrumData.size() << " 帧频谱数据" << std::endl;
-
-        for (auto& spectrum : spectrumData) {
-            assert(spectrum.size() == 256);
-        }
-        std::cout << std::endl << "[";
-        for (auto& item : spectrumData[spectrumData.size() / 2]) {
-            std::cout << (unsigned int)(item) << " ";
-        }
-        std::cout << "]" << std::endl << std::endl;
-
-        for (auto& item : waveformData) {
-            std::cout << int(item) << " ";
-        }
-        assert(spectrumData.size() == waveformData.size());
-        std::cout << std::endl;
-    }
-    return;
-
-    auto result = mediaxx_get_available_hwcodec_list();
-    if (nullptr != result) {
-        std::cout << "硬件加速编解码器：" << result << std::endl;
     }
 
     {

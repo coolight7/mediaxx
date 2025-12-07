@@ -40,8 +40,8 @@ namespace mediaxx {
         inline static constexpr size_t DEF_FFT_LOG2_SIZE = 9; // log2(512) = 9，位反转计算
         inline static constexpr float  DEF_2PI           = 2.0f * static_cast<float>(M_PI);
         // 波形振幅计算的分贝参数
-        inline static constexpr float DEF_WAVE_MIN_DB = -60.0f;
-        inline static constexpr float DEF_WAVE_MAX_DB = 10.0f;
+        inline static constexpr float DEF_WAVE_MIN_DB = -70.0f;
+        inline static constexpr float DEF_WAVE_MAX_DB = 0.0f;
         // UINT8音频采样的中心值（归一化用）
         inline static constexpr uint8_t DEF_U8_CENTER = 128;
         inline static constexpr float   DEF_U8_SCALE  = 128.0f;
@@ -174,13 +174,10 @@ namespace mediaxx {
             for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; ++i) {
                 // 将原始M个采样点映射到N=512个窗口点
                 // 计算当前目标点在原始数据中的 [归一化位置]（0~M-1）
-                const float srcPos
-                    = static_cast<float>(i) * (dataSize - 1) / (DEF_HANNING_WINDOW_SIZE - 1);
-
+                const float  srcPos = static_cast<float>(i) * dataSize / DEF_HANNING_WINDOW_SIZE;
                 const size_t srcIdx = static_cast<size_t>(srcPos);
                 // 插值权重
-                const float alpha     = srcPos - srcIdx;
-                float       sampleAbs = 0;
+                const float alpha = srcPos - srcIdx;
 
                 // 处理uint8数据，归一化到-1.0f ~ 1.0f
                 if (srcIdx < dataSize - 1) {
@@ -189,24 +186,22 @@ namespace mediaxx {
                         = static_cast<float>(*(dataStart + srcIdx) - DEF_U8_CENTER) / DEF_U8_SCALE;
                     float val2 = static_cast<float>(*(dataStart + srcIdx + 1) - DEF_U8_CENTER)
                                  / DEF_U8_SCALE;
-                    sampleAbs = std::abs(val1);
                     // (1-alpha)*左邻点 + alpha*右邻点
-                    windowInput[i] = (1.0f - alpha) * val1 + alpha * val2;
+                    windowInput[i]  = (1.0f - alpha) * val1 + alpha * val2;
+                    framePointSum  += val1 * val1;
                 } else {
                     // 最后一个目标点取原始数据最后一个值
                     float val = static_cast<float>(*(dataStart + dataSize - 1) - DEF_U8_CENTER)
                                 / DEF_U8_SCALE;
-                    sampleAbs      = std::abs(val);
-                    windowInput[i] = val;
+                    windowInput[i]  = val;
+                    framePointSum  += val * val;
                 }
-
-                framePointSum += sampleAbs;
             }
 
             {
                 // 根据当前帧计算振幅 [wave]
-                const float db
-                    = 20.0f * std::log10(framePointSum / DEF_HANNING_WINDOW_SIZE + 1e-6f);
+                const float rms        = std::sqrt(framePointSum / DEF_HANNING_WINDOW_SIZE);
+                const float db         = 20.0f * std::log10(rms + 1e-10f);
                 const float normalized = std::clamp(
                     (db - DEF_WAVE_MIN_DB) / (DEF_WAVE_MAX_DB - DEF_WAVE_MIN_DB),
                     0.0f,
@@ -223,9 +218,9 @@ namespace mediaxx {
             fft(fftData);
 
             for (size_t i = 0; i < DEF_SPECTRUM_SIZE; i++) {
-                float magnitude = std::abs(fftData[i]);
+                float magnitude = std::abs(fftData[i]) / DEF_FFT_SIZE;
                 // 分贝转换，归一化
-                const float db   = 20.0f * std::log10(magnitude + 1e-6f);
+                const float db   = 20.0f * std::log10(magnitude * 2 + 1e-10f);
                 float normalized = (db - DEF_WAVE_MIN_DB) / (DEF_WAVE_MAX_DB - DEF_WAVE_MIN_DB);
                 normalized       = std::clamp(normalized, 0.0f, 1.0f);
                 result[i]        = static_cast<unsigned char>(normalized * DEF_WAVE_MAX_POINT);
@@ -367,17 +362,12 @@ namespace mediaxx {
                 );
                 if (ret >= 0) {
                     // 校验数据
-                    if (nullptr != resampledData && outSamplesSize > 0) {
-                        int outSize = av_samples_get_buffer_size(
-                            nullptr,
-                            1,
-                            ret,
-                            codecContext->sample_fmt,
-                            1
-                        );
+                    if (nullptr != resampledData) {
+                        int outSize
+                            = av_samples_get_buffer_size(nullptr, 1, ret, AV_SAMPLE_FMT_U8, 0);
                         data.insert(data.end(), resampledData, resampledData + outSize);
                     } else {
-                        XX_LOGW("swr_convert: no valid data (nb_samples: {})", outSamplesSize);
+                        XX_LOGW("swr_convert: no valid data (nb_samples: {})", ret);
                     }
                 } else {
                     XX_LOGE_AV("swr_convert failed");
