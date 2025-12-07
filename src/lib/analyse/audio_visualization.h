@@ -40,8 +40,10 @@ namespace mediaxx {
         inline static constexpr size_t DEF_FFT_LOG2_SIZE = 9; // log2(512) = 9，位反转计算
         inline static constexpr float  DEF_2PI           = 2.0f * static_cast<float>(M_PI);
         // 波形振幅计算的分贝参数
-        inline static constexpr float DEF_WAVE_MIN_DB = -70.0f;
-        inline static constexpr float DEF_WAVE_MAX_DB = 0.0f;
+        inline static constexpr float DEF_FREQUENCY_MIN_DB = -80.0f;
+        inline static constexpr float DEF_FREQUENCY_MAX_DB = 0.0f;
+        inline static constexpr float DEF_WAVE_MIN_DB      = -60.0f;
+        inline static constexpr float DEF_WAVE_MAX_DB      = 20.0f;
         // UINT8音频采样的中心值（归一化用）
         inline static constexpr uint8_t DEF_U8_CENTER = 128;
         inline static constexpr float   DEF_U8_SCALE  = 128.0f;
@@ -220,10 +222,13 @@ namespace mediaxx {
             for (size_t i = 0; i < DEF_SPECTRUM_SIZE; i++) {
                 float magnitude = std::abs(fftData[i]) / DEF_FFT_SIZE;
                 // 分贝转换，归一化
-                const float db   = 20.0f * std::log10(magnitude * 2 + 1e-10f);
-                float normalized = (db - DEF_WAVE_MIN_DB) / (DEF_WAVE_MAX_DB - DEF_WAVE_MIN_DB);
-                normalized       = std::clamp(normalized, 0.0f, 1.0f);
-                result[i]        = static_cast<unsigned char>(normalized * DEF_WAVE_MAX_POINT);
+                const float db         = 20.0f * std::log10(magnitude * 2 + 1e-10f);
+                const float normalized = std::clamp(
+                    (db - DEF_FREQUENCY_MIN_DB) / (DEF_FREQUENCY_MAX_DB - DEF_FREQUENCY_MIN_DB),
+                    0.0f,
+                    1.0f
+                );
+                result[i] = static_cast<unsigned char>(normalized * DEF_WAVE_MAX_POINT);
             }
 
             return true;

@@ -94,7 +94,6 @@ void test() {
         assert(spectrumData.size() == waveformData.size());
         std::cout << std::endl;
     }
-    return;
     {
         std::cout
             << "AudioSpectrumAnalyzer/mediaxx_get_audio_visualization ....... ===================="
@@ -172,6 +171,7 @@ void test() {
         mediaxx_free(result);
         mediaxx_free(log);
     }
+    return;
 
     {
         const char* log     = nullptr;
