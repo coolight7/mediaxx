@@ -62,7 +62,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_info_malloc(
     *outResult = nullptr;
     if (mediaxx::MediaInfoReader_c::instance.openFile(item, headers)) {
         // 读取信息
-        auto jsonsb    = mediaxx::MediaInfoReader_c::instance.toInfoMap(item);
+        auto jsonsb    = mediaxx::MediaInfoReader_c::instance.getInfoMap(item);
         auto pOutput   = std::string_view{pictureOutputPath};
         auto p96Output = std::string_view{picture96OutputPath};
         *outResult     = mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();

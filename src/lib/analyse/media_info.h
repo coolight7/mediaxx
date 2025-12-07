@@ -120,8 +120,8 @@ namespace mediaxx {
             return true;
         }
 
-        simdjson::builder::string_builder toInfoMap(MediaInfoEntity_c& item) {
-            XX_LOGD("toInfoMap ......");
+        simdjson::builder::string_builder getInfoMap(MediaInfoEntity_c& item) {
+            XX_LOGD("getInfoMap ......");
             simdjson::builder::string_builder result{};
 
             auto const fmtCtx = item.fmtCtx;
@@ -193,6 +193,7 @@ namespace mediaxx {
             }
             result.append_comma();
 
+            size_t audioStreamCount = 0, videoStreamCount = 0;
             result.escape_and_append_with_quotes("streams");
             result.append_colon();
             {
@@ -278,12 +279,13 @@ namespace mediaxx {
                     }
 
                     XX_LOGD(
-                        "toInfoMap | append stream/metadata: {} ......",
+                        "getInfoMap | append stream/metadata: {} ......",
                         int(codecPar->codec_type)
                     );
                     switch (codecPar->codec_type) {
                     case AVMEDIA_TYPE_VIDEO:
                         {
+                            ++videoStreamCount;
                             result.append_comma();
                             result.append_key_value<"width">(codecPar->width);
                             result.append_comma();
@@ -339,6 +341,7 @@ namespace mediaxx {
                         break;
                     case AVMEDIA_TYPE_AUDIO:
                         {
+                            ++audioStreamCount;
                             result.append_comma();
                             result.append_key_value<"sample_rate">(codecPar->sample_rate);
                             result.append_comma();
@@ -380,8 +383,13 @@ namespace mediaxx {
                     result.end_object();
                 }
                 result.end_array();
-                // result.append_comma();
+                result.append_comma();
             }
+
+            result.append_key_value<"audioStreamCount">(audioStreamCount);
+            result.append_comma();
+            result.append_key_value<"videoStreamCount">(videoStreamCount);
+            // result.append_comma();
 
             result.end_object();
             return result;
