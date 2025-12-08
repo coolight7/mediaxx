@@ -325,7 +325,8 @@ namespace mediaxx {
             uint8_t*&             resampledData,
             int&                  resampledDataSize
         ) {
-            if (!codecContext || !packet || !decodedFrame) {
+            // packet can be nullptr
+            if (!codecContext || !decodedFrame) {
                 XX_LOGE("decodeAudioFrame: invalid parameters");
                 return false;
             }
@@ -424,13 +425,24 @@ namespace mediaxx {
             uint8_t*             resampledData     = nullptr;
             int                  resampledDataSize = 0;
             std::vector<uint8_t> accumulatedAudio{};
+            auto                 usePacket = packet;
 
-            while (av_read_frame(formatContext, packet) >= 0) {
-                if (packet->stream_index == audioStreamIndex) {
+            while (true) {
+                int ret = av_read_frame(formatContext, usePacket);
+                if (ret >= 0) {
+                    assert(nullptr != usePacket);
+                } else if (false == outputSpectrum.empty()) {
+                    // 读取失败，但之前积累读取数据，可能是到达末尾，最后调用一次解码
+                    usePacket = nullptr;
+                } else {
+                    // 读取失败
+                    break;
+                }
+                if (nullptr == usePacket || usePacket->stream_index == audioStreamIndex) {
                     // 解码并积累音频数据
                     if (decodeAudioFrame(
                             accumulatedAudio,
-                            packet,
+                            usePacket,
                             decodedFrame,
                             resampledData,
                             resampledDataSize
@@ -438,15 +450,14 @@ namespace mediaxx {
                         while (accumulatedAudio.size() >= samplesPerFrame) {
                             // 计算频谱数据
                             outputSpectrum.emplace_back();
-                            unsigned char waveformAmplitude = 0;
+                            // 波形振幅数据
+                            outputWaveform.emplace_back(0);
                             computeSpectrum(
                                 samplesPerFrame,
                                 accumulatedAudio.begin(),
                                 outputSpectrum.back(),
-                                waveformAmplitude
+                                outputWaveform.back()
                             );
-                            // 计算当前帧的振幅
-                            outputWaveform.push_back(waveformAmplitude);
                             // 移除已处理的数据
                             accumulatedAudio.erase(
                                 accumulatedAudio.begin(),
@@ -456,7 +467,11 @@ namespace mediaxx {
                     }
                     av_frame_unref(decodedFrame);
                 }
-                av_packet_unref(packet);
+                if (nullptr != usePacket) {
+                    av_packet_unref(usePacket);
+                } else {
+                    break;
+                }
             }
             av_packet_free(&packet);
             av_frame_free(&decodedFrame);
@@ -467,15 +482,14 @@ namespace mediaxx {
                 accumulatedAudio.resize(samplesPerFrame, DEF_U8_CENTER);
                 // 频谱数据
                 outputSpectrum.emplace_back();
-                unsigned char wave = 0;
+                // 波形振幅数据
+                outputWaveform.emplace_back(0);
                 computeSpectrum(
                     accumulatedAudio.size(),
                     accumulatedAudio.begin(),
                     outputSpectrum.back(),
-                    wave
+                    outputWaveform.back()
                 );
-                // 波形振幅数据
-                outputWaveform.push_back(wave);
             }
 
             cleanup();

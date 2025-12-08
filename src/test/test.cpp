@@ -151,6 +151,25 @@ void test() {
         mediaxx_free(resultWaveform);
         mediaxx_free(log);
     }
+    {
+        std::cout
+            << "AudioSpectrumAnalyzer/mediaxx_get_audio_visualization ....... ===================="
+            << std::endl;
+        const char* result         = nullptr;
+        const char* resultWaveform = nullptr;
+        const char* log            = nullptr;
+        auto        ret            = mediaxx_get_audio_visualization(
+            "./temp/Gold Town_M2U.mp3",
+            &result,
+            &resultWaveform,
+            &log
+        );
+        assert(nullptr != result && ret > 0);
+        std::cout << "result: Gold Town_M2U.mp3 | " << ret / 256 << std::endl;
+        mediaxx_free(result);
+        mediaxx_free(resultWaveform);
+        mediaxx_free(log);
+    }
 
     {
         const char* result = nullptr;
