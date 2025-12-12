@@ -450,7 +450,6 @@ EXPORTS
     avsubtitle_free
     avutil_configuration
     avutil_version
-    avutil_versionav_input_audio_device_next
     swr_get_class
     swresample_configuration
     swresample_version

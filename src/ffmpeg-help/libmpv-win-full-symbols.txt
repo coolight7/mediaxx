@@ -447,7 +447,6 @@
 --undefined=avsubtitle_free
 --undefined=avutil_configuration
 --undefined=avutil_version
---undefined=avutil_versionav_input_audio_device_next
 --undefined=swr_get_class
 --undefined=swresample_configuration
 --undefined=swresample_version
