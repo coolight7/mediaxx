@@ -495,6 +495,7 @@ namespace mediaxx {
         return nullptr;
     }
 
+    // 图片颜色分析
     inline std::shared_ptr<AnalysePictureColorResult>
         analysePictureColor(AVFormatContext* formatCtx, mediaxx::AnalyseLogItem_c& logItem) {
         XX_LOGD("analysePictureColor: ");

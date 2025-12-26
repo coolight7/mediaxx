@@ -13,6 +13,7 @@ namespace mediaxx {
     class CodecInfo_c {
     public:
 
+        // 获取可用的 codec 列表
         static simdjson::builder::string_builder findAvailCodec() {
             std::vector<const AVCodec*>       hardware_codecs{};
             simdjson::builder::string_builder result{};

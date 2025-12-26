@@ -102,6 +102,7 @@ endif()
 
 include(ExternalProject)
 
+# simdjson
 ExternalProject_Add(
   simdjson_repo
   SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/simdjson/"
@@ -145,6 +146,7 @@ set(simdjson_SOURCE_DIR "${SOURCE_DIR}")
 ExternalProject_Get_Property(simdjson_repo BINARY_DIR)
 set(simdjson_INSTALL_DIR "${BINARY_DIR}/")
 
+# fmt
 ExternalProject_Add(
   fmt_repo
   SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/"
@@ -348,7 +350,7 @@ include_directories(${ffmpeg_mpv_INCLUDE_DIR})
 aux_source_directory("./lib/util" DIR_UTIL)
 aux_source_directory("./lib/analyse" DIR_ANALYSE)
 aux_source_directory("./impl" DIR_IMPL)
-aux_source_directory("./impl/android/" DIR_IMPL_ANDROID)
+aux_source_directory("./impl/android" DIR_IMPL_ANDROID)
 
 add_library(mediaxx SHARED
   ${DIR_IMPL}
@@ -387,6 +389,8 @@ target_compile_options(mediaxx PRIVATE
     ${ffmpeg_mpv_CFLAGS}
 )
 
+# 统一输出名称 libmediaxx
+# - 不指定时，部分系统，如win可能编译输出缺少前缀 lib
 set_target_properties(mediaxx PROPERTIES
   PUBLIC_HEADER mediaxx.h
   PREFIX "lib"
