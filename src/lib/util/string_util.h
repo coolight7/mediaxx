@@ -1,10 +1,14 @@
 #pragma once
 
+#include "log.h"
 #include <iostream>
 #include <mediaxx.h>
+#include <sstream>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <unordered_set>
+#include <vector>
 
 namespace mediaxx {
 
@@ -37,9 +41,9 @@ namespace mediaxx {
             return (ch & 0xC0) == 0x80; // 10xxxxxx 的二进制特征：前两位是 10
         }
 
-        inline size_t utf8GetLengthCheckAvail(const char* str) {
+        inline size_t utf8GetLengthCheckAvail(std::string_view str) {
             size_t length = 0;
-            for (size_t i = 0, step = 0;; i += step) {
+            for (size_t i = 0, step = 0; i < str.length(); i += step) {
                 unsigned char ch = str[i];
                 if (ch == '\0') {
                     break;
@@ -73,7 +77,7 @@ namespace mediaxx {
 
                 if (step > 1) {
                     for (size_t j = 1; j < step; j++) {
-                        if (str[i + j] == '\0'
+                        if (i + j > str.length() || str[i + j] == '\0'
                             || false == utf8IsContinuationChar((unsigned char)str[i + j])) {
                             // 不合规
                             return 0;
@@ -85,8 +89,8 @@ namespace mediaxx {
             return length;
         }
 
-        inline bool utf8IsAvail(const char* str) {
-            if (nullptr == str || str[0] == '\0' || (utf8GetLengthCheckAvail(str) == 0)) {
+        inline bool utf8IsAvail(std::string_view str) {
+            if (str.empty() || str[0] == '\0' || (utf8GetLengthCheckAvail(str) == 0)) {
                 return false;
             }
             return true;
@@ -99,10 +103,6 @@ namespace mediaxx {
                 re_strlist.push_back(item);
             }
             return re_strlist;
-        }
-
-        inline void strEliminate(std::string& in_str, char in_char) {
-            in_str.erase(std::remove(in_str.begin(), in_str.end(), in_char), in_str.end());
         }
 
         inline std::string_view strTrim(std::string_view sv) {
@@ -192,5 +192,12 @@ namespace mediaxx {
             result[len] = '\0';
             return std::string_view{result, len};
         }
+
+        std::string convert_to_utf8(const std::string_view src, const char* src_encoding);
+        bool        chardet_convert_encoding(
+                   const std::string_view str,
+                   std::string&           encoding,
+                   std::string&           result
+               );
     }; // namespace stringxx
 }; // namespace mediaxx

@@ -29,11 +29,65 @@ void test() {
     }
 
     {
-        assert(mediaxx::stringxx::utf8IsAvail(nullptr) == false);
+        // uchardet
+        const auto textlist = std::vector<std::string>{
+            "./temp/test-utf8.txt",
+            "./temp/test-utf16.txt",
+            "./temp/test-gbk.txt"
+        };
+        std::string encoding, result;
+        for (const auto& item : textlist) {
+            std::ifstream file(item, std::ios::binary);
+            if (!file) {
+                std::cout << "文件打开失败: " << item << std::endl;
+                continue;
+            }
+
+            // 获取文件大小
+            file.seekg(0, std::ios_base::end);
+            const auto size = file.tellg();
+            if (size <= 0) {
+                std::cout << "文件为空: " << item << std::endl;
+                continue;
+            }
+            file.seekg(0, std::ios_base::beg);
+
+            std::string buf;
+            buf.resize(static_cast<size_t>(size));
+            file.read(buf.data(), size);
+
+            if (mediaxx::stringxx::chardet_convert_encoding(buf, encoding, result)) {
+                std::cout << item << " - " << encoding << std::endl
+                          << result << std::endl
+                          << std::endl;
+            } else {
+                std::cout << "转换失败: " << encoding << std::endl
+                          << item << std::endl
+                          << std::endl;
+            }
+        }
+
+        if (mediaxx::stringxx::chardet_convert_encoding(
+                "Hello \xB0\xA1\xC4\xE3",
+                encoding,
+                result
+            )) {
+            std::cout << "GBK: - " << encoding << std::endl << result << std::endl;
+        } else {
+            std::cout << "GBK: - 失败" << std::endl;
+        }
+        if (mediaxx::stringxx::chardet_convert_encoding("Hello 世界", encoding, result)) {
+            std::cout << "UTF8: - " << encoding << std::endl << result << std::endl;
+        } else {
+            std::cout << "UTF8: - 失败" << std::endl;
+        }
+    }
+
+    {
         assert(mediaxx::stringxx::utf8IsAvail("\0") == false);
         assert(mediaxx::stringxx::utf8IsAvail("1"));
         assert(mediaxx::stringxx::utf8IsAvail("ww 测试 cc"));
-        // assert(mediaxx::stringxx::isAvailUtf8("ww 测试 cc �") == false);
+        assert(mediaxx::stringxx::utf8IsAvail("ww 测试 cc �") == false);
         assert(
             mediaxx::stringxx::utf8IsAvail(std::vector<char>{-49, -7, -43, -59}.data()) == false
         );
@@ -46,6 +100,7 @@ void test() {
         assert(mediaxx::stringxx::utf8IsAvail("12 \xF8\xF7 fd") == false);
         assert(mediaxx::stringxx::utf8IsAvail("12 \xFC\xFD fd") == false);
     }
+    return;
 
     mediaxx_set_log_level(AV_LOG_TRACE);
     auto result = mediaxx_get_available_hwcodec_list();

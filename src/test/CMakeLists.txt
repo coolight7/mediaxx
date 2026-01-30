@@ -3,6 +3,11 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.6)
 aux_source_directory(. DIR_test)
 set(NAME_test test)
 
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+    add_compile_options("-fsanitize=address")
+    add_link_options("-fsanitize=address")
+endif (CMAKE_BUILD_TYPE MATCHES Debug)
+
 add_executable(${NAME_test} ${DIR_test})
 target_link_libraries(${NAME_test}
 	mediaxx

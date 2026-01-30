@@ -9,3 +9,6 @@
 	path = src/third_party/fmt
 	url = https://github.com/fmtlib/fmt
 	branch = 12.1.0
+[submodule "src/third_party/uchardet"]
+	path = src/third_party/uchardet
+	url = https://gitlab.freedesktop.org/uchardet/uchardet

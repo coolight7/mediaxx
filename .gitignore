@@ -35,4 +35,5 @@ migrate_working_dir/
 /coverage/
 /src/out/
 /src/third_party/ffmpeg/libs-*/
+/src/third_party/libiconv/*
 /temp/

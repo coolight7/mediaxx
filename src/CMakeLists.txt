@@ -195,6 +195,86 @@ set(fmt_SOURCE_DIR "${SOURCE_DIR}")
 ExternalProject_Get_Property(fmt_repo BINARY_DIR)
 set(fmt_INSTALL_DIR "${BINARY_DIR}/")
 
+# uchardet
+ExternalProject_Add(
+  uchardet_repo
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/uchardet/"
+  UPDATE_COMMAND ""
+  CMAKE_ARGS 
+      -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
+      -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
+      "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
+      "-DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}"
+      "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}"
+      "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}" 
+      "-DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}"
+
+      "-DCMAKE_ANDROID_ARCH_ABI=${CMAKE_ANDROID_ARCH_ABI}"
+      "-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
+      "-DANDROID_ABI=${ANDROID_ABI}"
+      "-DANDROID_NDK=${ANDROID_NDK}"
+      "-DANDROID_STL=${ANDROID_STL}"
+      "-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}"
+      "-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}"
+
+      "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}"
+      "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+      "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
+      "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
+
+      "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
+      "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
+      "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
+      "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
+      "-DCMAKE_C_FLAGS_PROFILE=${CMAKE_C_FLAGS_PROFILE}"
+      "-DCMAKE_CXX_FLAGS_PROFILE=${CMAKE_CXX_FLAGS_PROFILE}"
+      "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
+      "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
+      -DBUILD_BINARY=OFF
+      -DBUILD_SHARED_LIBS=OFF
+      -DCHECK_SSE2=ON
+  INSTALL_COMMAND ""
+)
+ExternalProject_Get_Property(uchardet_repo SOURCE_DIR)
+set(uchardet_SOURCE_DIR "${SOURCE_DIR}")
+ExternalProject_Get_Property(uchardet_repo BINARY_DIR)
+set(uchardet_INSTALL_DIR "${BINARY_DIR}/")
+
+# iconv
+set(LIBICONV_VERSION 1.18)
+set(LIBICONV_URL "https://ftp.gnu.org/gnu/libiconv/libiconv-${LIBICONV_VERSION}.tar.gz")
+set(LIBICONV_PREFIX ${CMAKE_BINARY_DIR}/libiconv-src)
+set(LIBICONV_SOURCE_DIR ${LIBICONV_PREFIX}/src/iconv_repo)
+set(LIBICONV_BINARY_DIR ${CMAKE_BINARY_DIR}/libiconv-build)
+set(LIBICONV_INSTALL_DIR ${CMAKE_BINARY_DIR}/libiconv-install)
+ExternalProject_Add(
+  iconv_repo
+  URL ${LIBICONV_URL}
+  PREFIX ${LIBICONV_PREFIX} 
+  SOURCE_DIR ${LIBICONV_SOURCE_DIR}
+  BINARY_DIR ${LIBICONV_BINARY_DIR} 
+  INSTALL_DIR ${LIBICONV_INSTALL_DIR} 
+  CONFIGURE_COMMAND 
+      cd ${LIBICONV_SOURCE_DIR} && ./configure
+      --prefix=${LIBICONV_INSTALL_DIR} 
+      --host=${CMAKE_C_COMPILER_TARGET}
+      --build=${CMAKE_HOST_SYSTEM_PROCESSOR}
+      --enable-static=yes
+      --enable-shared=no
+      --disable-rpath
+      CC=${CMAKE_C_COMPILER}
+      CXX=${CMAKE_CXX_COMPILER}
+      AR=${CMAKE_AR}               
+      RANLIB=${CMAKE_RANLIB}   
+      "CFLAGS=${CMAKE_C_FLAGS}"
+  BUILD_COMMAND 
+    cd ${LIBICONV_SOURCE_DIR} && make -j${CMAKE_BUILD_PARALLEL_LEVEL}
+  INSTALL_COMMAND 
+     cd ${LIBICONV_SOURCE_DIR} && make install
+  UPDATE_COMMAND ""
+  TEST_COMMAND ""
+)
+
 # - .vscode/c_cpp_properties.json 默认取 android
 # - 两种模式，动态链接 ffmpeg 和 静态链接 ffmpeg
 #   - 静态链接时需要各种 ffmpeg 的依赖库，因此只在发布 release 时上 docker 内编译，最终合并 ffmpeg 到 mediaxx 内整合为一个动态库
@@ -343,6 +423,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
 include_directories(${simdjson_SOURCE_DIR}/include/)
 include_directories(${fmt_SOURCE_DIR}/include/)
+include_directories(${uchardet_SOURCE_DIR}/src/)
+include_directories(${LIBICONV_INSTALL_DIR}/include/)
 include_directories(${vulkan_INCLUDE_DIR})
 include_directories(${third_party_DIR})
 include_directories(${ffmpeg_mpv_INCLUDE_DIR})
@@ -363,16 +445,22 @@ add_library(mediaxx SHARED
 
 add_dependencies(mediaxx simdjson_repo)
 add_dependencies(mediaxx fmt_repo)
+add_dependencies(mediaxx uchardet_repo)
+add_dependencies(mediaxx iconv_repo)
 
 target_link_directories(mediaxx PUBLIC 
   ${ffmpeg_mpv_BINARY_DIR}
   ${simdjson_INSTALL_DIR}
   ${fmt_INSTALL_DIR}
+  ${uchardet_INSTALL_DIR}/src
+  ${LIBICONV_INSTALL_DIR}/lib
 )
 
 target_link_libraries(mediaxx PUBLIC
   ${ffmpeg_mpv_LIBRARIES}
   simdjson
+  uchardet
+  iconv
 )
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   # 仅单配置构建、debug 时使用
