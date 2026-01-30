@@ -11,7 +11,7 @@ const std::set<std::string> g_chinese_encoding_priorities
 
 static uchardet_t cChardetHandle = uchardet_new();
 
-__attribute__((destructor)) void chardet_destroy_handle() {
+__attribute__((destructor)) void chardetDestroyHandle() {
     if (nullptr != cChardetHandle) {
         uchardet_delete(cChardetHandle);
         cChardetHandle = nullptr;
@@ -19,7 +19,7 @@ __attribute__((destructor)) void chardet_destroy_handle() {
 }
 
 // BOM 判断UTF16编码
-static std::string detect_utf_bom(const std::string_view str) {
+static std::string detectUtfBom(const std::string_view str) {
     if (str.size() < 2) {
         // UTF16 BOM至少2字节，长度不足直接返回
         return "";
@@ -38,7 +38,7 @@ static std::string detect_utf_bom(const std::string_view str) {
     return "";
 }
 
-static std::vector<std::string> get_iconv_candidate_encodings(const char* src_encoding) {
+static std::vector<std::string> getIconvCandidateEncodings(const char* src_encoding) {
     std::vector<std::string> candidates;
     if (src_encoding == nullptr) {
         return candidates;
@@ -58,8 +58,7 @@ static std::vector<std::string> get_iconv_candidate_encodings(const char* src_en
 }
 
 // 转UTF8
-std::string
-    mediaxx::stringxx::convert_to_utf8(const std::string_view src, const char* src_encoding) {
+std::string mediaxx::stringxx::convertToUtf8(const std::string_view src, const char* src_encoding) {
     // 已是UTF8/空字符串，直接返回
     if (std::strcmp(src_encoding, "UTF-8") == 0 || std::strcmp(src_encoding, "utf8") == 0) {
         return std::string{src};
@@ -68,7 +67,7 @@ std::string
         return "";
     }
 
-    auto candidate_encs = get_iconv_candidate_encodings(src_encoding);
+    auto candidate_encs = getIconvCandidateEncodings(src_encoding);
     if (candidate_encs.empty()) {
         return "";
     }
@@ -113,7 +112,7 @@ std::string
     return utf8_str;
 }
 
-bool mediaxx::stringxx::chardet_convert_encoding(
+bool mediaxx::stringxx::chardetConvertEncoding(
     const std::string_view str,
     std::string&           encoding,
     std::string&           result
@@ -124,10 +123,10 @@ bool mediaxx::stringxx::chardet_convert_encoding(
     }
 
     // 手动检测UTF16 BOM
-    std::string bom_enc = detect_utf_bom(str);
+    std::string bom_enc = detectUtfBom(str);
     if (!bom_enc.empty()) {
         encoding = bom_enc;
-        result   = convert_to_utf8(str, encoding.c_str());
+        result   = convertToUtf8(str, encoding.c_str());
         if (!result.empty() || str.empty()) {
             return true;
         }
@@ -190,7 +189,7 @@ bool mediaxx::stringxx::chardet_convert_encoding(
         encoding = "UTF-16LE";
     }
 
-    result = convert_to_utf8(str, encoding.c_str());
+    result = convertToUtf8(str, encoding.c_str());
     if (result.empty() && !str.empty()) {
         return false;
     }

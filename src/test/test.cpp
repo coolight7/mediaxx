@@ -56,7 +56,7 @@ void test() {
             buf.resize(static_cast<size_t>(size));
             file.read(buf.data(), size);
 
-            if (mediaxx::stringxx::chardet_convert_encoding(buf, encoding, result)) {
+            if (mediaxx::stringxx::chardetConvertEncoding(buf, encoding, result)) {
                 std::cout << item << " - " << encoding << std::endl
                           << result << std::endl
                           << std::endl;
@@ -67,16 +67,12 @@ void test() {
             }
         }
 
-        if (mediaxx::stringxx::chardet_convert_encoding(
-                "Hello \xB0\xA1\xC4\xE3",
-                encoding,
-                result
-            )) {
+        if (mediaxx::stringxx::chardetConvertEncoding("Hello \xB0\xA1\xC4\xE3", encoding, result)) {
             std::cout << "GBK: - " << encoding << std::endl << result << std::endl;
         } else {
             std::cout << "GBK: - 失败" << std::endl;
         }
-        if (mediaxx::stringxx::chardet_convert_encoding("Hello 世界", encoding, result)) {
+        if (mediaxx::stringxx::chardetConvertEncoding("Hello 世界", encoding, result)) {
             std::cout << "UTF8: - " << encoding << std::endl << result << std::endl;
         } else {
             std::cout << "UTF8: - 失败" << std::endl;

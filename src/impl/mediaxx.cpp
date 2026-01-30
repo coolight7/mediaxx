@@ -217,14 +217,15 @@ FFI_PLUGIN_EXPORT int
         return 0;
     }
     std::string encoding, result;
-    if (mediaxx::stringxx::chardet_convert_encoding(
+    if (mediaxx::stringxx::chardetConvertEncoding(
             std::string_view{str, dataSize},
             encoding,
             result
         )) {
         auto resultPtr = (char*)malloc(result.length() + 1);
         std::memcpy((void*)resultPtr, result.data(), result.length());
-        *out = resultPtr;
+        resultPtr[result.length()] = '\0';
+        *out                       = resultPtr;
         return result.size();
     }
     return 0;

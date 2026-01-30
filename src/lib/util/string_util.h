@@ -202,8 +202,8 @@ namespace mediaxx {
             return std::string_view{result, len};
         }
 
-        std::string convert_to_utf8(const std::string_view src, const char* src_encoding);
-        bool        chardet_convert_encoding(
+        std::string convertToUtf8(const std::string_view src, const char* src_encoding);
+        bool        chardetConvertEncoding(
                    const std::string_view str,
                    std::string&           encoding,
                    std::string&           result
