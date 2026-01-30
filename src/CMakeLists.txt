@@ -277,6 +277,9 @@ if (DEFINED LUMENXX_BUILD_TYPE)
     UPDATE_COMMAND ""
     TEST_COMMAND ""
   )
+
+  add_dependencies(mediaxx uchardet_repo)
+  add_dependencies(mediaxx iconv_repo)
 endif ()
 
 # - .vscode/c_cpp_properties.json 默认取 android
@@ -449,8 +452,6 @@ add_library(mediaxx SHARED
 
 add_dependencies(mediaxx simdjson_repo)
 add_dependencies(mediaxx fmt_repo)
-add_dependencies(mediaxx uchardet_repo)
-add_dependencies(mediaxx iconv_repo)
 
 target_link_directories(mediaxx PUBLIC 
   ${ffmpeg_mpv_BINARY_DIR}
