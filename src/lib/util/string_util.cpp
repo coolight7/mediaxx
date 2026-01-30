@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iconv.h>
 #include <set>
-#include <uchardet.h>
+#include <uchardet/uchardet.h>
 #include <vector>
 
 const std::set<std::string> g_chinese_encoding_priorities
