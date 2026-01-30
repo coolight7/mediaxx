@@ -210,6 +210,26 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
     return 0;
 }
 
+FFI_PLUGIN_EXPORT int
+    mediaxx_convert_char_encoding(const char* str, const size_t dataSize, const char** out) {
+    assert(nullptr != out);
+    if (nullptr == str || dataSize <= 0) {
+        return 0;
+    }
+    std::string encoding, result;
+    if (mediaxx::stringxx::chardet_convert_encoding(
+            std::string_view{str, dataSize},
+            encoding,
+            result
+        )) {
+        auto resultPtr = (char*)malloc(result.length() + 1);
+        std::memcpy((void*)resultPtr, result.data(), result.length());
+        *out = resultPtr;
+        return result.size();
+    }
+    return 0;
+}
+
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
     auto jsonsb = mediaxx::CodecInfo_c::findAvailCodec();
     return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();

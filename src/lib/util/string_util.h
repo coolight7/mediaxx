@@ -42,12 +42,14 @@ namespace mediaxx {
         }
 
         inline size_t utf8GetLengthCheckAvail(std::string_view str) {
-            size_t length = 0;
-            for (size_t i = 0, step = 0; i < str.length(); i += step) {
+            size_t     length = 0;
+            const auto strLen = str.length();
+            for (size_t i = 0, step = 0; i < strLen; i += step) {
                 unsigned char ch = str[i];
                 if (ch == '\0') {
                     break;
-                } else if (ch >= 0xFC || ch >= 0xF8) {
+                } else if (ch >= 0xF8) {
+                    // (ch >= 0xFC || ch >= 0xF8)
                     // lenght 6、5 无效
                     return 0;
                 } else if (ch >= 0xF0) {
@@ -60,6 +62,13 @@ namespace mediaxx {
                     if (ch == 0xE0 && (static_cast<unsigned char>(str[i + 1]) & 0xE0) == 0x80) {
                         // 0xE0 0x80~0x9F 对应 0~0x7FF
                         return 0;
+                    }
+                    if (ch == 0xEF && i + 2 < strLen) {
+                        unsigned char ch1 = static_cast<unsigned char>(str[i + 1]);
+                        unsigned char ch2 = static_cast<unsigned char>(str[i + 2]);
+                        if (ch1 == 0xBF && ch2 == 0xBD) {
+                            return 0; // 匹配�，判定为无效UTF-8
+                        }
                     }
                     step = 3;
                 } else if (ch >= 0xC0) {
@@ -77,7 +86,7 @@ namespace mediaxx {
 
                 if (step > 1) {
                     for (size_t j = 1; j < step; j++) {
-                        if (i + j > str.length() || str[i + j] == '\0'
+                        if (i + j >= strLen || str[i + j] == '\0'
                             || false == utf8IsContinuationChar((unsigned char)str[i + j])) {
                             // 不合规
                             return 0;

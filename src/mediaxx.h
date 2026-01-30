@@ -86,6 +86,9 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
     const char** outLog
 );
 
+FFI_PLUGIN_EXPORT int
+    mediaxx_convert_char_encoding(const char* str, const size_t dataSize, const char** out);
+
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list();
 
 #if __cplusplus

@@ -19,19 +19,20 @@ __attribute__((destructor)) void chardet_destroy_handle() {
 }
 
 // BOM 判断UTF16编码
-static std::string detect_utf16_bom(const std::string_view str) {
+static std::string detect_utf_bom(const std::string_view str) {
     if (str.size() < 2) {
         // UTF16 BOM至少2字节，长度不足直接返回
         return "";
     }
     const unsigned char* bom = reinterpret_cast<const unsigned char*>(str.data());
-    // UTF-16LE BOM (0xFF 0xFE)
     if (bom[0] == 0xFF && bom[1] == 0xFE) {
+        // UTF-16LE BOM (0xFF 0xFE)
         return "UTF-16LE";
-    }
-    // UTF-16BE BOM (0xFE 0xFF)
-    else if (bom[0] == 0xFE && bom[1] == 0xFF) {
+    } else if (bom[0] == 0xFE && bom[1] == 0xFF) {
+        // UTF-16BE BOM (0xFE 0xFF)
         return "UTF-16BE";
+    } else if (str.size() >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF) {
+        return "UTF-8";
     }
     // 无BOM，返回空
     return "";
@@ -123,7 +124,7 @@ bool mediaxx::stringxx::chardet_convert_encoding(
     }
 
     // 手动检测UTF16 BOM
-    std::string bom_enc = detect_utf16_bom(str);
+    std::string bom_enc = detect_utf_bom(str);
     if (!bom_enc.empty()) {
         encoding = bom_enc;
         result   = convert_to_utf8(str, encoding.c_str());

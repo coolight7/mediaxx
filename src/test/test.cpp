@@ -81,6 +81,11 @@ void test() {
         } else {
             std::cout << "UTF8: - 失败" << std::endl;
         }
+        {
+            std::string str = "Hello 世界";
+            const char* out = nullptr;
+            assert(mediaxx_convert_char_encoding(str.data(), str.size(), &out) == 12);
+        }
     }
 
     {
@@ -89,7 +94,12 @@ void test() {
         assert(mediaxx::stringxx::utf8IsAvail("ww 测试 cc"));
         assert(mediaxx::stringxx::utf8IsAvail("ww 测试 cc �") == false);
         assert(
-            mediaxx::stringxx::utf8IsAvail(std::vector<char>{-49, -7, -43, -59}.data()) == false
+            mediaxx::stringxx::utf8IsAvail(std::string_view{
+                std::vector<char>{-49, -7, -43, -59}
+                .data(),
+                4
+        })
+            == false
         );
         // 多字节后续字节格式错误，后续字节固定为 10xxxxxx
         assert(mediaxx::stringxx::utf8IsAvail("12 \xE4\x28\x01 fd") == false);
