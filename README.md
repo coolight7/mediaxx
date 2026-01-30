@@ -6,27 +6,43 @@
     1. 读取音视频文件的基本信息（标题、艺术家、内嵌LRC歌词、时长、专辑、年份等）
     2. 提取音视频的封面保存到文件
     3. 读取链接的 ffmpeg 支持的编解码器、硬件加速列表信息
+  - 结合`uchardet`、`iconv`尝试识别字符串的字符编码格式，以及转换到 utf8
   - 分析图片颜色，聚类出 主色调、亮色调4种、暗色调4种、综合颜色占比排序最高的4种
 
-## 适配支持
-- 已验证：
-  - Android: arm64、arm32、x64
-  - windows: x64
-  - linux: x64
-  - macos: arm64
-  - ios: arm64
+## 开始使用
+- 本项目分为 `c++ 代码` 和 `dart 代码` 两部分，c++ 部分主要是链接依赖库、实现功能，dart 代码为 ffi 调用 c++ 动态库的符号接口，方便 flutter/dart 程序使用
+- 流程为 先将 `c++ 插件代码` 编译为 动态库，`主程序`打包时需要添加这个动态库文件， `dart 插件代码`在运行时即可加载动态库使用
+- 可见本插件的 dart 代码并无实际功能实现，仅方便 flutter/dart 主程序调用 c++ 代码而已。另外也就是说本插件编译出的动态库 `libmediaxx` 可以给其他编程语言/项目使用
+- 在编译本插件的动态库 `libmediaxx` 时，还可以选择静态链接 `ffmpeg/libav`、`libmpv` 等库，提高代码段复用，大幅缩减体积
 
-## Getting Started
-- 该项目需要先编译出动态库 libmediaxx ，然后在主程序编译时复制动态库到 install安装根目录，运行时即可自动动态加载动态库
+## 开发、测试
+- c++代码开发初始化：
+  - 建议在 linux 开发测试 c++ 代码，需要下载或编译 ffmpeg 的动态库 `libavcodec.so/libavdevice.so/libavfilter.so/libavutil.so/libswresample.so/libswscale.so` 复制到 `src/third_party/ffmpeg/libs-linux`中，并复制系统库 `libva-drm.so.2/libva-x11.so.2/libva.so.2/libvdpau.so.1` 到`src/third_party/ffmpeg/libs-linux`，编译 libmediaxx 时需要用到，详见 [CMakeLists.txt](src/CMakeLists.txt)
+  - 拉取依赖库源码：`git submodule update --init` 可以拉取依赖库到 `src/third_party/` 中
+  - 另外还需要手动下载 iconv，同样解压到 `src/third_party/`:
+```sh
+cd src/third_party
+wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz && tar -zxvf libiconv-1.18.tar.gz && mv libiconv-1.18 libiconv && rm libiconv-1.18.tar.gz
+```
+  - 接着在项目根目录执行 `./script/debug_build.sh` 或 `./script/release_build.sh` 即可编译 c++ 代码，debug 编译脚本在编译完成后会运行 test
+- 当修改导出的头文件(src/mediaxx.h)[src/mediaxx.h]内的函数声明后，需要执行 `dart run ffigen --config ffigen.yaml` 更新生成的dart代码
+
+## 动态库编译简要说明
+- 该项目需要先编译出动态库 libmediaxx ，然后在主程序编译时复制动态库到 install安装根目录，一般即为主程序编译输出所在目录，dart插件代码运行时即可自动动态加载动态库
 - 编译见：
   - android:   https://github.com/coolight7/libmpv-android-video-build
   - windows:   https://github.com/coolight7/mpv-winbuild-cmake
   - linux:     https://github.com/coolight7/libmpv-linux-build
   - macos/ios: https://github.com/coolight7/libmpv-apple-build
+- 已验证系统/架构支持：
+  - Android: arm64、arm32、x64
+  - windows: x64
+  - linux: x64
+  - macos: arm64
+  - ios: arm64
 - 调整编译脚本即可控制动态、静态链接 ffmpeg、libmpv
 - 静态链接时，需要考虑清楚c++标准库的链接方式
 
-## 简要说明
 ### 相通点
 - 五大系统平台上的动态库尽管差别不小，但相同点也不少，其中 android和linux 基本互通，ios和macos基本相同，windows的编译是在 linux 上使用 clang 交叉编译出来的，所以在 CMakeLists.txt 中不少参数指定也跟 linux 差不多
 - 关于控制动态库的符号导出：
@@ -71,9 +87,6 @@ add_library(mediaxx SHARED
 - apple 端的动态库名称为 libmediaxx.dylib ，后缀不同于其他系统
 - 另外动态库的导出符号需要前缀下划线，见:
   - [libmpv-apple.symbols.txt](src/ffmpeg-help/libmpv-apple.symbols.txt) 和 [libmpv-apple.exp](src/ffmpeg-help/libmpv-apple.exp)
-
-## 开发
-- 修改导出的头文件(src/mediaxx.h)[src/mediaxx.h]内的函数声明后，需要执行 `dart run ffigen --config ffigen.yaml` 更新生成的dart代码
 
 ## LICENSE
 - MIT
