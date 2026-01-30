@@ -258,22 +258,17 @@ ExternalProject_Add(
       cd ${LIBICONV_SOURCE_DIR} && ./configure
       --prefix=${LIBICONV_INSTALL_DIR} 
       --host=${CMAKE_C_COMPILER_TARGET}
-      --build=${CMAKE_HOST_SYSTEM_PROCESSOR}
       --enable-static=yes
       --enable-shared=no
+      --enable-pic
       --disable-rpath
       --disable-nls
       --disable-libiconv-close
-      --sysroot=${CMAKE_SYSROOT}
       CC=${CMAKE_C_COMPILER}
       CXX=${CMAKE_CXX_COMPILER}
-      AR=${CMAKE_AR}               
-      RANLIB=${CMAKE_RANLIB}   
-      "CFLAGS=${CMAKE_C_FLAGS}"
-      "-D__ANDROID_API__=${ANDROID_PLATFORM}"
-      "-DANDROID_ABI=${ANDROID_ABI}"
-      "-DANDROID_NDK=${ANDROID_NDK}"
-      "-DANDROID_STL=${ANDROID_STL}"
+      AR=${CMAKE_AR}
+      RANLIB=${CMAKE_RANLIB}
+      "CFLAGS=${CMAKE_C_FLAGS} -DANDROID_PLATFORM=${ANDROID_PLATFORM} -DANDROID_ABI=${ANDROID_ABI} -DANDROID_NDK=${ANDROID_NDK} -DANDROID_STL=${ANDROID_STL}"
   BUILD_COMMAND 
     cd ${LIBICONV_SOURCE_DIR} && make -j${CMAKE_BUILD_PARALLEL_LEVEL}
   INSTALL_COMMAND 
