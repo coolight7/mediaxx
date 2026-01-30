@@ -197,11 +197,15 @@ set(fmt_INSTALL_DIR "${BINARY_DIR}/")
 
 if (DEFINED LUMENXX_BUILD_TYPE)
   # uchardet
+  set(UCHARDET_BINARY_DIR ${CMAKE_BINARY_DIR}/uchardet_repo-build)
+  set(UCHARDET_INSTALL_DIR ${CMAKE_BINARY_DIR}/uchardet_repo-install)
   ExternalProject_Add(
     uchardet_repo
     SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/uchardet/"
-    UPDATE_COMMAND ""
+    BINARY_DIR ${UCHARDET_BINARY_DIR}
+    INSTALL_DIR ${UCHARDET_INSTALL_DIR}
     CMAKE_ARGS 
+        "-DCMAKE_INSTALL_PREFIX=${UCHARDET_INSTALL_DIR}"
         -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
         -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
         "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
@@ -234,12 +238,12 @@ if (DEFINED LUMENXX_BUILD_TYPE)
         -DBUILD_BINARY=OFF
         -DBUILD_SHARED_LIBS=OFF
         -DCHECK_SSE2=ON
-    INSTALL_COMMAND ""
+    UPDATE_COMMAND ""
+    TEST_COMMAND ""
+    LOG_INSTALL ON
   )
   ExternalProject_Get_Property(uchardet_repo SOURCE_DIR)
   set(uchardet_SOURCE_DIR "${SOURCE_DIR}")
-  ExternalProject_Get_Property(uchardet_repo BINARY_DIR)
-  set(uchardet_INSTALL_DIR "${BINARY_DIR}/")
 
   # iconv
   set(LIBICONV_VERSION 1.18)
@@ -277,9 +281,6 @@ if (DEFINED LUMENXX_BUILD_TYPE)
     UPDATE_COMMAND ""
     TEST_COMMAND ""
   )
-
-  add_dependencies(mediaxx uchardet_repo)
-  add_dependencies(mediaxx iconv_repo)
 endif ()
 
 # - .vscode/c_cpp_properties.json 默认取 android
@@ -430,7 +431,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
 include_directories(${simdjson_SOURCE_DIR}/include/)
 include_directories(${fmt_SOURCE_DIR}/include/)
-include_directories(${uchardet_SOURCE_DIR}/src/)
+include_directories(${UCHARDET_INSTALL_DIR}/include/)
 include_directories(${LIBICONV_INSTALL_DIR}/include/)
 include_directories(${vulkan_INCLUDE_DIR})
 include_directories(${third_party_DIR})
@@ -452,12 +453,16 @@ add_library(mediaxx SHARED
 
 add_dependencies(mediaxx simdjson_repo)
 add_dependencies(mediaxx fmt_repo)
+if (DEFINED LUMENXX_BUILD_TYPE)
+  add_dependencies(mediaxx uchardet_repo)
+  add_dependencies(mediaxx iconv_repo)
+endif ()
 
 target_link_directories(mediaxx PUBLIC 
   ${ffmpeg_mpv_BINARY_DIR}
   ${simdjson_INSTALL_DIR}
   ${fmt_INSTALL_DIR}
-  ${uchardet_INSTALL_DIR}/src
+  ${UCHARDET_INSTALL_DIR}/lib
   ${LIBICONV_INSTALL_DIR}/lib
 )
 
