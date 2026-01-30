@@ -144,6 +144,20 @@ mediaxx_get_audio_visualization(final String? filepath) async {
   );
 }
 
+Future<String?> mediaxx_convert_char_encoding(Uint8List data) async {
+  if (data.isEmpty) {
+    return null;
+  }
+  final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
+  final int requestId = _nextAsyncxxRequestId++;
+  final request = _AsyncxxRequestConvertCharEncoding(requestId, data: data);
+  final completer = Completer<_AsyncxxResponseStringDefault>();
+  _asyncxxRequests[requestId] = completer;
+  helperIsolateSendPort.send(request);
+  final result = await completer.future;
+  return result.str;
+}
+
 String mediaxx_get_available_hwcodec_list() {
   final result = _bindings.mediaxx_get_available_hwcodec_list();
   final str = result.cast<Utf8>().tryToDartString();
@@ -306,6 +320,32 @@ class _AsyncxxRequestAnalyseAudioVisualization {
   }) {
     filepathPtr = filepath?.toNativeUtf8().cast<Char>();
   }
+}
+
+class _AsyncxxRequestConvertCharEncoding {
+  final int id;
+
+  late Pointer<Uint8> dataPtr;
+  late int dataSize;
+
+  bool isDispose = false;
+
+  _AsyncxxRequestConvertCharEncoding(this.id, {required final Uint8List data}) {
+    dataSize = data.lengthInBytes;
+    dataPtr = malloc<Uint8>(data.lengthInBytes);
+    final Uint8List nativeString = dataPtr.asTypedList(data.lengthInBytes);
+    nativeString.setAll(0, data);
+  }
+}
+
+class _AsyncxxResponseStringDefault {
+  final int id;
+  final Pointer<Char>? strPtr;
+  final int strSize;
+
+  String? str;
+
+  _AsyncxxResponseStringDefault(this.id, {this.strPtr, required this.strSize});
 }
 
 class _AsyncxxResponseDefault {
@@ -547,6 +587,25 @@ Future<SendPort> _helperIsolateSendPort = () async {
                 ? resultWaveformPtr
                 : null,
             logPtr: (nullptr != logPtr) ? logPtr : null,
+          );
+          sendPort.send(response);
+          return;
+        } else if (data is _AsyncxxRequestConvertCharEncoding) {
+          final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+          result.value = nullptr;
+          int ret = 0;
+          ret = _bindings.mediaxx_convert_char_encoding(
+            data.dataPtr.cast<Char>(),
+            data.dataSize,
+            result,
+          );
+          final resultPtr = result.value;
+
+          malloc.free(result);
+          final response = _AsyncxxResponseStringDefault(
+            data.id,
+            strSize: ret,
+            strPtr: (nullptr != resultPtr) ? resultPtr : null,
           );
           sendPort.send(response);
           return;

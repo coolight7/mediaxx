@@ -292,6 +292,33 @@ class MediaxxBindings {
             )
           >();
 
+  int mediaxx_convert_char_encoding(
+    ffi.Pointer<ffi.Char> str,
+    int dataSize,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  ) {
+    return _mediaxx_convert_char_encoding(str, dataSize, out);
+  }
+
+  late final _mediaxx_convert_char_encodingPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Size,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+          )
+        >
+      >('mediaxx_convert_char_encoding');
+  late final _mediaxx_convert_char_encoding = _mediaxx_convert_char_encodingPtr
+      .asFunction<
+        int Function(
+          ffi.Pointer<ffi.Char>,
+          int,
+          ffi.Pointer<ffi.Pointer<ffi.Char>>,
+        )
+      >();
+
   ffi.Pointer<ffi.Char> mediaxx_get_available_hwcodec_list() {
     return _mediaxx_get_available_hwcodec_list();
   }
