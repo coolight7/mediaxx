@@ -456,14 +456,16 @@ add_dependencies(mediaxx fmt_repo)
 if (DEFINED LUMENXX_BUILD_TYPE)
   add_dependencies(mediaxx uchardet_repo)
   add_dependencies(mediaxx iconv_repo)
+  target_link_directories(mediaxx PUBLIC 
+    ${UCHARDET_INSTALL_DIR}/lib
+    ${LIBICONV_INSTALL_DIR}/lib
+  )
 endif ()
 
 target_link_directories(mediaxx PUBLIC 
   ${ffmpeg_mpv_BINARY_DIR}
   ${simdjson_INSTALL_DIR}
   ${fmt_INSTALL_DIR}
-  ${UCHARDET_INSTALL_DIR}/lib
-  ${LIBICONV_INSTALL_DIR}/lib
 )
 
 target_link_libraries(mediaxx PUBLIC
