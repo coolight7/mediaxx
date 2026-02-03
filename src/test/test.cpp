@@ -106,7 +106,6 @@ void test() {
         assert(mediaxx::stringxx::utf8IsAvail("12 \xF8\xF7 fd") == false);
         assert(mediaxx::stringxx::utf8IsAvail("12 \xFC\xFD fd") == false);
     }
-    return;
 
     mediaxx_set_log_level(AV_LOG_TRACE);
     auto result = mediaxx_get_available_hwcodec_list();
@@ -114,6 +113,46 @@ void test() {
         std::cout << "硬件加速编解码器：" << result << std::endl;
     }
 
+    {
+        const char* result = nullptr;
+        const char* log    = nullptr;
+        auto        ret    = mediaxx_get_media_info_malloc(
+            "./temp/林力尧 - 初恋旧爱新欢.flac",
+            "",
+            "./temp/中文输出/输出out - put.jpg",
+            "./temp/中文输出/输出out - put96.jpg",
+            &result,
+            &log
+        );
+        std::cout << "mediaxx info ret: " << ret << std::endl;
+        std::cout << ((nullptr != result) ? result : "nullptr") << std::endl;
+        std::cout << "log: " << ((nullptr != log) ? log : "nullptr") << std::endl;
+        assert(ret == 2);
+        mediaxx_free(result);
+        mediaxx_free(log);
+    }
+    {
+        const char* result = nullptr;
+        const char* log    = nullptr;
+        auto        ret    = mediaxx_get_media_info_malloc(
+            // "./temp/李艺皓+-+嚣张.wav",
+            // "./temp/林力尧 - 初恋旧爱新欢.flac",
+            // "./temp/Great Voyage_洛天依.mp3",
+            // "./temp/淋雨一直走-张韶涵.flac",
+            "./temp/爱情的骗子我问你 - 陈小云.mp3",
+            "",
+            "./temp/output.jpg",
+            "./temp/output96.jpg",
+            &result,
+            &log
+        );
+        std::cout << "mediaxx info ret: " << ret << std::endl;
+        std::cout << ((nullptr != result) ? result : "nullptr") << std::endl;
+        std::cout << "log: " << ((nullptr != log) ? log : "nullptr") << std::endl;
+        assert(ret == 2);
+        mediaxx_free(result);
+        mediaxx_free(log);
+    }
     {
         std::cout << "AudioSpectrumAnalyzer ....... ====================" << std::endl;
         mediaxx::AudioSpectrumAnalyzer analyzer{};
@@ -231,30 +270,6 @@ void test() {
         mediaxx_free(resultWaveform);
         mediaxx_free(log);
     }
-
-    {
-        const char* result = nullptr;
-        const char* log    = nullptr;
-        auto        ret    = mediaxx_get_media_info_malloc(
-            // "./temp/李艺皓+-+嚣张.wav",
-            // "./temp/林力尧 - 初恋旧爱新欢.flac",
-            // "./temp/Great Voyage_洛天依.mp3",
-            // "./temp/淋雨一直走-张韶涵.flac",
-            "./temp/爱情的骗子我问你 - 陈小云.mp3",
-            "",
-            "./temp/output.jpg",
-            "./temp/output96.jpg",
-            &result,
-            &log
-        );
-        std::cout << "mediaxx info ret: " << ret << std::endl;
-        std::cout << ((nullptr != result) ? result : "nullptr") << std::endl;
-        std::cout << "log: " << ((nullptr != log) ? log : "nullptr") << std::endl;
-        assert(ret == 2);
-        mediaxx_free(result);
-        mediaxx_free(log);
-    }
-    return;
 
     {
         const char* log     = nullptr;

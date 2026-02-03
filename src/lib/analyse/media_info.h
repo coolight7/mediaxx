@@ -536,14 +536,15 @@ namespace mediaxx {
                 }
 
                 // 写入文件
-                std::ofstream file{std::string{outputPath}, std::ios::binary};
+                // dart 传入的是 utf8 path，win上跟系统编码不同，访问会有问题
+                std::ofstream file{std::filesystem::u8path(outputPath), std::ios::binary};
                 if (file.is_open()) {
                     file.write(reinterpret_cast<const char*>(pkt->data), pkt->size);
                     file.close();
                     result = true;
                 } else {
                     item.setLog(fmt::format("输出文件打开失败: {}", outputPath));
-                    result = true;
+                    result = false;
                 }
             } while (false);
 
@@ -866,7 +867,7 @@ namespace mediaxx {
                     XX_LOGD("tryGetPicture: ATTACHED_PIC");
                     AVPacket pkt = stream->attached_pic;
 
-                    std::ofstream file{std::string{outputPath}, std::ios::binary};
+                    std::ofstream file{std::filesystem::u8path(outputPath), std::ios::binary};
                     if (file.is_open()) {
                         file.write(reinterpret_cast<const char*>(pkt.data), pkt.size);
                         file.close();
