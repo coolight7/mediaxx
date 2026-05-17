@@ -135,11 +135,11 @@ void test() {
         const char* result = nullptr;
         const char* log    = nullptr;
         auto        ret    = mediaxx_get_media_info_malloc(
-            // "./temp/李艺皓+-+嚣张.wav",
+            "./temp/李艺皓+-+嚣张.wav",
             // "./temp/林力尧 - 初恋旧爱新欢.flac",
             // "./temp/Great Voyage_洛天依.mp3",
             // "./temp/淋雨一直走-张韶涵.flac",
-            "./temp/爱情的骗子我问你 - 陈小云.mp3",
+            // "./temp/爱情的骗子我问你 - 陈小云.mp3",
             "",
             "./temp/output.jpg",
             "./temp/output96.jpg",

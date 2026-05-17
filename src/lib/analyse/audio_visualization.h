@@ -14,8 +14,6 @@ extern "C" {
 #include <array>
 #include <assert.h>
 #include <cmath>
-#include <complex>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -54,6 +52,10 @@ namespace mediaxx {
 
         std::array<size_t, DEF_FFT_SIZE>           fftBitRevTable{};
         std::array<float, DEF_HANNING_WINDOW_SIZE> hanningWindow{};
+
+        // ── 预分配复用缓冲区，消除每帧 heap 分配 ──
+        alignas(16) std::array<float, DEF_FFT_SIZE> fftReal{};
+        alignas(16) std::array<float, DEF_FFT_SIZE> fftImag{};
 
         AudioSpectrumAnalyzer() {
             // avformat_network_init();
@@ -104,17 +106,13 @@ namespace mediaxx {
         }
 
         // 快速傅里叶变换
-        void fft(std::vector<std::complex<float>>& data) const {
-            if (data.size() != DEF_FFT_SIZE) {
-                XX_LOGW("fft: only support size={}, current={}", DEF_FFT_SIZE, data.size());
-                return;
-            }
-
+        void fft(float* real, float* imag) const {
             // 位反转重排
             for (size_t i = 0; i < DEF_FFT_SIZE; ++i) {
                 const size_t j = fftBitRevTable[i];
                 if (i < j) {
-                    std::swap(data[i], data[j]);
+                    std::swap(real[i], real[j]);
+                    std::swap(imag[i], imag[j]);
                 }
             }
 
@@ -132,19 +130,21 @@ namespace mediaxx {
                         const float wCos = fftTwiddleCos[j * step];
                         const float wSin = fftTwiddleSin[j * step];
 
-                        // 获取蝶形的两个节点
-                        const size_t               idxU = i + j;
-                        const size_t               idxV = idxU + halfLen;
-                        const std::complex<float>& u    = data[idxU];
-                        const std::complex<float>& v    = data[idxV];
+                        // 蝶形索引
+                        const size_t idxU = i + j;
+                        const size_t idxV = idxU + halfLen;
 
-                        // 计算 v * W
-                        // (v.real * wCos - v.imag * wSin) + i*(v.imag * wCos + v.real * wSin)
-                        const float vwReal = v.real() * wCos - v.imag() * wSin;
-                        const float vwImag = v.imag() * wCos + v.real() * wSin;
+                        // v * W
+                        const float vwReal = real[idxV] * wCos - imag[idxV] * wSin;
+                        const float vwImag = imag[idxV] * wCos + real[idxV] * wSin;
 
-                        data[idxU] = std::complex<float>(u.real() + vwReal, u.imag() + vwImag);
-                        data[idxV] = std::complex<float>(u.real() - vwReal, u.imag() - vwImag);
+                        const float uReal = real[idxU];
+                        const float uImag = imag[idxU];
+
+                        real[idxU] = uReal + vwReal;
+                        imag[idxU] = uImag + vwImag;
+                        real[idxV] = uReal - vwReal;
+                        imag[idxV] = uImag - vwImag;
                     }
                 }
             }
@@ -158,7 +158,7 @@ namespace mediaxx {
 
         bool computeSpectrum(
             const size_t                                  dataSize,
-            const std::vector<uint8_t>::iterator          dataStart,
+            const uint8_t*                                dataStart,
             std::array<unsigned char, DEF_SPECTRUM_SIZE>& result,
             unsigned char&                                wave
         ) {
@@ -169,40 +169,31 @@ namespace mediaxx {
                 return false;
             }
 
-            // 当前帧的峰值
-            float framePointSum = 0.0f;
-            // 统一线性插值适配汉宁窗大小
-            std::vector<float> windowInput(DEF_HANNING_WINDOW_SIZE, 0.0f);
-            for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; ++i) {
-                // 将原始M个采样点映射到N=512个窗口点
-                // 计算当前目标点在原始数据中的 [归一化位置]（0~M-1）
-                const float  srcPos = static_cast<float>(i) * dataSize / DEF_HANNING_WINDOW_SIZE;
-                const size_t srcIdx = static_cast<size_t>(srcPos);
-                // 插值权重
-                const float alpha = srcPos - srcIdx;
+            // ── 平均降采样替代线性插值 ──
+            // 将 M 个原始采样均匀分成 N=512 段，每段求平均
+            // 这等效于矩形低通滤波 + 降采样，消除了混叠失真
+            float        framePointSum = 0.0f;
+            const size_t blockSize     = dataSize / DEF_HANNING_WINDOW_SIZE;
+            const size_t remainder     = dataSize % DEF_HANNING_WINDOW_SIZE;
 
-                // 处理uint8数据，归一化到-1.0f ~ 1.0f
-                if (srcIdx < dataSize - 1) {
-                    // uint8转浮点数
-                    float val1
-                        = static_cast<float>(*(dataStart + srcIdx) - DEF_U8_CENTER) / DEF_U8_SCALE;
-                    float val2 = static_cast<float>(*(dataStart + srcIdx + 1) - DEF_U8_CENTER)
-                                 / DEF_U8_SCALE;
-                    // (1-alpha)*左邻点 + alpha*右邻点
-                    windowInput[i]  = (1.0f - alpha) * val1 + alpha * val2;
-                    framePointSum  += val1 * val1;
-                } else {
-                    // 最后一个目标点取原始数据最后一个值
-                    float val = static_cast<float>(*(dataStart + dataSize - 1) - DEF_U8_CENTER)
-                                / DEF_U8_SCALE;
-                    windowInput[i]  = val;
-                    framePointSum  += val * val;
+            for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; ++i) {
+                // 每段长度：前 remainder 段多一个采样
+                const size_t segLen = blockSize + (i < remainder ? 1 : 0);
+                const size_t start  = i * blockSize + (i < remainder ? i : remainder);
+
+                float sum = 0.0f;
+                for (size_t j = 0; j < segLen; ++j) {
+                    const float val
+                        = static_cast<float>(dataStart[start + j] - DEF_U8_CENTER) / DEF_U8_SCALE;
+                    sum           += val;
+                    framePointSum += val * val; // RMS 基于原始采样
                 }
+                fftReal[i] = sum / segLen;
             }
 
+            // ── 振幅计算（wave）──
             {
-                // 根据当前帧计算振幅 [wave]
-                const float rms        = std::sqrt(framePointSum / DEF_HANNING_WINDOW_SIZE);
+                const float rms        = std::sqrt(framePointSum / dataSize);
                 const float db         = 20.0f * std::log10(rms + 1e-10f);
                 const float normalized = std::clamp(
                     (db - DEF_WAVE_MIN_DB) / (DEF_WAVE_MAX_DB - DEF_WAVE_MIN_DB),
@@ -212,17 +203,31 @@ namespace mediaxx {
                 wave = static_cast<unsigned char>(normalized * DEF_WAVE_MAX_POINT);
             }
 
-            std::vector<std::complex<float>> fftData(DEF_FFT_SIZE);
+            // ── 应用汉宁窗 ──
             for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; ++i) {
-                fftData[i] = std::complex<float>{windowInput[i] * hanningWindow[i], 0.0f};
+                fftReal[i] *= hanningWindow[i];
+                fftImag[i]  = 0.0f;
+            }
+            // 剩余部分清零（DEF_HANNING_WINDOW_SIZE ~ DEF_FFT_SIZE）
+            for (size_t i = DEF_HANNING_WINDOW_SIZE; i < DEF_FFT_SIZE; ++i) {
+                fftReal[i] = 0.0f;
+                fftImag[i] = 0.0f;
             }
 
-            fft(fftData);
+            // ── FFT ──
+            fft(fftReal.data(), fftImag.data());
 
+            // ── 幅度计算 + 分贝归一化 ──
+            // DC(i=0) 和 Nyquist(i=N/2) 正确除以 N，其余除以 N/2
             for (size_t i = 0; i < DEF_SPECTRUM_SIZE; i++) {
-                float magnitude = std::abs(fftData[i]) / DEF_FFT_SIZE;
-                // 分贝转换，归一化
-                const float db         = 20.0f * std::log10(magnitude * 2 + 1e-10f);
+                float magnitude = std::sqrt(fftReal[i] * fftReal[i] + fftImag[i] * fftImag[i]);
+
+                // DC 和 Nyquist 分量除以 N，其他频率分量除以 N/2
+                const float norm = (i == 0 || i == DEF_SPECTRUM_SIZE)
+                                       ? magnitude / DEF_FFT_SIZE
+                                       : magnitude / (DEF_FFT_SIZE / 2);
+
+                const float db         = 20.0f * std::log10(norm + 1e-10f);
                 const float normalized = std::clamp(
                     (db - DEF_FREQUENCY_MIN_DB) / (DEF_FREQUENCY_MAX_DB - DEF_FREQUENCY_MIN_DB),
                     0.0f,
@@ -425,7 +430,9 @@ namespace mediaxx {
             uint8_t*             resampledData     = nullptr;
             int                  resampledDataSize = 0;
             std::vector<uint8_t> accumulatedAudio{};
-            auto                 usePacket = packet;
+            // ── 用偏移指针替代 erase，消除 O(N) memmove ──
+            size_t processedOffset = 0;
+            auto   usePacket       = packet;
 
             while (true) {
                 int ret = av_read_frame(formatContext, usePacket);
@@ -447,22 +454,30 @@ namespace mediaxx {
                             resampledData,
                             resampledDataSize
                         )) {
-                        while (accumulatedAudio.size() >= samplesPerFrame) {
+                        // 用指针偏移代替 erase
+                        while (accumulatedAudio.size() - processedOffset >= samplesPerFrame) {
+                            const uint8_t* frameData = accumulatedAudio.data() + processedOffset;
+
                             // 计算频谱数据
                             outputSpectrum.emplace_back();
                             // 波形振幅数据
                             outputWaveform.emplace_back(0);
                             computeSpectrum(
                                 samplesPerFrame,
-                                accumulatedAudio.begin(),
+                                frameData,
                                 outputSpectrum.back(),
                                 outputWaveform.back()
                             );
-                            // 移除已处理的数据
-                            accumulatedAudio.erase(
-                                accumulatedAudio.begin(),
-                                accumulatedAudio.begin() + samplesPerFrame
-                            );
+                            processedOffset += samplesPerFrame;
+
+                            // ── 定期 compact，避免 offset 无限增长 ──
+                            if (processedOffset >= samplesPerFrame * DEF_FPS * 2) {
+                                accumulatedAudio.erase(
+                                    accumulatedAudio.begin(),
+                                    accumulatedAudio.begin() + processedOffset
+                                );
+                                processedOffset = 0;
+                            }
                         }
                     }
                     av_frame_unref(decodedFrame);
@@ -478,15 +493,19 @@ namespace mediaxx {
             av_freep(&resampledData);
 
             // 处理剩余数据,不足一帧时填充0
-            if (false == accumulatedAudio.empty()) {
-                accumulatedAudio.resize(samplesPerFrame, DEF_U8_CENTER);
-                // 频谱数据
+            const size_t remaining = accumulatedAudio.size() - processedOffset;
+            if (remaining > 0) {
+                // 拷贝剩余数据到开头并补齐
+                std::vector<uint8_t> lastFrame(samplesPerFrame, DEF_U8_CENTER);
+                for (size_t i = 0; i < remaining; ++i) {
+                    lastFrame[i] = accumulatedAudio[processedOffset + i];
+                }
+
                 outputSpectrum.emplace_back();
-                // 波形振幅数据
                 outputWaveform.emplace_back(0);
                 computeSpectrum(
-                    accumulatedAudio.size(),
-                    accumulatedAudio.begin(),
+                    samplesPerFrame,
+                    lastFrame.data(),
                     outputSpectrum.back(),
                     outputWaveform.back()
                 );
