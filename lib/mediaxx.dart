@@ -86,7 +86,7 @@ Future<(int ret, String? log)> mediaxx_get_media_picture(
 
 Future<(int ret, String? result, String? log)> mediaxx_analyse_picture_color(
   final String? filepath,
-  final Uint8List? data,
+  final List<int>? data,
 ) async {
   assert(null != filepath || null != data);
   final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
@@ -144,7 +144,7 @@ mediaxx_get_audio_visualization(final String? filepath) async {
   );
 }
 
-Future<String?> mediaxx_convert_char_encoding(Uint8List data) async {
+Future<String?> mediaxx_convert_char_encoding(List<int> data) async {
   if (data.isEmpty) {
     return null;
   }
@@ -286,21 +286,21 @@ class _AsyncxxRequestAnalysePictureColor {
   _AsyncxxRequestAnalysePictureColor(
     this.id, {
     required String? filepath,
-    required final Uint8List? data,
-    required final Uint8List? decodedData,
+    required final List<int>? data,
+    required final List<int>? decodedData,
   }) {
     filepathPtr = filepath?.toNativeUtf8().cast<Char>();
     dataSize = 0;
     if (null != data) {
-      dataSize = data.lengthInBytes;
-      dataPtr = malloc<Uint8>(data.lengthInBytes);
-      final Uint8List nativeString = dataPtr!.asTypedList(data.lengthInBytes);
+      dataSize = data.length;
+      dataPtr = malloc<Uint8>(data.length);
+      final Uint8List nativeString = dataPtr!.asTypedList(data.length);
       nativeString.setAll(0, data);
     } else if (null != decodedData) {
-      dataSize = decodedData.lengthInBytes;
-      decodedDataPtr = malloc<Uint8>(decodedData.lengthInBytes);
+      dataSize = decodedData.length;
+      decodedDataPtr = malloc<Uint8>(decodedData.length);
       final Uint8List nativeString = decodedDataPtr!.asTypedList(
-        decodedData.lengthInBytes,
+        decodedData.length,
       );
       nativeString.setAll(0, decodedData);
     }
@@ -330,10 +330,10 @@ class _AsyncxxRequestConvertCharEncoding {
 
   bool isDispose = false;
 
-  _AsyncxxRequestConvertCharEncoding(this.id, {required final Uint8List data}) {
-    dataSize = data.lengthInBytes;
-    dataPtr = malloc<Uint8>(data.lengthInBytes);
-    final Uint8List nativeString = dataPtr.asTypedList(data.lengthInBytes);
+  _AsyncxxRequestConvertCharEncoding(this.id, {required final List<int> data}) {
+    dataSize = data.length;
+    dataPtr = malloc<Uint8>(data.length);
+    final Uint8List nativeString = dataPtr.asTypedList(data.length);
     nativeString.setAll(0, data);
   }
 }
@@ -420,6 +420,16 @@ Future<SendPort> _helperIsolateSendPort = () async {
 
         if (null != data.logPtr) {
           malloc.free(data.logPtr!);
+        }
+        return;
+      } else if (data is _AsyncxxResponseStringDefault) {
+        data.str = data.strPtr?.cast<Utf8>().tryToDartString(
+          length: data.strSize,
+        );
+        completer.complete(data);
+
+        if (null != data.strPtr) {
+          malloc.free(data.strPtr!);
         }
         return;
       }
