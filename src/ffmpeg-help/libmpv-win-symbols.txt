@@ -9,6 +9,7 @@
 --undefined=mediaxx_analyse_picture_color_from_decoded_data
 --undefined=mediaxx_get_available_hwcodec_list
 --undefined=mediaxx_get_audio_visualization
+--undefined=mediaxx_convert_char_encoding
 
 --undefined=mpv_abort_async_command
 --undefined=mpv_client_api_version

@@ -11,6 +11,7 @@
     mediaxx_analyse_picture_color_from_decoded_data;
     mediaxx_get_available_hwcodec_list;
     mediaxx_get_audio_visualization;
+    mediaxx_convert_char_encoding;
     JNI_OnLoad;
     Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative;
     av_jni_set_java_vm;

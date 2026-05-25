@@ -11,6 +11,7 @@
     mediaxx_analyse_picture_color_from_decoded_data;
     mediaxx_get_available_hwcodec_list;
     mediaxx_get_audio_visualization;
+    mediaxx_convert_char_encoding;
     mpv_abort_async_command;
     mpv_client_api_version;
     mpv_client_id;

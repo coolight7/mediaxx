@@ -9,6 +9,7 @@ _mediaxx_analyse_picture_color
 _mediaxx_analyse_picture_color_from_decoded_data
 _mediaxx_get_available_hwcodec_list
 _mediaxx_get_audio_visualization
+_mediaxx_convert_char_encoding
 _mpv_abort_async_command
 _mpv_client_api_version
 _mpv_client_id
