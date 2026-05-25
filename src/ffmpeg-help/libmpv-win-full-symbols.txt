@@ -455,7 +455,3 @@
 --undefined=sws_isSupportedOutput
 --undefined=swscale_configuration
 --undefined=swscale_version
-
---undefined=av_base64_encode
---undefined=av_frame_side_data_get_c
---undefined=av_frame_side_data_remove

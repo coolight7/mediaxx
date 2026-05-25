@@ -458,6 +458,3 @@ EXPORTS
     sws_isSupportedOutput
     swscale_configuration
     swscale_version
-    av_base64_encode
-    av_frame_side_data_get_c
-    av_frame_side_data_remove
