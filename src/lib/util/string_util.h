@@ -7,12 +7,46 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace mediaxx {
 
     namespace stringxx {
+
+        // 不区分大小写哈希
+        struct IgnoreCaseHash {
+            size_t operator()(const std::string& s) const {
+                std::string lower_s;
+                lower_s.reserve(s.size());
+                for (char c : s) {
+                    lower_s.push_back(tolower(static_cast<unsigned char>(c)));
+                }
+                return std::hash<std::string>()(lower_s);
+            }
+        };
+
+        // 不区分大小写相等判断（用于无序容器）
+        struct IgnoreCaseEqual {
+            bool operator()(const std::string& a, const std::string& b) const {
+                if (a.size() != b.size()) {
+                    return false;
+                }
+                for (size_t i = 0; i < a.size(); ++i) {
+                    if (tolower(static_cast<unsigned char>(a[i]))
+                        != tolower(static_cast<unsigned char>(b[i]))) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+
+        template<typename V>
+        using IgnoreCaseMap = std::unordered_map<std::string, V, IgnoreCaseHash, IgnoreCaseEqual>;
+
+        using IgnoreCaseSet = std::unordered_set<std::string, IgnoreCaseHash, IgnoreCaseEqual>;
 
         inline size_t utf8GetLength(std::string_view in_str) {
             size_t length = 0;

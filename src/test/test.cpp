@@ -30,16 +30,18 @@ void test() {
 
     {
         // uchardet
-        const auto textlist = std::vector<std::string>{
-            "./temp/test-utf8.txt",
-            "./temp/test-utf16.txt",
-            "./temp/test-gbk.txt"
+        const auto textlist = std::vector<std::pair<std::string, std::string>>{
+            {"./temp/test-utf8.txt",                      "UTF-8"   },
+            {"./temp/test-utf16.txt",                     "UTF-16BE"},
+            {"./temp/test-gbk.txt",                       "GB18030" },
+            {"./temp/安静了.lrc",                      "GB18030" },
+            {"./temp/不该 - 周杰伦、张惠妹.lrc", "GB18030" },
         };
         std::string encoding, result;
         for (const auto& item : textlist) {
-            std::ifstream file(item, std::ios::binary);
+            std::ifstream file(item.first, std::ios::binary);
             if (!file) {
-                std::cout << "文件打开失败: " << item << std::endl;
+                std::cout << "文件打开失败: " << item.first << std::endl;
                 continue;
             }
 
@@ -47,7 +49,7 @@ void test() {
             file.seekg(0, std::ios_base::end);
             const auto size = file.tellg();
             if (size <= 0) {
-                std::cout << "文件为空: " << item << std::endl;
+                std::cout << "文件为空: " << item.first << std::endl;
                 continue;
             }
             file.seekg(0, std::ios_base::beg);
@@ -56,24 +58,28 @@ void test() {
             buf.resize(static_cast<size_t>(size));
             file.read(buf.data(), size);
 
+            std::cout << "预期字符编码: " << item.second << std::endl;
             if (mediaxx::stringxx::chardetConvertEncoding(buf, encoding, result)) {
-                std::cout << item << " - " << encoding << std::endl
+                std::cout << item.first << " - " << encoding << std::endl
                           << result << std::endl
                           << std::endl;
             } else {
                 std::cout << "转换失败: " << encoding << std::endl
-                          << item << std::endl
+                          << item.first << std::endl
                           << std::endl;
             }
+            assert(item.second == encoding);
         }
 
         if (mediaxx::stringxx::chardetConvertEncoding("Hello \xB0\xA1\xC4\xE3", encoding, result)) {
             std::cout << "GBK: - " << encoding << std::endl << result << std::endl;
+            assert(encoding == "GB18030");
         } else {
             std::cout << "GBK: - 失败" << std::endl;
         }
         if (mediaxx::stringxx::chardetConvertEncoding("Hello 世界", encoding, result)) {
             std::cout << "UTF8: - " << encoding << std::endl << result << std::endl;
+            assert(encoding == "UTF-8");
         } else {
             std::cout << "UTF8: - 失败" << std::endl;
         }
