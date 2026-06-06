@@ -41,10 +41,10 @@ wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz && tar -zxvf libi
   - macos: arm64
   - ios: arm64
 - 调整编译脚本即可控制动态、静态链接 ffmpeg、libmpv
-- 静态链接时，需要考虑清楚c++标准库的链接方式
+- 静态链接时，需要考虑清楚c++标准库的链接方式，统一静态、动态链接标准库避免异常
 
 ### 相通点
-- 五大系统平台上的动态库尽管差别不小，但相同点也不少，其中 android和linux 基本互通，ios和macos基本相同，windows的编译是在 linux 上使用 clang 交叉编译出来的，所以在 CMakeLists.txt 中不少参数指定也跟 linux 差不多
+- 各大系统平台上的动态库尽管差别不小，但相同点也不少，其中 android和linux 基本互通，ios和macos基本相同，windows的编译是在 linux 上使用 clang 交叉编译出来的，所以在 CMakeLists.txt 中不少参数指定也跟 linux 差不多
 - 关于控制动态库的符号导出：
   - 只导出需要的符号，可以帮助链接器了解哪些符号是没用的，以便最终生成动态库时可以删除无用的代码和数据段
   - 控制符号导出主要是两步：
@@ -65,6 +65,9 @@ wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz && tar -zxvf libi
 --undefined-version
 ```
 
+### Linux
+- 整体类似于 Android
+
 ### Windows
 - win端的动态库名称为 libmediaxx.dll
 - 导出符号控制方式与其他系统不同，使用 .def 文件声明要导出的符号，并在 CMakeLists.txt 中编译时直接指定即可，见 [CMakeLists.txt](src/CMakeLists.txt):
@@ -79,9 +82,6 @@ add_library(mediaxx SHARED
 )
 ```
 - 另外 windows 生成动态库时，一般还会生成导入库 libmediaxx.lib 这里虽然后缀是 .lib 但不是静态库，它只是声明了动态库的符号等信息，用于其他程序编译时可以链接，因此 win 端链接动态库时，可以只需要对应的导入库，而不需要动态库文件。如果还需要 .def 文件，可以从动态库生成，方法见 [win_create_dll_def.bat](script/win_create_dll_def.bat)
-
-### Linux
-- 整体类似于 Android
 
 ### IOS/Macos
 - apple 端的动态库名称为 libmediaxx.dylib ，后缀不同于其他系统
