@@ -961,7 +961,7 @@ namespace mediaxx {
 
                             if (avcodec_receive_frame(decodeCtx, frame) == 0) {
                                 targetFrame = av_frame_alloc();
-                                targetFrame = av_frame_move_ref(frame);
+                                av_frame_move_ref(targetFrame, frame);
                                 av_frame_unref(frame);
                                 av_packet_unref(pkt);
                                 break;

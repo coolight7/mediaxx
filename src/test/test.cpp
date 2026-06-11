@@ -160,7 +160,6 @@ void test() {
         mediaxx_free(result);
         mediaxx_free(log);
     }
-    return;
     {
         std::cout << "AudioSpectrumAnalyzer ....... ====================" << std::endl;
         mediaxx::AudioSpectrumAnalyzer analyzer{};
