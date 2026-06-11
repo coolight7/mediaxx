@@ -270,10 +270,7 @@ namespace mediaxx {
                         }
                     }
 
-                    // 根据count添加多个副本
-                    for (int j = 0; j < color.count; ++j) {
-                        clusters[bestCluster].push_back(color);
-                    }
+                    clusters[bestCluster].push_back(color);
                 }
 
                 // 更新质心
@@ -287,24 +284,25 @@ namespace mediaxx {
                     }
 
                     double totalR = 0, totalG = 0, totalB = 0;
-                    int    totalCount = 0;
+                    double totalWeight = 0;
 
+                    // 根据count添加多次
                     for (const auto& color : clusters[i]) {
-                        totalR += color.r;
-                        totalG += color.g;
-                        totalB += color.b;
-                        totalCount++;
+                        totalR      += color.r * color.count;
+                        totalG      += color.g * color.count;
+                        totalB      += color.b * color.count;
+                        totalWeight += color.count;
                     }
 
                     auto newCentroid = Color{
-                        static_cast<uint8_t>(totalR / totalCount),
-                        static_cast<uint8_t>(totalG / totalCount),
-                        static_cast<uint8_t>(totalB / totalCount),
+                        static_cast<uint8_t>(totalR / totalWeight),
+                        static_cast<uint8_t>(totalG / totalWeight),
+                        static_cast<uint8_t>(totalB / totalWeight),
                         1,
                         int(calculateBrightness(
-                            static_cast<uint8_t>(totalR / totalCount),
-                            static_cast<uint8_t>(totalG / totalCount),
-                            static_cast<uint8_t>(totalB / totalCount)
+                            static_cast<uint8_t>(totalR / totalWeight),
+                            static_cast<uint8_t>(totalG / totalWeight),
+                            static_cast<uint8_t>(totalB / totalWeight)
                         ))
                     };
 
@@ -341,9 +339,11 @@ namespace mediaxx {
             }
 
             // 随机选择初始化质心
-            std::random_device              rd{};
-            std::mt19937                    gen{rd()};
-            std::uniform_int_distribution<> dis{0, int(colors.size() - 1)};
+            static thread_local std::mt19937 gen{[] {
+                std::random_device rd{};
+                return rd();
+            }()};
+            std::uniform_int_distribution<>  dis{0, int(colors.size() - 1)};
 
             for (int i = 0; i < k; ++i) {
                 centroids.push_back(colors[dis(gen)]);
@@ -437,7 +437,7 @@ namespace mediaxx {
         // 统计颜色
         XX_LOGD("analyse color...");
         // key: RGB值(0xRRGGBB), value: 颜色信息
-        std::map<uint32_t, Color> colorMap{};
+        std::unordered_map<uint32_t, Color> colorMap{};
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {

@@ -537,9 +537,11 @@ namespace mediaxx {
 
                 // 写入文件
                 // dart 传入的是 utf8 path，win上跟系统编码不同，访问会有问题
-                auto          usePath = std::string{outputPath};
                 std::ofstream file{
-                    std::filesystem::path((const char8_t*)usePath.data()),
+                    std::filesystem::path{
+                                          (const char8_t*)outputPath.data(),
+                                          (const char8_t*)outputPath.data() + outputPath.size()
+                    },
                     std::ios::binary
                 };
                 if (file.is_open()) {
@@ -924,7 +926,8 @@ namespace mediaxx {
                             }
 
                             if (avcodec_receive_frame(decodeCtx, frame) == 0) {
-                                targetFrame = av_frame_clone(frame);
+                                targetFrame = av_frame_alloc();
+                                targetFrame = av_frame_move_ref(frame);
                                 av_frame_unref(frame);
                                 av_packet_unref(pkt);
                                 break;
