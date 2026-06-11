@@ -16,8 +16,7 @@
                 "UNICODE",
                 "_UNICODE"
             ],
-            "windowsSdkVersion": "10.0.22000.0",
-            "compilerPath": "cl.exe",
+            "compilerPath": "/usr/local/bin/g++",
             "cStandard": "c23",
             "cppStandard": "c++23"
         },

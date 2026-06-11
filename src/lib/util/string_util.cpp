@@ -2,12 +2,25 @@
 #include <algorithm>
 #include <cstring>
 #include <iconv.h>
+#include <map>
 #include <set>
 #include <uchardet/uchardet.h>
 #include <vector>
 
-const std::set<std::string> g_chinese_encoding_priorities
-    = {"UTF-8", "UTF-16", "GB2312", "GBK", "GB18030"};
+const mediaxx::stringxx::IgnoreCaseSet g_encoding_priorities = {
+    "UTF-8",
+    "UTF-16",
+    "GB2312",
+    "GBK",
+    "GB18030",
+};
+const mediaxx::stringxx::IgnoreCaseMap<std::string> g_encoding_shift = {
+    {"UTF8",   "UTF-8"  },
+    {"UTF16",  "UTF-16" },
+    {"GB2312", "GB18030"},
+    {"GBK",    "GB18030"},
+};
+const size_t defShortStringLength = 30;
 
 static uchardet_t cChardetHandle = uchardet_new();
 
@@ -144,9 +157,9 @@ bool mediaxx::stringxx::chardetConvertEncoding(
     if (n_candidates <= 0) {
         return false;
     }
-    if (n_candidates > 3) {
-        n_candidates = 3;
-    }
+    // if (n_candidates > 5) {
+    //     n_candidates = 5;
+    // }
     std::vector<std::string> detected_candidates;
     for (int i = 0; i < n_candidates; ++i) {
         const char* enc = uchardet_get_encoding(handle, i);
@@ -159,28 +172,41 @@ bool mediaxx::stringxx::chardetConvertEncoding(
     }
 
     std::string selected_enc;
-    if (str.size() < 20) {
-        // 短字符串，趋向取常见编码
+    {
         bool haveCheckUtf8 = false;
         // detected_candidates 中可能出现多次 utf8
         for (const auto& item : detected_candidates) {
-            if (g_chinese_encoding_priorities.contains(item)) {
-                if (item == "UTF-8") {
-                    // 检查utf8有效性
-                    if (haveCheckUtf8
-                        || false == mediaxx::stringxx::utf8GetLengthCheckAvail(str.data())) {
-                        haveCheckUtf8 = true;
-                        continue;
+            if (g_encoding_priorities.contains(item)) {
+                auto item_ptr = &item;
+
+                auto shiftItemIt = g_encoding_shift.find(item);
+                if (shiftItemIt != g_encoding_shift.end()) {
+                    item_ptr = &(shiftItemIt->second);
+                }
+
+                if (str.size() < defShortStringLength) {
+                    // 短字符串容易不准确，需要检查utf8有效性
+                    if (*item_ptr == std::string_view{"UTF-8"}) {
+                        if (haveCheckUtf8
+                            || false == mediaxx::stringxx::utf8GetLengthCheckAvail(str.data())) {
+                            haveCheckUtf8 = true;
+                            continue;
+                        }
                     }
                 }
-                selected_enc = item;
+                selected_enc = *item_ptr;
                 break;
             }
         }
     }
     if (selected_enc.empty()) {
         // 无优先，取第一个
-        selected_enc = detected_candidates[0];
+        if (str.size() < defShortStringLength) {
+            // 短字符串直接取 gb
+            selected_enc = "GB18030";
+        } else {
+            selected_enc = detected_candidates[0];
+        }
     }
 
     encoding = selected_enc;

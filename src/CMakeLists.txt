@@ -10,6 +10,20 @@ set(CMAKE_C_STANDARD 23)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(XX_BUILD_TYPE "Generate the client target." "RELEASE")
+
+# 仅用于指示是否编译用于调试用途，不代表真实编译类型
+# - [IS_DEBUG_D] == 1 时，启用大部分调试日志等信息，因此 profile 之类注重
+# 性能的编译将视为 release
+set(IS_DEBUG_D    0)
+set(IS_RELEASE_D  1)
+
+if (XX_BUILD_TYPE STREQUAL "DEBUG")
+  set(IS_DEBUG_D    1)
+  set(IS_RELEASE_D  0)
+endif()
+add_definitions(-DXX_BUILD_TYPE=${XX_BUILD_TYPE})
+
 set(IS_LINUX_D    0)
 set(IS_WIN_D      0)
 set(IS_MACOS_D    0)
@@ -101,150 +115,37 @@ if (DEFINED LUMENXX_BUILD_TYPE)
 endif()
 
 include(ExternalProject)
+include(FetchContent)
 
 # simdjson
-ExternalProject_Add(
-  simdjson_repo
+FetchContent_Declare(
+  simdjson
   SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/simdjson/"
-  UPDATE_COMMAND ""
-  CMAKE_ARGS 
-      -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
-      -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
-      "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
-      "-DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}"
-      "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}"
-      "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}" 
-      "-DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}"
-
-      "-DCMAKE_ANDROID_ARCH_ABI=${CMAKE_ANDROID_ARCH_ABI}"
-      "-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
-      "-DANDROID_ABI=${ANDROID_ABI}"
-      "-DANDROID_NDK=${ANDROID_NDK}"
-      "-DANDROID_STL=${ANDROID_STL}"
-      "-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}"
-      "-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}"
-
-      "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}"
-      "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
-      "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
-      "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
-
-      "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-      "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-      "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
-      "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
-      "-DCMAKE_C_FLAGS_PROFILE=${CMAKE_C_FLAGS_PROFILE}"
-      "-DCMAKE_CXX_FLAGS_PROFILE=${CMAKE_CXX_FLAGS_PROFILE}"
-      "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
-      "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-      -DBUILD_SHARED_LIBS=OFF
-      -DSIMDJSON_BUILD_STATIC_LIB=ON
-  INSTALL_COMMAND ""
+  EXCLUDE_FROM_ALL
 )
-ExternalProject_Get_Property(simdjson_repo SOURCE_DIR)
-set(simdjson_SOURCE_DIR "${SOURCE_DIR}")
-ExternalProject_Get_Property(simdjson_repo BINARY_DIR)
-set(simdjson_INSTALL_DIR "${BINARY_DIR}/")
+block()
+  set(BUILD_SHARED_LIBS             OFF)
+  set(BUILD_STATIC_LIBS             ON)
+  FetchContent_MakeAvailable(simdjson)
+endblock()
 
 # fmt
-ExternalProject_Add(
-  fmt_repo
+FetchContent_Declare(
+  fmt
   SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/"
-  UPDATE_COMMAND ""
-  CMAKE_ARGS 
-      -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
-      -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
-      "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
-      "-DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}"
-      "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}"
-      "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}" 
-      "-DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}"
-
-      "-DCMAKE_ANDROID_ARCH_ABI=${CMAKE_ANDROID_ARCH_ABI}"
-      "-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
-      "-DANDROID_ABI=${ANDROID_ABI}"
-      "-DANDROID_NDK=${ANDROID_NDK}"
-      "-DANDROID_STL=${ANDROID_STL}"
-      "-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}"
-      "-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}"
-
-      "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}"
-      "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
-      "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
-      "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
-
-      "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-      "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-      "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
-      "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
-      "-DCMAKE_C_FLAGS_PROFILE=${CMAKE_C_FLAGS_PROFILE}"
-      "-DCMAKE_CXX_FLAGS_PROFILE=${CMAKE_CXX_FLAGS_PROFILE}"
-      "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
-      "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-      -DFMT_PEDANTIC=OFF
-      -DFMT_INSTALL=OFF
-      -DFMT_WERROR=OFF
-      -DBUILD_SHARED_LIBS=OFF
-      -DFMT_DOC=OFF
-      -DFMT_TEST=OFF
-      -DFMT_CUDA_TEST=OFF
-  INSTALL_COMMAND ""
 )
-ExternalProject_Get_Property(fmt_repo SOURCE_DIR)
-set(fmt_SOURCE_DIR "${SOURCE_DIR}")
-ExternalProject_Get_Property(fmt_repo BINARY_DIR)
-set(fmt_INSTALL_DIR "${BINARY_DIR}/")
+block()
+  set(FMT_PEDANTIC          OFF)
+  set(FMT_INSTALL           OFF)
+  set(FMT_WERROR            OFF)
+  set(BUILD_SHARED_LIBS     OFF)
+  set(BUILD_STATIC_LIBS     ON )
+  set(FMT_DOC               OFF)
+  set(FMT_TEST              OFF)
+  FetchContent_MakeAvailable(fmt)
+endblock()
 
 if (DEFINED LUMENXX_BUILD_TYPE)
-  # uchardet
-  set(UCHARDET_BINARY_DIR ${CMAKE_BINARY_DIR}/uchardet_repo-build)
-  set(UCHARDET_INSTALL_DIR ${CMAKE_BINARY_DIR}/uchardet_repo-install)
-  ExternalProject_Add(
-    uchardet_repo
-    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/uchardet/"
-    BINARY_DIR ${UCHARDET_BINARY_DIR}
-    INSTALL_DIR ${UCHARDET_INSTALL_DIR}
-    CMAKE_ARGS 
-        "-DCMAKE_INSTALL_PREFIX=${UCHARDET_INSTALL_DIR}"
-        -DCMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME}
-        -DCMAKE_SYSTEM_PROCESSOR=${CMAKE_SYSTEM_PROCESSOR}
-        "-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}"
-        "-DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}"
-        "-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=${CMAKE_FIND_ROOT_PATH_MODE_LIBRARY}"
-        "-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=${CMAKE_FIND_ROOT_PATH_MODE_INCLUDE}" 
-        "-DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}"
-
-        "-DCMAKE_ANDROID_ARCH_ABI=${CMAKE_ANDROID_ARCH_ABI}"
-        "-DANDROID_PLATFORM=${ANDROID_PLATFORM}"
-        "-DANDROID_ABI=${ANDROID_ABI}"
-        "-DANDROID_NDK=${ANDROID_NDK}"
-        "-DANDROID_STL=${ANDROID_STL}"
-        "-DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}"
-        "-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}"
-
-        "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_CONFIGURATION_TYPES}"
-        "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
-        "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
-        "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
-
-        "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"
-        "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"
-        "-DCMAKE_C_FLAGS_RELEASE=${CMAKE_C_FLAGS_RELEASE}"
-        "-DCMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}"
-        "-DCMAKE_C_FLAGS_PROFILE=${CMAKE_C_FLAGS_PROFILE}"
-        "-DCMAKE_CXX_FLAGS_PROFILE=${CMAKE_CXX_FLAGS_PROFILE}"
-        "-DCMAKE_C_FLAGS_DEBUG=${CMAKE_C_FLAGS_DEBUG}"
-        "-DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}"
-        -DBUILD_BINARY=OFF
-        -DBUILD_SHARED_LIBS=OFF
-        -DCHECK_SSE2=ON
-    UPDATE_COMMAND ""
-    TEST_COMMAND ""
-    LOG_INSTALL ON
-  )
-  ExternalProject_Get_Property(uchardet_repo SOURCE_DIR)
-  set(uchardet_SOURCE_DIR "${SOURCE_DIR}")
-
   # iconv
   set(LIBICONV_VERSION 1.18)
   set(LIBICONV_URL "https://ftp.gnu.org/gnu/libiconv/libiconv-${LIBICONV_VERSION}.tar.gz")
@@ -281,6 +182,20 @@ if (DEFINED LUMENXX_BUILD_TYPE)
     UPDATE_COMMAND ""
     TEST_COMMAND ""
   )
+
+  # uchardet
+  FetchContent_Declare(
+    uchardet
+    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/uchardet/"
+    EXCLUDE_FROM_ALL
+  )
+  block()
+    set(CHECK_SSE2            ON)
+    set(BUILD_BINARY          OFF)
+    set(BUILD_SHARED_LIBS     OFF)
+    set(BUILD_STATIC_LIBS     ON )
+    FetchContent_MakeAvailable(uchardet)
+  endblock()
 endif ()
 
 # - .vscode/c_cpp_properties.json 默认取 android
@@ -451,10 +366,7 @@ add_library(mediaxx SHARED
   ${mediaxx_EXPORT_DEF}
 )
 
-add_dependencies(mediaxx simdjson_repo)
-add_dependencies(mediaxx fmt_repo)
 if (DEFINED LUMENXX_BUILD_TYPE)
-  add_dependencies(mediaxx uchardet_repo)
   add_dependencies(mediaxx iconv_repo)
   target_link_directories(mediaxx PUBLIC 
     ${UCHARDET_INSTALL_DIR}/lib
@@ -470,20 +382,11 @@ target_link_directories(mediaxx PUBLIC
 
 target_link_libraries(mediaxx PUBLIC
   ${ffmpeg_mpv_LIBRARIES}
+  fmt::fmt
   simdjson
-  uchardet
   iconv
+  libuchardet
 )
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-  # 仅单配置构建、debug 时使用
-  target_link_libraries(mediaxx PUBLIC
-    fmtd
-  )
-else ()
-  target_link_libraries(mediaxx PUBLIC
-    fmt
-  )
-endif()
 
 target_compile_options(mediaxx PRIVATE 
     ${ffmpeg_mpv_CFLAGS}

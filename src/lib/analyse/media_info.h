@@ -173,11 +173,45 @@ namespace mediaxx {
                             auto key   = std::string_view{tag->key};
                             auto value = std::string_view{tag->value};
                             XX_LOGW("tags =============== {} {}", key, value);
-                            if (key.contains("�") || false == stringxx::utf8IsAvail(key.data())
-                                || value.contains("�")
-                                || false == stringxx::utf8IsAvail(value.data())) {
+                            const auto  keyAvail   = stringxx::utf8IsAvail(key.data());
+                            const auto  valueAvail = stringxx::utf8IsAvail(value.data());
+                            std::string convertKey, convertValue;
+                            if (false == keyAvail || false == valueAvail) {
                                 XX_LOGW("tags pair contain '�': '{}': '{}'", key, value);
-                                continue;
+#ifndef NDEBUG
+                                if (false == keyAvail) {
+                                    XX_LOGD("  - try convert key:");
+                                    std::string encoding;
+                                    if (mediaxx::stringxx::chardetConvertEncoding(
+                                            key,
+                                            encoding,
+                                            convertKey
+                                        )) {
+                                        XX_LOGD("    - {}", encoding);
+                                        XX_LOGD("    - {}", convertKey);
+                                        key = std::string_view{convertKey};
+                                    } else {
+                                        XX_LOGD("    - 自动转换失败");
+                                        continue;
+                                    }
+                                }
+                                if (false == valueAvail) {
+                                    XX_LOGD("  - try convert value:");
+                                    std::string encoding, result;
+                                    if (mediaxx::stringxx::chardetConvertEncoding(
+                                            value,
+                                            encoding,
+                                            convertValue
+                                        )) {
+                                        XX_LOGD("    - {}", encoding);
+                                        XX_LOGD("    - {}", convertValue);
+                                        value = std::string_view{convertValue};
+                                    } else {
+                                        XX_LOGD("    - 自动转换失败");
+                                        continue;
+                                    }
+                                }
+#endif
                             }
                             if (false == isFirst) {
                                 result.append_comma();

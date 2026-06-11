@@ -9,6 +9,7 @@
 --undefined=mediaxx_analyse_picture_color_from_decoded_data
 --undefined=mediaxx_get_available_hwcodec_list
 --undefined=mediaxx_get_audio_visualization
+--undefined=mediaxx_convert_char_encoding
 
 --undefined=mpv_abort_async_command
 --undefined=mpv_client_api_version
@@ -455,13 +456,3 @@
 --undefined=sws_isSupportedOutput
 --undefined=swscale_configuration
 --undefined=swscale_version
-
---undefined=av_buffersink_get_alpha_mode
---undefined=av_buffersrc_get_status
---undefined=av_packet_side_data_to_frame
---undefined=avcodec_receive_frame_flags
---undefined=av_alpha_mode_name
---undefined=av_base64_encode
---undefined=av_frame_side_data_get_c
---undefined=av_frame_side_data_remove
---undefined=av_mime_codec_str

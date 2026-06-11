@@ -12,6 +12,7 @@ EXPORTS
     mediaxx_analyse_picture_color_from_decoded_data
     mediaxx_get_available_hwcodec_list
     mediaxx_get_audio_visualization
+    mediaxx_convert_char_encoding
 
     mpv_abort_async_command
     mpv_client_api_version
@@ -458,12 +459,3 @@ EXPORTS
     sws_isSupportedOutput
     swscale_configuration
     swscale_version
-    av_buffersink_get_alpha_mode
-    av_buffersrc_get_status
-    av_packet_side_data_to_frame
-    avcodec_receive_frame_flags
-    av_alpha_mode_name
-    av_base64_encode
-    av_frame_side_data_get_c
-    av_frame_side_data_remove
-    av_mime_codec_str
