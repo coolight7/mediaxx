@@ -1,10 +1,11 @@
-#include "string_util.h"
+#include "util/string_util.h"
+#include "uchardet/uchardet.h"
 #include <algorithm>
 #include <cstring>
 #include <iconv.h>
 #include <map>
+#include <mutex>
 #include <set>
-#include <uchardet/uchardet.h>
 #include <vector>
 
 const mediaxx::stringxx::IgnoreCaseSet g_encoding_priorities = {
@@ -22,17 +23,10 @@ const mediaxx::stringxx::IgnoreCaseMap<std::string> g_encoding_shift = {
 };
 const size_t defShortStringLength = 30;
 
-static uchardet_t cChardetHandle = uchardet_new();
-
-__attribute__((destructor)) void chardetDestroyHandle() {
-    if (nullptr != cChardetHandle) {
-        uchardet_delete(cChardetHandle);
-        cChardetHandle = nullptr;
-    }
-}
+static const thread_local uchardet_t g_chardetHandle = uchardet_new();
 
 // BOM 判断UTF16编码
-static std::string detectUtfBom(const std::string_view str) {
+static std::string detectUtfBom(std::string_view str) {
     if (str.size() < 2) {
         // UTF16 BOM至少2字节，长度不足直接返回
         return "";
@@ -71,18 +65,19 @@ static std::vector<std::string> getIconvCandidateEncodings(const char* src_encod
 }
 
 // 转UTF8
-std::string mediaxx::stringxx::convertToUtf8(const std::string_view src, const char* src_encoding) {
+std::tuple<bool, std::optional<std::string>>
+    mediaxx::stringxx::convertToUtf8(std::string_view src, std::string_view srcEncoding) {
     // 已是UTF8/空字符串，直接返回
-    if (std::strcmp(src_encoding, "UTF-8") == 0 || std::strcmp(src_encoding, "utf8") == 0) {
-        return std::string{src};
+    if ("UTF-8" == srcEncoding || "utf8" == srcEncoding) {
+        return {true, std::nullopt};
     }
     if (src.empty()) {
-        return "";
+        return {false, std::nullopt};
     }
 
-    auto candidate_encs = getIconvCandidateEncodings(src_encoding);
+    auto candidate_encs = getIconvCandidateEncodings(srcEncoding.data());
     if (candidate_encs.empty()) {
-        return "";
+        return {false, std::nullopt};
     }
 
     // 遍历候选编码，逐个尝试
@@ -100,12 +95,12 @@ std::string mediaxx::stringxx::convertToUtf8(const std::string_view src, const c
     }
     if (cd == (iconv_t)-1) {
         // 所有候选编码名都失败，直接返回
-        return "";
+        return {false, std::nullopt};
     }
 
     // 缓冲区
     size_t src_len = src.size();
-    // UTF8单字符最大6字节
+    // UTF8 单字符最大6字节
     size_t            dst_buf_size = src_len * 6;
     std::vector<char> dst_buf(dst_buf_size);
     char*             dst_ptr    = dst_buf.data();
@@ -116,59 +111,56 @@ std::string mediaxx::stringxx::convertToUtf8(const std::string_view src, const c
     size_t      src_remain = src_len;
     int         ret = iconv(cd, const_cast<char**>(&src_ptr), &src_remain, &dst_ptr, &dst_remain);
 
-    std::string utf8_str;
+    std::string utf8Str;
     if (ret != -1 && src_remain == 0) {
-        utf8_str = std::string(dst_buf.data(), dst_buf_size - dst_remain);
+        utf8Str = std::string(dst_buf.data(), dst_buf_size - dst_remain);
     }
 
     iconv_close(cd);
-    return utf8_str;
+    return {true, utf8Str};
 }
 
-bool mediaxx::stringxx::chardetConvertEncoding(
-    const std::string_view str,
-    std::string&           encoding,
-    std::string&           result
-) {
-    const auto handle = cChardetHandle;
-    if (handle == nullptr) {
-        return false;
+/// <isSuccess, result>
+std::tuple<bool, std::optional<std::string>>
+    mediaxx::stringxx::autoConvertToUtf8(std::string_view str, std::string& encoding) {
+    if (str.empty()) {
+        return {true, std::nullopt};
     }
 
     // 手动检测UTF16 BOM
     std::string bom_enc = detectUtfBom(str);
     if (!bom_enc.empty()) {
-        encoding = bom_enc;
-        result   = convertToUtf8(str, encoding.c_str());
-        if (!result.empty() || str.empty()) {
-            return true;
+        encoding                 = bom_enc;
+        auto [isSuccess, result] = convertToUtf8(str, encoding.c_str());
+        if (isSuccess) {
+            return {true, result};
         }
     }
 
     // uchardet检测
-    uchardet_reset(handle);
-    int ret = uchardet_handle_data(handle, str.data(), str.size());
+    uchardet_reset(g_chardetHandle);
+    int ret = uchardet_handle_data(g_chardetHandle, str.data(), str.size());
     if (ret != 0) {
-        return false;
+        return {false, std::nullopt};
     }
-    uchardet_data_end(handle);
+    uchardet_data_end(g_chardetHandle);
 
-    int n_candidates = uchardet_get_n_candidates(handle);
+    int n_candidates = uchardet_get_n_candidates(g_chardetHandle);
     if (n_candidates <= 0) {
-        return false;
+        return {false, std::nullopt};
     }
     // if (n_candidates > 5) {
     //     n_candidates = 5;
     // }
     std::vector<std::string> detected_candidates;
     for (int i = 0; i < n_candidates; ++i) {
-        const char* enc = uchardet_get_encoding(handle, i);
+        const char* enc = uchardet_get_encoding(g_chardetHandle, i);
         if (enc && std::strlen(enc) > 0) {
             detected_candidates.emplace_back(enc);
         }
     }
     if (detected_candidates.empty()) {
-        return false;
+        return {false, std::nullopt};
     }
 
     std::string selected_enc;
@@ -215,10 +207,19 @@ bool mediaxx::stringxx::chardetConvertEncoding(
         encoding = "UTF-16LE";
     }
 
-    result = convertToUtf8(str, encoding.c_str());
-    if (result.empty() && !str.empty()) {
-        return false;
-    }
+    return convertToUtf8(str, encoding);
+}
 
-    return true;
+std::tuple<bool, std::optional<std::string>>
+    mediaxx::stringxx::autoConvertToUtf8(std::string_view str, bool _) {
+    std::string encoding;
+    return autoConvertToUtf8(str, encoding);
+}
+
+bool mediaxx::stringxx::autoConvertToUtf8(std::string& str) {
+    auto [isSuccess, result] = autoConvertToUtf8(str, true);
+    if (isSuccess && result.has_value()) {
+        str = std::move(result.value());
+    }
+    return isSuccess;
 }

@@ -181,14 +181,13 @@ namespace mediaxx {
 #ifndef NDEBUG
                                 if (false == keyAvail) {
                                     XX_LOGD("  - try convert key:");
-                                    std::string encoding;
-                                    if (mediaxx::stringxx::chardetConvertEncoding(
-                                            key,
-                                            encoding,
-                                            convertKey
-                                        )) {
-                                        XX_LOGD("    - {}", encoding);
-                                        XX_LOGD("    - {}", convertKey);
+                                    auto [isSucc, result]
+                                        = mediaxx::stringxx::autoConvertToUtf8(key, true);
+                                    if (isSucc) {
+                                        if (result.has_value()) {
+                                            XX_LOGD("    - {}", result.value());
+                                            convertKey = std::move(result.value());
+                                        }
                                         key = std::string_view{convertKey};
                                     } else {
                                         XX_LOGD("    - 自动转换失败");
@@ -197,14 +196,13 @@ namespace mediaxx {
                                 }
                                 if (false == valueAvail) {
                                     XX_LOGD("  - try convert value:");
-                                    std::string encoding, result;
-                                    if (mediaxx::stringxx::chardetConvertEncoding(
-                                            value,
-                                            encoding,
-                                            convertValue
-                                        )) {
-                                        XX_LOGD("    - {}", encoding);
-                                        XX_LOGD("    - {}", convertValue);
+                                    auto [isSucc, result]
+                                        = mediaxx::stringxx::autoConvertToUtf8(value, true);
+                                    if (isSucc) {
+                                        if (result.has_value()) {
+                                            XX_LOGD("    - {}", result.value());
+                                            convertValue = std::move(result.value());
+                                        }
                                         value = std::string_view{convertValue};
                                     } else {
                                         XX_LOGD("    - 自动转换失败");

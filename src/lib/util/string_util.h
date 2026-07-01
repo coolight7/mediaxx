@@ -236,11 +236,15 @@ namespace mediaxx {
             return std::string_view{result, len};
         }
 
-        std::string convertToUtf8(const std::string_view src, const char* src_encoding);
-        bool        chardetConvertEncoding(
-                   const std::string_view str,
-                   std::string&           encoding,
-                   std::string&           result
-               );
+        std::tuple<bool, std::optional<std::string>>
+            convertToUtf8(std::string_view src, std::string_view srcEncoding);
+
+        std::tuple<bool, std::optional<std::string>>
+            autoConvertToUtf8(std::string_view str, std::string& encoding);
+
+        std::tuple<bool, std::optional<std::string>>
+            autoConvertToUtf8(std::string_view str, bool _);
+
+        bool autoConvertToUtf8(std::string& str);
     }; // namespace stringxx
 }; // namespace mediaxx

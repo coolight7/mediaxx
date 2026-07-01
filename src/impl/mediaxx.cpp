@@ -216,17 +216,22 @@ FFI_PLUGIN_EXPORT int
     if (nullptr == str || dataSize <= 0) {
         return 0;
     }
-    std::string encoding, result;
-    if (mediaxx::stringxx::chardetConvertEncoding(
-            std::string_view{str, dataSize},
-            encoding,
-            result
-        )) {
-        auto resultPtr = (char*)malloc(result.length() + 1);
-        std::memcpy((void*)resultPtr, result.data(), result.length());
-        resultPtr[result.length()] = '\0';
-        *out                       = resultPtr;
-        return result.size();
+    auto [isSucc, result]
+        = mediaxx::stringxx::autoConvertToUtf8(std::string_view{str, dataSize}, true);
+    if (isSucc) {
+        if (false == result.has_value()) {
+            auto resultPtr = (char*)malloc(dataSize + 1);
+            std::memcpy((void*)resultPtr, str, dataSize);
+            resultPtr[dataSize] = '\0';
+            *out                = resultPtr;
+            return dataSize;
+        }
+        const auto& resultStr = result.value();
+        auto        resultPtr = (char*)malloc(resultStr.length() + 1);
+        std::memcpy((void*)resultPtr, resultStr.data(), resultStr.length());
+        resultPtr[resultStr.length()] = '\0';
+        *out                          = resultPtr;
+        return resultStr.length();
     }
     return 0;
 }

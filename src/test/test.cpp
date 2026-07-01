@@ -59,9 +59,10 @@ void test() {
             file.read(buf.data(), size);
 
             std::cout << "预期字符编码: " << item.second << std::endl;
-            if (mediaxx::stringxx::chardetConvertEncoding(buf, encoding, result)) {
+            auto [isSucc, result] = mediaxx::stringxx::autoConvertToUtf8(buf, encoding);
+            if (isSucc) {
                 std::cout << item.first << " - " << encoding << std::endl
-                          << result << std::endl
+                          << result.value_or("[crude]") << std::endl
                           << std::endl;
             } else {
                 std::cout << "转换失败: " << encoding << std::endl
@@ -71,17 +72,26 @@ void test() {
             assert(item.second == encoding);
         }
 
-        if (mediaxx::stringxx::chardetConvertEncoding("Hello \xB0\xA1\xC4\xE3", encoding, result)) {
-            std::cout << "GBK: - " << encoding << std::endl << result << std::endl;
-            assert(encoding == "GB18030");
-        } else {
-            std::cout << "GBK: - 失败" << std::endl;
+        {
+            auto [isSucc, result]
+                = mediaxx::stringxx::autoConvertToUtf8("Hello \xB0\xA1\xC4\xE3", encoding);
+            if (isSucc) {
+                std::cout << "GBK: - " << encoding << std::endl
+                          << result.value_or("[crude]") << std::endl;
+                assert(encoding == "GB18030");
+            } else {
+                std::cout << "GBK: - 失败" << std::endl;
+            }
         }
-        if (mediaxx::stringxx::chardetConvertEncoding("Hello 世界", encoding, result)) {
-            std::cout << "UTF8: - " << encoding << std::endl << result << std::endl;
-            assert(encoding == "UTF-8");
-        } else {
-            std::cout << "UTF8: - 失败" << std::endl;
+        {
+            auto [isSucc, result] = mediaxx::stringxx::autoConvertToUtf8("Hello 世界", encoding);
+            if (isSucc) {
+                std::cout << "UTF8: - " << encoding << std::endl
+                          << result.value_or("[crude]") << std::endl;
+                assert(encoding == "UTF-8");
+            } else {
+                std::cout << "UTF8: - 失败" << std::endl;
+            }
         }
         {
             std::string str = "Hello 世界";
