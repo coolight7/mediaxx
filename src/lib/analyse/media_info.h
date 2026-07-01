@@ -111,7 +111,7 @@ namespace mediaxx {
             ret = avformat_find_stream_info(item.fmtCtx, nullptr);
             if (ret < 0) {
                 item.setLog(
-                    fmt::format("无法获取流信息: {}", item.filepath, utilxx::av_err2str(ret))
+                    fmt::format("无法获取流信息: {} | {}", item.filepath, utilxx::av_err2str(ret))
                 );
                 return false;
             }
@@ -138,7 +138,9 @@ namespace mediaxx {
 
                 result.append_key_value<"filename">(item.filepath);
                 result.append_comma();
-                strBuilderAppendFixdKeyVPtr_d(result, "format_name", fmtCtx->iformat->name);
+                if (nullptr != fmtCtx->iformat) {
+                    strBuilderAppendFixdKeyVPtr_d(result, "format_name", fmtCtx->iformat->name);
+                }
                 result.append_key_value<"nb_streams">(fmtCtx->nb_streams);
                 result.append_comma();
                 result.append_key_value<"nb_programs">(fmtCtx->nb_programs);
@@ -432,7 +434,7 @@ namespace mediaxx {
                 quality = 0;
             if (quality > 100)
                 quality = 100;
-            return (int)(2 + (100 - quality) * 29 / 100.0 + 0.5);
+            return static_cast<int>(2 + (100 - quality) * 29 / 100.0 + 0.5);
         }
 
         int savePicture(
@@ -490,6 +492,7 @@ namespace mediaxx {
                 }
 
                 // 设置编码参数
+                // 修正为正方形
                 encodeCtx->width  = (clipWidth > 0) ? clipWidth : frame->width;
                 encodeCtx->height = (clipHeight > 0) ? clipHeight : frame->height;
                 {
