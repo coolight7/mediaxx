@@ -48,7 +48,7 @@ namespace mediaxx {
         inline static constexpr float   DEF_U8_SCALE  = 128.0f;
 
         // ── 编译期预计算表 ──
-        static consteval std::array<float, DEF_HANNING_WINDOW_SIZE> makeHanningWindow() {
+        inline static constexpr std::array<float, DEF_HANNING_WINDOW_SIZE> makeHanningWindow() {
             std::array<float, DEF_HANNING_WINDOW_SIZE> arr{};
             for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; i++) {
                 arr[i] = 0.5f
@@ -61,7 +61,7 @@ namespace mediaxx {
             return arr;
         }
 
-        static consteval std::array<size_t, DEF_FFT_SIZE> makeBitRevTable() {
+        inline static constexpr std::array<size_t, DEF_FFT_SIZE> makeBitRevTable() {
             std::array<size_t, DEF_FFT_SIZE> arr{};
             for (size_t i = 0; i < DEF_FFT_SIZE; ++i) {
                 size_t bitRev = 0;
@@ -73,7 +73,7 @@ namespace mediaxx {
             return arr;
         }
 
-        static consteval std::array<float, DEF_FFT_SIZE / 2> makeTwiddleCos() {
+        inline static constexpr std::array<float, DEF_FFT_SIZE / 2> makeTwiddleCos() {
             std::array<float, DEF_FFT_SIZE / 2> arr{};
             for (size_t k = 0; k < DEF_FFT_SIZE / 2; ++k) {
                 arr[k]
@@ -82,7 +82,7 @@ namespace mediaxx {
             return arr;
         }
 
-        static consteval std::array<float, DEF_FFT_SIZE / 2> makeTwiddleSin() {
+        inline static constexpr std::array<float, DEF_FFT_SIZE / 2> makeTwiddleSin() {
             std::array<float, DEF_FFT_SIZE / 2> arr{};
             for (size_t k = 0; k < DEF_FFT_SIZE / 2; ++k) {
                 arr[k]
@@ -91,10 +91,11 @@ namespace mediaxx {
             return arr;
         }
 
-        std::array<float, DEF_FFT_SIZE / 2>        fftTwiddleCos  = makeTwiddleCos();
-        std::array<float, DEF_FFT_SIZE / 2>        fftTwiddleSin  = makeTwiddleSin();
-        std::array<size_t, DEF_FFT_SIZE>           fftBitRevTable = makeBitRevTable();
-        std::array<float, DEF_HANNING_WINDOW_SIZE> hanningWindow  = makeHanningWindow();
+        inline static const std::array<float, DEF_FFT_SIZE / 2> fftTwiddleCos  = makeTwiddleCos();
+        inline static const std::array<float, DEF_FFT_SIZE / 2> fftTwiddleSin  = makeTwiddleSin();
+        inline static const std::array<size_t, DEF_FFT_SIZE>    fftBitRevTable = makeBitRevTable();
+        inline static const std::array<float, DEF_HANNING_WINDOW_SIZE> hanningWindow
+            = makeHanningWindow();
 
         // ── 预分配复用缓冲区，消除每帧 heap 分配 ──
         alignas(16) std::array<float, DEF_FFT_SIZE> fftReal{};
