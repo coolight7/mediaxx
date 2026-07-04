@@ -12,8 +12,6 @@ extern "C" {
 #include "audio_visualization.h"
 #include <cmath>
 #include <cstring>
-#include <fstream>
-#include <iostream>
 #include <stdint.h>
 #include <util/utilxx.h>
 #include <vector>

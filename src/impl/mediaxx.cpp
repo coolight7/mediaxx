@@ -187,11 +187,11 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
         assert(spectrumData.size() == waveformData.size());
         const auto len = mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE * spectrumData.size();
 
-        auto resultWavefrom = (char*)malloc(waveformData.size());
-        std::memcpy((void*)resultWavefrom, waveformData.data(), waveformData.size());
+        auto resultWaveform = (char*)mediaxx_malloc(waveformData.size());
+        std::memcpy((void*)resultWaveform, waveformData.data(), waveformData.size());
 
-        auto resultSpectrums = (char*)malloc(len);
-        int  index           = 0;
+        auto   resultSpectrums = (char*)mediaxx_malloc(len);
+        size_t index           = 0;
         for (auto& spectrum : spectrumData) {
             std::memcpy(
                 (void*)(resultSpectrums + index),
@@ -201,7 +201,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
             index += mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE;
         }
 
-        *outWavefrom  = resultWavefrom;
+        *outWavefrom  = resultWaveform;
         *outSpectrums = resultSpectrums;
         return len;
     }
@@ -216,17 +216,22 @@ FFI_PLUGIN_EXPORT int
     if (nullptr == str || dataSize <= 0) {
         return 0;
     }
-    std::string encoding, result;
-    if (mediaxx::stringxx::chardetConvertEncoding(
-            std::string_view{str, dataSize},
-            encoding,
-            result
-        )) {
-        auto resultPtr = (char*)malloc(result.length() + 1);
-        std::memcpy((void*)resultPtr, result.data(), result.length());
-        resultPtr[result.length()] = '\0';
-        *out                       = resultPtr;
-        return result.size();
+    auto [isSucc, result]
+        = mediaxx::stringxx::autoConvertToUtf8(std::string_view{str, dataSize}, true);
+    if (isSucc) {
+        if (false == result.has_value()) {
+            auto resultPtr = (char*)mediaxx_malloc(dataSize + 1);
+            std::memcpy((void*)resultPtr, str, dataSize);
+            resultPtr[dataSize] = '\0';
+            *out                = resultPtr;
+            return dataSize;
+        }
+        const auto& resultStr = result.value();
+        auto        resultPtr = (char*)mediaxx_malloc(resultStr.length() + 1);
+        std::memcpy((void*)resultPtr, resultStr.data(), resultStr.length());
+        resultPtr[resultStr.length()] = '\0';
+        *out                          = resultPtr;
+        return resultStr.length();
     }
     return 0;
 }

@@ -16,6 +16,7 @@ extern "C" {
 #include <cmath>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace mediaxx {
@@ -46,12 +47,55 @@ namespace mediaxx {
         inline static constexpr uint8_t DEF_U8_CENTER = 128;
         inline static constexpr float   DEF_U8_SCALE  = 128.0f;
 
-        // 预计算的旋转因子表（W_N^k = cosθ - i*sinθ，θ=2kπ/N）
-        std::array<float, DEF_FFT_SIZE / 2> fftTwiddleCos{}; // 实部（cosθ）
-        std::array<float, DEF_FFT_SIZE / 2> fftTwiddleSin{}; // 虚部（-sinθ，提前存储负号）
+        // ── 编译期预计算表 ──
+        inline static constexpr std::array<float, DEF_HANNING_WINDOW_SIZE> makeHanningWindow() {
+            std::array<float, DEF_HANNING_WINDOW_SIZE> arr{};
+            for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; i++) {
+                arr[i] = 0.5f
+                         * (1.0f
+                            - std::cos(
+                                DEF_2PI * static_cast<float>(i)
+                                / static_cast<float>(DEF_HANNING_WINDOW_SIZE - 1)
+                            ));
+            }
+            return arr;
+        }
 
-        std::array<size_t, DEF_FFT_SIZE>           fftBitRevTable{};
-        std::array<float, DEF_HANNING_WINDOW_SIZE> hanningWindow{};
+        inline static constexpr std::array<size_t, DEF_FFT_SIZE> makeBitRevTable() {
+            std::array<size_t, DEF_FFT_SIZE> arr{};
+            for (size_t i = 0; i < DEF_FFT_SIZE; ++i) {
+                size_t bitRev = 0;
+                for (size_t j = 0; j < DEF_FFT_LOG2_SIZE; ++j) {
+                    bitRev |= ((i >> j) & 1) << (DEF_FFT_LOG2_SIZE - 1 - j);
+                }
+                arr[i] = bitRev;
+            }
+            return arr;
+        }
+
+        inline static constexpr std::array<float, DEF_FFT_SIZE / 2> makeTwiddleCos() {
+            std::array<float, DEF_FFT_SIZE / 2> arr{};
+            for (size_t k = 0; k < DEF_FFT_SIZE / 2; ++k) {
+                arr[k]
+                    = std::cos(DEF_2PI * static_cast<float>(k) / static_cast<float>(DEF_FFT_SIZE));
+            }
+            return arr;
+        }
+
+        inline static constexpr std::array<float, DEF_FFT_SIZE / 2> makeTwiddleSin() {
+            std::array<float, DEF_FFT_SIZE / 2> arr{};
+            for (size_t k = 0; k < DEF_FFT_SIZE / 2; ++k) {
+                arr[k]
+                    = -std::sin(DEF_2PI * static_cast<float>(k) / static_cast<float>(DEF_FFT_SIZE));
+            }
+            return arr;
+        }
+
+        inline static const std::array<float, DEF_FFT_SIZE / 2> fftTwiddleCos  = makeTwiddleCos();
+        inline static const std::array<float, DEF_FFT_SIZE / 2> fftTwiddleSin  = makeTwiddleSin();
+        inline static const std::array<size_t, DEF_FFT_SIZE>    fftBitRevTable = makeBitRevTable();
+        inline static const std::array<float, DEF_HANNING_WINDOW_SIZE> hanningWindow
+            = makeHanningWindow();
 
         // ── 预分配复用缓冲区，消除每帧 heap 分配 ──
         alignas(16) std::array<float, DEF_FFT_SIZE> fftReal{};
@@ -68,45 +112,8 @@ namespace mediaxx {
         AudioSpectrumAnalyzer(const AudioSpectrumAnalyzer&)            = delete;
         AudioSpectrumAnalyzer& operator=(const AudioSpectrumAnalyzer&) = delete;
 
-        // 汉宁窗口
-        void createHanningWindow() {
-            assert(hanningWindow.size() == DEF_HANNING_WINDOW_SIZE);
-            hanningWindow.fill(0);
-            for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; i++) {
-                hanningWindow[i]
-                    = 0.5f * (1.0f - std::cos(DEF_2PI * i / (DEF_HANNING_WINDOW_SIZE - 1)));
-            }
-        }
-
-        void precomputeFFTTables() {
-            // 预计算位反转表（针对 512 点 FFT，9 位地址）
-            for (size_t i = 0; i < DEF_FFT_SIZE; ++i) {
-                size_t bitRev = 0;
-                for (size_t j = 0; j < DEF_FFT_LOG2_SIZE; ++j) {
-                    // 逐位反转：将 i 的第 j 位放到 bitRev 的第 (DEF_FFT_LOG2_SIZE-1-j) 位
-                    bitRev |= ((i >> j) & 1) << (DEF_FFT_LOG2_SIZE - 1 - j);
-                }
-                fftBitRevTable[i] = bitRev;
-            }
-
-            // 预计算旋转因子表（W_N^k = cos(2πk/N) - i*sin(2πk/N)）
-            // 只需要计算前 N/2 个，提前存储虚部的负号
-            for (size_t k = 0; k < DEF_FFT_SIZE / 2; ++k) {
-                const float theta = DEF_2PI * k / DEF_FFT_SIZE;
-                fftTwiddleCos[k]  = std::cos(theta);
-                // 提前带负号，减少计算
-                fftTwiddleSin[k] = -std::sin(theta);
-            }
-
-            XX_LOGD(
-                "FFT tables precomputed: bitRevTable size={}, twiddleTable size={}",
-                fftBitRevTable.size(),
-                fftTwiddleCos.size()
-            );
-        }
-
         // 快速傅里叶变换
-        void fft(float* real, float* imag) const {
+        void fft(float* real, float* imag) {
             // 位反转重排
             for (size_t i = 0; i < DEF_FFT_SIZE; ++i) {
                 const size_t j = fftBitRevTable[i];
@@ -148,12 +155,6 @@ namespace mediaxx {
                     }
                 }
             }
-        }
-
-        void init() {
-            createHanningWindow();
-            // 预计算 FFT 旋转因子表和位反转表
-            precomputeFFTTables();
         }
 
         bool computeSpectrum(
@@ -364,8 +365,7 @@ namespace mediaxx {
                         resampledDataSize = outSamplesSize;
                     }
 
-                    haveDecoded = true;
-                    ret         = swr_convert(
+                    ret = swr_convert(
                         swrContext,
                         &resampledData,
                         outSamplesSize,
@@ -373,6 +373,7 @@ namespace mediaxx {
                         decodedFrame->nb_samples
                     );
                     if (ret >= 0) {
+                        haveDecoded = true;
                         // 校验数据
                         if (nullptr != resampledData) {
                             int outSize
@@ -419,12 +420,12 @@ namespace mediaxx {
                 return false;
             }
 
-            init();
-
             AVPacket* packet       = av_packet_alloc();
             AVFrame*  decodedFrame = av_frame_alloc();
             if (nullptr == packet || nullptr == decodedFrame) {
-                XX_LOGE("processAudio: av_packet_alloc failed");
+                XX_LOGE("processAudio: av_packet_alloc or av_frame_alloc failed");
+                av_packet_free(&packet);
+                av_frame_free(&decodedFrame);
                 return false;
             }
             uint8_t*             resampledData     = nullptr;

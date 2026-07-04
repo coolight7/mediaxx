@@ -382,10 +382,10 @@ target_link_directories(mediaxx PUBLIC
 
 target_link_libraries(mediaxx PUBLIC
   ${ffmpeg_mpv_LIBRARIES}
+  iconv
   fmt::fmt
   simdjson
-  iconv
-  libuchardet
+  uchardet
 )
 
 target_compile_options(mediaxx PRIVATE 
