@@ -381,14 +381,22 @@ Future<SendPort> _helperIsolateSendPort = () async {
       _asyncxxRequests.remove(data.id);
       // App接收数据，在这里才转 dartStr，减少拷贝
       if (data is _AsyncxxResponseUInt8List) {
-        data.resultSpectrums = data.resultSpectrumsPtr
-            ?.cast<Uint8>()
-            .asTypedList(data.resultSpectrumsLen)
-            .sublist(0);
-        data.resultWaveform = data.resultWaveformPtr
-            ?.cast<Uint8>()
-            .asTypedList(data.resultWaveformLen)
-            .sublist(0);
+        if (null != data.resultSpectrumsPtr &&
+            nullptr != data.resultSpectrumsPtr) {
+          data.resultSpectrums = Uint8List.fromList(
+            data.resultSpectrumsPtr!.cast<Uint8>().asTypedList(
+              data.resultSpectrumsLen,
+            ),
+          );
+        }
+        if (null != data.resultWaveformPtr &&
+            nullptr != data.resultWaveformPtr) {
+          data.resultWaveform = Uint8List.fromList(
+            data.resultWaveformPtr!.cast<Uint8>().asTypedList(
+              data.resultWaveformLen,
+            ),
+          );
+        }
         data.log = data.logPtr?.cast<Utf8>().tryToDartString();
         completer.complete(data);
 
