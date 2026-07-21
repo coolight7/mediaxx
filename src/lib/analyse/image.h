@@ -727,7 +727,9 @@ namespace mediaxx {
             return nullptr;
         }
 
-        return analysePictureColor(formatCtx, logItem);
+        auto result = analysePictureColor(formatCtx, logItem);
+        avio_context_free(&avioCtx);
+        return std::move(result);
     }
 
     inline std::shared_ptr<AnalysePictureColorResult>

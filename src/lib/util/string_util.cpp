@@ -180,7 +180,7 @@ std::tuple<bool, std::optional<std::string>>
                     // 短字符串容易不准确，需要检查utf8有效性
                     if (*item_ptr == std::string_view{"UTF-8"}) {
                         if (haveCheckUtf8
-                            || false == mediaxx::stringxx::utf8GetLengthCheckAvail(str.data())) {
+                            || false == mediaxx::stringxx::utf8GetLengthCheckAvail(str)) {
                             haveCheckUtf8 = true;
                             continue;
                         }

@@ -555,6 +555,9 @@ Future<SendPort> _helperIsolateSendPort = () async {
           if (null != data.dataPtr) {
             malloc.free(data.dataPtr!);
           }
+          if (null != data.decodedDataPtr) {
+            malloc.free(data.decodedDataPtr!);
+          }
           malloc.free(result);
           malloc.free(log);
           final response = _AsyncxxResponseMediaInfo(
@@ -619,6 +622,9 @@ Future<SendPort> _helperIsolateSendPort = () async {
           );
           final resultPtr = result.value;
 
+          if (null != data.dataPtr) {
+            malloc.free(data.dataPtr);
+          }
           malloc.free(result);
           final response = _AsyncxxResponseStringDefault(
             data.id,
