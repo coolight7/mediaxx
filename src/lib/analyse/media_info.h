@@ -986,6 +986,10 @@ namespace mediaxx {
                                     "转换像素格式从 {} 到 YUVJ420P 失败",
                                     targetFrame->format
                                 ));
+                                // break 会跳出外层 do-while，必须先释放，否则泄漏
+                                av_frame_free(&targetFrame);
+                                av_frame_free(&frame);
+                                av_packet_free(&pkt);
                                 break;
                             }
                         }

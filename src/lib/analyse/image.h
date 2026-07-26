@@ -715,7 +715,9 @@ namespace mediaxx {
 
         auto formatCtx = avformat_alloc_context();
         if (nullptr == formatCtx) {
-            avio_context_free(&avioCtx); // 同时释放 avio_buffer
+            // avio_context_free 只释放上下文结构体，buffer 需单独释放
+            av_freep(&avioCtx->buffer);
+            avio_context_free(&avioCtx);
             return nullptr;
         }
         formatCtx->pb = avioCtx;
@@ -723,11 +725,15 @@ namespace mediaxx {
         if (ret != 0) {
             SET_LOG(logItem, "avformat_open_input: 无法打开数据 | {}", utilxx::av_err2str(ret));
             avformat_free_context(formatCtx);
+            // buffer 可能已被 libavformat 替换，释放当前持有的 buffer
+            av_freep(&avioCtx->buffer);
             avio_context_free(&avioCtx);
             return nullptr;
         }
 
         auto result = analysePictureColor(formatCtx, logItem);
+        // 自定义 IO 时 avformat_close_input 不会释放 avioCtx 及其 buffer
+        av_freep(&avioCtx->buffer);
         avio_context_free(&avioCtx);
         return std::move(result);
     }
