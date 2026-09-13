@@ -175,43 +175,19 @@ namespace mediaxx {
                             auto key   = std::string_view{tag->key};
                             auto value = std::string_view{tag->value};
                             XX_LOGW("tags =============== {} {}", key, value);
-                            const auto  keyAvail   = stringxx::utf8IsAvail(key.data());
-                            const auto  valueAvail = stringxx::utf8IsAvail(value.data());
-                            std::string convertKey, convertValue;
+                            auto [keyAvail, convertKey]
+                                = mediaxx::stringxx::autoConvertToUtf8(key, true);
+                            auto [valueAvail, convertValue]
+                                = mediaxx::stringxx::autoConvertToUtf8(value, true);
                             if (false == keyAvail || false == valueAvail) {
-                                XX_LOGW("tags pair contain '�': '{}': '{}'", key, value);
-#ifndef NDEBUG
-                                if (false == keyAvail) {
-                                    XX_LOGD("  - try convert key:");
-                                    auto [isSucc, result]
-                                        = mediaxx::stringxx::autoConvertToUtf8(key, true);
-                                    if (isSucc) {
-                                        if (result.has_value()) {
-                                            XX_LOGD("    - {}", result.value());
-                                            convertKey = std::move(result.value());
-                                        }
-                                        key = std::string_view{convertKey};
-                                    } else {
-                                        XX_LOGD("    - 自动转换失败");
-                                        continue;
-                                    }
-                                }
-                                if (false == valueAvail) {
-                                    XX_LOGD("  - try convert value:");
-                                    auto [isSucc, result]
-                                        = mediaxx::stringxx::autoConvertToUtf8(value, true);
-                                    if (isSucc) {
-                                        if (result.has_value()) {
-                                            XX_LOGD("    - {}", result.value());
-                                            convertValue = std::move(result.value());
-                                        }
-                                        value = std::string_view{convertValue};
-                                    } else {
-                                        XX_LOGD("    - 自动转换失败");
-                                        continue;
-                                    }
-                                }
-#endif
+                                // 存在不可用，抛弃这个 kv
+                                continue;
+                            }
+                            if (convertKey.has_value()) {
+                                key = convertKey.value();
+                            }
+                            if (convertValue.has_value()) {
+                                value = convertValue.value();
                             }
                             if (false == isFirst) {
                                 result.append_comma();
@@ -298,9 +274,20 @@ namespace mediaxx {
                             if (nullptr != tag && nullptr != tag->key && nullptr != tag->value) {
                                 auto key   = std::string_view{tag->key};
                                 auto value = std::string_view{tag->value};
-                                if (key.contains("�") || value.contains("�")) {
-                                    XX_LOGW("tags pair contain '�': '{}': '{}'", key, value);
+                                // 与 format 级 tag
+                                auto [keyAvail, convertKey]
+                                    = mediaxx::stringxx::autoConvertToUtf8(key, true);
+                                auto [valueAvail, convertValue]
+                                    = mediaxx::stringxx::autoConvertToUtf8(value, true);
+                                if (false == keyAvail || false == valueAvail) {
+                                    // 存在不可用，抛弃这个 kv
                                     continue;
+                                }
+                                if (convertKey.has_value()) {
+                                    key = convertKey.value();
+                                }
+                                if (convertValue.has_value()) {
+                                    value = convertValue.value();
                                 }
                                 if (false == isFirst) {
                                     result.append_comma();
