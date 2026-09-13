@@ -177,10 +177,28 @@ namespace mediaxx {
             const size_t blockSize     = dataSize / DEF_HANNING_WINDOW_SIZE;
             const size_t remainder     = dataSize % DEF_HANNING_WINDOW_SIZE;
 
+            if (dataSize < DEF_HANNING_WINDOW_SIZE) {
+                // 采样点不足一个汉宁窗（低采样率音频，例如 sampleRate < DEF_FPS * DEF_HANNING_WINDOW_SIZE）
+                // 不足的部分按静音 0 处理，见下方 segLen == 0 分支
+                XX_LOGW(
+                    "computeSpectrum: dataSize({}) < hanningWindow({}), 不足部分按静音处理",
+                    dataSize,
+                    DEF_HANNING_WINDOW_SIZE
+                );
+            }
+
             for (size_t i = 0; i < DEF_HANNING_WINDOW_SIZE; ++i) {
                 // 每段长度：前 remainder 段多一个采样
                 const size_t segLen = blockSize + (i < remainder ? 1 : 0);
                 const size_t start  = i * blockSize + (i < remainder ? i : remainder);
+
+                if (0 == segLen) {
+                    // dataSize < DEF_HANNING_WINDOW_SIZE 时 blockSize == 0，
+                    // 从第 remainder 段起没有任何采样点，必须补 0：
+                    // 否则 sum / 0 会得到 NaN，污染整段 FFT（NaN 转 unsigned char 还是 UB）
+                    fftReal[i] = 0.0f;
+                    continue;
+                }
 
                 float sum = 0.0f;
                 for (size_t j = 0; j < segLen; ++j) {
@@ -189,7 +207,7 @@ namespace mediaxx {
                     sum           += val;
                     framePointSum += val * val; // RMS 基于原始采样
                 }
-                fftReal[i] = sum / segLen;
+                fftReal[i] = sum / static_cast<float>(segLen);
             }
 
             // ── 振幅计算（wave）──
@@ -219,14 +237,14 @@ namespace mediaxx {
             fft(fftReal.data(), fftImag.data());
 
             // ── 幅度计算 + 分贝归一化 ──
-            // DC(i=0) 和 Nyquist(i=N/2) 正确除以 N，其余除以 N/2
+            // 只输出前 DEF_SPECTRUM_SIZE 个 bin（0 ~ 255）；FFT_SIZE=512 的 Nyquist bin(256) 不输出，
+            // 所以下面不存在 Nyquist 的单独归一化分支（原来的 i == DEF_SPECTRUM_SIZE 判断永远不成立）
             for (size_t i = 0; i < DEF_SPECTRUM_SIZE; i++) {
                 float magnitude = std::sqrt(fftReal[i] * fftReal[i] + fftImag[i] * fftImag[i]);
 
-                // DC 和 Nyquist 分量除以 N，其他频率分量除以 N/2
-                const float norm = (i == 0 || i == DEF_SPECTRUM_SIZE)
-                                       ? magnitude / DEF_FFT_SIZE
-                                       : magnitude / (DEF_FFT_SIZE / 2);
+                // DC(i=0) 分量除以 N，其余频率分量除以 N/2
+                const float norm = (0 == i) ? magnitude / DEF_FFT_SIZE
+                                            : magnitude / (DEF_FFT_SIZE / 2);
 
                 const float db         = 20.0f * std::log10(norm + 1e-10f);
                 const float normalized = std::clamp(
