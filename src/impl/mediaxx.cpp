@@ -117,6 +117,8 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color(
     assert(nullptr != data || nullptr != filepath);
     assert(nullptr != outResult);
     assert(nullptr != outLog);
+    // 失败分支也要给出确定值，不能依赖调用方预先初始化出参
+    *outResult = nullptr;
 
     auto logItem = mediaxx::AnalyseLogItem_c{outLog};
     if (nullptr != data) {
@@ -147,6 +149,7 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
     assert(nullptr != data && dataSize > 0);
     assert(nullptr != outResult);
     assert(nullptr != outLog);
+    *outResult = nullptr;
 
     // auto logItem = mediaxx::AnalyseLogItem_c{outLog};
     if (nullptr != data) {
@@ -178,6 +181,8 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
     assert(nullptr != outSpectrums);
     assert(nullptr != outWavefrom);
     assert(nullptr != outLog);
+    *outSpectrums = nullptr;
+    *outWavefrom  = nullptr;
 
     mediaxx::AudioSpectrumAnalyzer analyzer{};
     std::vector<std::array<uint8_t, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
@@ -213,6 +218,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
 FFI_PLUGIN_EXPORT int
     mediaxx_convert_char_encoding(const char* str, const size_t dataSize, const char** out) {
     assert(nullptr != out);
+    *out = nullptr;
     if (nullptr == str || dataSize <= 0) {
         return 0;
     }
