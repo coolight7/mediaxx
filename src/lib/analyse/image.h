@@ -10,6 +10,7 @@ extern "C" {
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <random>
@@ -294,16 +295,22 @@ namespace mediaxx {
                         totalWeight += color.count;
                     }
 
+                    const auto newR = static_cast<uint8_t>(totalR / totalWeight);
+                    const auto newG = static_cast<uint8_t>(totalG / totalWeight);
+                    const auto newB = static_cast<uint8_t>(totalB / totalWeight);
+                    // count 必须是该簇的像素总数（权重和），不能写死成 1，否则：
+                    //   - 输出 JSON 的 mainColor / dominantColors[].count 恒为 1，客户端无法按占比排序
+                    //   - calculateVisualScore() 里的“流行度”项退化成常数，主色选择丢掉流行度因素
+                    const auto newCount
+                        = totalWeight > double(std::numeric_limits<int>::max())
+                              ? std::numeric_limits<int>::max()
+                              : int(totalWeight);
                     auto newCentroid = Color{
-                        static_cast<uint8_t>(totalR / totalWeight),
-                        static_cast<uint8_t>(totalG / totalWeight),
-                        static_cast<uint8_t>(totalB / totalWeight),
-                        1,
-                        int(calculateBrightness(
-                            static_cast<uint8_t>(totalR / totalWeight),
-                            static_cast<uint8_t>(totalG / totalWeight),
-                            static_cast<uint8_t>(totalB / totalWeight)
-                        ))
+                        newR,
+                        newG,
+                        newB,
+                        newCount,
+                        int(calculateBrightness(newR, newG, newB))
                     };
 
                     if (colorDistance(newCentroid, centroids[i]) > 1.0) {
@@ -389,24 +396,36 @@ namespace mediaxx {
             dominantColors = clusterer.getCentroids();
 
             // 按视觉重要性排序（亮度、饱和度和流行度）
+            int maxCount = 0;
+            for (const auto& color : dominantColors) {
+                maxCount = std::max(maxCount, color.count);
+            }
             std::sort(
                 dominantColors.begin(),
                 dominantColors.end(),
-                [](const Color& a, const Color& b) {
-                    return calculateVisualScore(a) > calculateVisualScore(b);
+                [maxCount](const Color& a, const Color& b) {
+                    return calculateVisualScore(a, maxCount)
+                           > calculateVisualScore(b, maxCount);
                 }
             );
         }
 
-        static double calculateVisualScore(const Color& color) {
+        // [maxCount] 候选颜色里最大的簇权重，用于把“流行度”归一到 0 ~ 1
+        static double calculateVisualScore(const Color& color, int maxCount = 1) {
             double h, s, l;
             rgbToHsl(color.r, color.g, color.b, h, s, l);
 
-            // 综合考虑饱和度、亮度和颜色流行度
+            // 综合考虑饱和度、亮度和颜色流行度（三项都归一到 0 ~ 1，权重 0.4/0.3/0.3 才有意义）
             double saturationScore = s * 0.4;
             // 偏好中等亮度
             double lightnessScore  = (1.0 - std::abs(l - 0.6)) * 0.3;
-            double populationScore = std::log1p(color.count) * 0.3;
+            // 流行度：簇权重是像素数（1 ~ 百万级），直接 log1p(count) 会压过另外两项，
+            // 因此按最大权重做对数归一后再乘权重
+            double popularity      = (maxCount > 1)
+                                         ? std::log1p(double(std::max(color.count, 0)))
+                                               / std::log1p(double(maxCount))
+                                         : 0.0;
+            double populationScore = popularity * 0.3;
 
             return saturationScore + lightnessScore + populationScore;
         }
