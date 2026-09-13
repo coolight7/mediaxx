@@ -299,13 +299,13 @@ namespace mediaxx {
                     const auto newG = static_cast<uint8_t>(totalG / totalWeight);
                     const auto newB = static_cast<uint8_t>(totalB / totalWeight);
                     // count 必须是该簇的像素总数（权重和），不能写死成 1，否则：
-                    //   - 输出 JSON 的 mainColor / dominantColors[].count 恒为 1，客户端无法按占比排序
+                    //   - 输出 JSON 的 mainColor / dominantColors[].count 恒为
+                    //   1，客户端无法按占比排序
                     //   - calculateVisualScore() 里的“流行度”项退化成常数，主色选择丢掉流行度因素
-                    const auto newCount
-                        = totalWeight > double(std::numeric_limits<int>::max())
-                              ? std::numeric_limits<int>::max()
-                              : int(totalWeight);
-                    auto newCentroid = Color{
+                    const auto newCount    = totalWeight > double(std::numeric_limits<int>::max())
+                                                 ? std::numeric_limits<int>::max()
+                                                 : int(totalWeight);
+                    auto       newCentroid = Color{
                         newR,
                         newG,
                         newB,
@@ -404,8 +404,7 @@ namespace mediaxx {
                 dominantColors.begin(),
                 dominantColors.end(),
                 [maxCount](const Color& a, const Color& b) {
-                    return calculateVisualScore(a, maxCount)
-                           > calculateVisualScore(b, maxCount);
+                    return calculateVisualScore(a, maxCount) > calculateVisualScore(b, maxCount);
                 }
             );
         }
@@ -418,13 +417,12 @@ namespace mediaxx {
             // 综合考虑饱和度、亮度和颜色流行度（三项都归一到 0 ~ 1，权重 0.4/0.3/0.3 才有意义）
             double saturationScore = s * 0.4;
             // 偏好中等亮度
-            double lightnessScore  = (1.0 - std::abs(l - 0.6)) * 0.3;
+            double lightnessScore = (1.0 - std::abs(l - 0.6)) * 0.3;
             // 流行度：簇权重是像素数（1 ~ 百万级），直接 log1p(count) 会压过另外两项，
             // 因此按最大权重做对数归一后再乘权重
-            double popularity      = (maxCount > 1)
-                                         ? std::log1p(double(std::max(color.count, 0)))
-                                               / std::log1p(double(maxCount))
-                                         : 0.0;
+            double popularity      = (maxCount > 1) ? std::log1p(double(std::max(color.count, 0)))
+                                                     / std::log1p(double(maxCount))
+                                                    : 0.0;
             double populationScore = popularity * 0.3;
 
             return saturationScore + lightnessScore + populationScore;
@@ -754,7 +752,7 @@ namespace mediaxx {
         // 自定义 IO 时 avformat_close_input 不会释放 avioCtx 及其 buffer
         av_freep(&avioCtx->buffer);
         avio_context_free(&avioCtx);
-        return std::move(result);
+        return result;
     }
 
     inline std::shared_ptr<AnalysePictureColorResult>
