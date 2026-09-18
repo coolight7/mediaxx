@@ -66,8 +66,9 @@ Future<(int ret, String? log)> mediaxx_get_media_picture(
   String filepath,
   String headers,
   String pictureOutputPath,
-  String picture96OutputPath,
-) async {
+  String picture96OutputPath, [
+  String pictureDisplayOutputPath = "",
+]) async {
   final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
   final int requestId = _nextAsyncxxRequestId++;
   final request = _AsyncxxRequestMediaPicture(
@@ -76,6 +77,7 @@ Future<(int ret, String? log)> mediaxx_get_media_picture(
     headers: headers,
     pictureOutputPath: pictureOutputPath,
     picture96OutputPath: picture96OutputPath,
+    pictureDisplayOutputPath: pictureDisplayOutputPath,
   );
   final completer = Completer<_AsyncxxResponseDefault>();
   _asyncxxRequests[requestId] = completer;
@@ -124,13 +126,17 @@ mediaxx_analyse_picture_color_from_decoded_data(Uint8List data) async {
 Future<
   (int ret, Uint8List? resultSpectrums, Uint8List? resultWaveform, String? log)
 >
-mediaxx_get_audio_visualization(final String? filepath) async {
+mediaxx_get_audio_visualization(
+  final String? filepath, {
+  int maxDurationSeconds = 0,
+}) async {
   assert(null != filepath);
   final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
   final int requestId = _nextAsyncxxRequestId++;
   final request = _AsyncxxRequestAnalyseAudioVisualization(
     requestId,
     filepath: filepath,
+    maxDurationSeconds: maxDurationSeconds,
   );
   final completer = Completer<_AsyncxxResponseUInt8List>();
   _asyncxxRequests[requestId] = completer;
@@ -211,24 +217,19 @@ class _AsyncxxRequestMediaInfo {
 class _AsyncxxResponseUInt8List {
   final int id;
   final int ret;
-  final int resultSpectrumsLen;
-  final Pointer<Char>? resultSpectrumsPtr;
-  final int resultWaveformLen;
-  final Pointer<Char>? resultWaveformPtr;
-  final Pointer<Char>? logPtr;
+  final TransferableTypedData? transferableSpectrums;
+  final TransferableTypedData? transferableWaveform;
+  final String? log;
 
   Uint8List? resultSpectrums;
   Uint8List? resultWaveform;
-  String? log;
 
   _AsyncxxResponseUInt8List(
     this.id, {
     required this.ret,
-    required this.resultSpectrumsLen,
-    this.resultSpectrumsPtr,
-    required this.resultWaveformLen,
-    this.resultWaveformPtr,
-    this.logPtr,
+    this.transferableSpectrums,
+    this.transferableWaveform,
+    this.log,
   });
 }
 
@@ -256,6 +257,7 @@ class _AsyncxxRequestMediaPicture {
   late Pointer<Char> headersPtr;
   late Pointer<Char> pictureOutputPathPtr;
   late Pointer<Char> picture96OutputPathPtr;
+  late Pointer<Char> pictureDisplayOutputPathPtr;
 
   bool isDispose = false;
 
@@ -265,11 +267,14 @@ class _AsyncxxRequestMediaPicture {
     required String headers,
     required String pictureOutputPath,
     required String picture96OutputPath,
+    String pictureDisplayOutputPath = "",
   }) {
     filepathPtr = filepath.toNativeUtf8().cast<Char>();
     headersPtr = headers.toNativeUtf8().cast<Char>();
     pictureOutputPathPtr = pictureOutputPath.toNativeUtf8().cast<Char>();
     picture96OutputPathPtr = picture96OutputPath.toNativeUtf8().cast<Char>();
+    pictureDisplayOutputPathPtr =
+        pictureDisplayOutputPath.toNativeUtf8().cast<Char>();
   }
 }
 
@@ -311,12 +316,14 @@ class _AsyncxxRequestAnalyseAudioVisualization {
   final int id;
 
   late Pointer<Char>? filepathPtr;
+  final int maxDurationSeconds;
 
   bool isDispose = false;
 
   _AsyncxxRequestAnalyseAudioVisualization(
     this.id, {
     required String? filepath,
+    this.maxDurationSeconds = 0,
   }) {
     filepathPtr = filepath?.toNativeUtf8().cast<Char>();
   }
@@ -381,34 +388,15 @@ Future<SendPort> _helperIsolateSendPort = () async {
       _asyncxxRequests.remove(data.id);
       // App接收数据，在这里才转 dartStr，减少拷贝
       if (data is _AsyncxxResponseUInt8List) {
-        if (null != data.resultSpectrumsPtr &&
-            nullptr != data.resultSpectrumsPtr) {
-          data.resultSpectrums = Uint8List.fromList(
-            data.resultSpectrumsPtr!.cast<Uint8>().asTypedList(
-              data.resultSpectrumsLen,
-            ),
-          );
+        if (null != data.transferableSpectrums) {
+          data.resultSpectrums =
+              data.transferableSpectrums!.materialize().asUint8List();
         }
-        if (null != data.resultWaveformPtr &&
-            nullptr != data.resultWaveformPtr) {
-          data.resultWaveform = Uint8List.fromList(
-            data.resultWaveformPtr!.cast<Uint8>().asTypedList(
-              data.resultWaveformLen,
-            ),
-          );
+        if (null != data.transferableWaveform) {
+          data.resultWaveform =
+              data.transferableWaveform!.materialize().asUint8List();
         }
-        data.log = data.logPtr?.cast<Utf8>().tryToDartString();
         completer.complete(data);
-
-        if (null != data.resultSpectrumsPtr) {
-          malloc.free(data.resultSpectrumsPtr!);
-        }
-        if (null != data.resultWaveformPtr) {
-          malloc.free(data.resultWaveformPtr!);
-        }
-        if (null != data.logPtr && nullptr != data.logPtr) {
-          malloc.free(data.logPtr!);
-        }
         return;
       } else if (data is _AsyncxxResponseMediaInfo) {
         data.result = data.resultPtr?.cast<Utf8>().tryToDartString();
@@ -493,6 +481,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
           final headersPtr = data.headersPtr;
           final pictureOutputPathPtr = data.pictureOutputPathPtr;
           final picture96OutputPathPtr = data.picture96OutputPathPtr;
+          final pictureDisplayOutputPathPtr = data.pictureDisplayOutputPathPtr;
           final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
           log.value = nullptr;
 
@@ -501,6 +490,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
             headersPtr,
             pictureOutputPathPtr,
             picture96OutputPathPtr,
+            pictureDisplayOutputPathPtr,
             log,
           );
           final logPtr = log.value;
@@ -509,6 +499,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
           malloc.free(headersPtr);
           malloc.free(pictureOutputPathPtr);
           malloc.free(picture96OutputPathPtr);
+          malloc.free(pictureDisplayOutputPathPtr);
           malloc.free(log);
           final response = _AsyncxxResponseDefault(
             data.id,
@@ -585,6 +576,7 @@ Future<SendPort> _helperIsolateSendPort = () async {
             resultSpectrums,
             resultWaveform,
             log,
+            data.maxDurationSeconds,
           );
           final resultSpectrumsPtr = resultSpectrums.value;
           final resultWaveformPtr = resultWaveform.value;
@@ -596,18 +588,50 @@ Future<SendPort> _helperIsolateSendPort = () async {
           malloc.free(resultSpectrums);
           malloc.free(resultWaveform);
           malloc.free(log);
+
+          TransferableTypedData? transferableSpectrums;
+          TransferableTypedData? transferableWaveform;
+          if (ret > 0 &&
+              nullptr != resultSpectrumsPtr &&
+              nullptr != resultWaveformPtr) {
+            final spectrumsTypedList = resultSpectrumsPtr
+                .cast<Uint8>()
+                .asTypedList(ret);
+            final waveformLen = ret ~/ 256;
+            final waveformTypedList = resultWaveformPtr
+                .cast<Uint8>()
+                .asTypedList(waveformLen);
+
+            // 拷贝至可高效跨 Isolate 零拷贝传递的 TransferableTypedData，随即释放底层 C++ 原生堆内存
+            transferableSpectrums = TransferableTypedData.fromList([
+              Uint8List.fromList(spectrumsTypedList),
+            ]);
+            transferableWaveform = TransferableTypedData.fromList([
+              Uint8List.fromList(waveformTypedList),
+            ]);
+            mediaxx_free(resultSpectrumsPtr);
+            mediaxx_free(resultWaveformPtr);
+          } else {
+            if (nullptr != resultSpectrumsPtr) {
+              mediaxx_free(resultSpectrumsPtr);
+            }
+            if (nullptr != resultWaveformPtr) {
+              mediaxx_free(resultWaveformPtr);
+            }
+          }
+
+          final logStr =
+              (nullptr != logPtr) ? logPtr.cast<Utf8>().tryToDartString() : null;
+          if (nullptr != logPtr) {
+            mediaxx_free(logPtr);
+          }
+
           final response = _AsyncxxResponseUInt8List(
             data.id,
             ret: ret,
-            resultSpectrumsLen: ret, // 返回值为长度
-            resultSpectrumsPtr: (nullptr != resultSpectrumsPtr)
-                ? resultSpectrumsPtr
-                : null,
-            resultWaveformLen: ret ~/ 256,
-            resultWaveformPtr: (nullptr != resultWaveformPtr)
-                ? resultWaveformPtr
-                : null,
-            logPtr: (nullptr != logPtr) ? logPtr : null,
+            transferableSpectrums: transferableSpectrums,
+            transferableWaveform: transferableWaveform,
+            log: logStr,
           );
           sendPort.send(response);
           return;

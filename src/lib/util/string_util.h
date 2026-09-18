@@ -394,11 +394,11 @@ namespace mediaxx {
             return length;
         }
 
-        [[nodiscard]] inline constexpr bool utf8IsAvail(std::string_view str) {
+        [[nodiscard]] inline constexpr bool utf8IsAvail(std::string_view str, bool allowBackstop = false) {
             if (str.empty() || str[0] == '\0') {
-                return true;
+                return false;
             }
-            return utf8GetLengthCheckAvail(str) != 0;
+            return utf8GetLengthCheckAvail(str, allowBackstop) != 0;
         }
 
         /// 修复非法 UTF-8: 将每一处非法字节序列 (按 Unicode 推荐的
@@ -624,6 +624,11 @@ namespace mediaxx {
 
         [[nodiscard]] std::tuple<bool, std::optional<std::string>>
             autoConvertToUtf8(std::string_view str, bool _);
+
+        [[nodiscard]] inline std::tuple<bool, std::optional<std::string>>
+            autoConvertToUtf8(std::string_view str, std::string& encoding) {
+            return autoConvertCharset(str, encoding, "UTF-8");
+        }
 
         bool autoConvertToUtf8(std::string& str);
 

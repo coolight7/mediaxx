@@ -427,7 +427,8 @@ namespace mediaxx {
         int savePicture(
             MediaInfoEntity_c&     item,
             const std::string_view outputStr,
-            const std::string_view output96Str
+            const std::string_view output96Str,
+            const std::string_view outputDisplayStr = {}
         ) {
             XX_LOGD("savePicture: {}", item.filepath);
             auto const fmtCtx = item.fmtCtx;
@@ -440,7 +441,7 @@ namespace mediaxx {
                 AVCodecParameters* codecPar = stream->codecpar;
                 switch (codecPar->codec_type) {
                 case AVMEDIA_TYPE_VIDEO:
-                    return tryGetPicture(item, stream, outputStr, output96Str);
+                    return tryGetPicture(item, stream, outputStr, output96Str, outputDisplayStr);
                 case AVMEDIA_TYPE_AUDIO:
                 default:
                     break;
@@ -878,7 +879,8 @@ namespace mediaxx {
             MediaInfoEntity_c&     item,
             AVStream*              stream,
             const std::string_view outputPath,
-            const std::string_view output96Path
+            const std::string_view output96Path,
+            const std::string_view outputDisplayPath = {}
         ) {
             if (outputPath.empty()) {
                 item.setLog("缺少输出路径");
@@ -904,11 +906,27 @@ namespace mediaxx {
                         file.write(reinterpret_cast<const char*>(pkt.data), pkt.size);
                         file.close();
                         result = 1;
+                        bool ok96      = false;
+                        bool okDisplay = false;
+                        if (false == outputDisplayPath.empty()) {
+                            XX_LOGD("tryGetPicture: savePictureScaleByStream-512");
+                            okDisplay = savePictureScaleByStream(
+                                item,
+                                &pkt,
+                                stream,
+                                outputDisplayPath,
+                                512,
+                                5
+                            );
+                        }
                         if (false == output96Path.empty()) {
                             XX_LOGD("tryGetPicture: savePictureScaleByStream-96");
-                            if (savePictureScaleByStream(item, &pkt, stream, output96Path, 96, 8)) {
-                                result = 2;
-                            }
+                            ok96 = savePictureScaleByStream(item, &pkt, stream, output96Path, 96, 8);
+                        }
+                        if (outputDisplayPath.empty()) {
+                            result = ok96 ? 2 : 1;
+                        } else {
+                            result = 1 | (ok96 ? 2 : 0) | (okDisplay ? 4 : 0);
                         }
                     } else {
                         item.setLog(fmt::format("输出文件打开失败: {}", outputPath));
@@ -987,11 +1005,25 @@ namespace mediaxx {
                         }
 
                         if (saveFrameAsJPEG(item, useFrame, outputPath, -1, -1, 2)) {
-                            result = 1;
+                            result         = 1;
+                            bool ok96      = false;
+                            bool okDisplay = false;
+                            if (false == outputDisplayPath.empty()) {
+                                okDisplay = saveFrameAsJPEGWithScale(
+                                    item,
+                                    useFrame,
+                                    outputDisplayPath,
+                                    512,
+                                    5
+                                );
+                            }
                             if (false == output96Path.empty()) {
-                                if (saveFrameAsJPEGWithScale(item, useFrame, output96Path, 96, 8)) {
-                                    result = 2;
-                                }
+                                ok96 = saveFrameAsJPEGWithScale(item, useFrame, output96Path, 96, 8);
+                            }
+                            if (outputDisplayPath.empty()) {
+                                result = ok96 ? 2 : 1;
+                            } else {
+                                result = 1 | (ok96 ? 2 : 0) | (okDisplay ? 4 : 0);
                             }
                         }
                     }

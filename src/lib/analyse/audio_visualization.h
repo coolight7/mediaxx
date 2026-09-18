@@ -24,10 +24,12 @@ namespace mediaxx {
     class AudioSpectrumAnalyzer {
     private:
 
-        AVFormatContext* formatContext    = nullptr;
-        AVCodecContext*  codecContext     = nullptr;
-        SwrContext*      swrContext       = nullptr;
-        int              audioStreamIndex = -1;
+        AVFormatContext* formatContext     = nullptr;
+        AVCodecContext*  codecContext      = nullptr;
+        SwrContext*      swrContext        = nullptr;
+        int              audioStreamIndex  = -1;
+        uint8_t*         resampledData     = nullptr;
+        int              resampledDataSize = 0;
 
     public:
 
@@ -46,6 +48,90 @@ namespace mediaxx {
         // UINT8音频采样的中心值（归一化用）
         inline static constexpr uint8_t DEF_U8_CENTER = 128;
         inline static constexpr float   DEF_U8_SCALE  = 128.0f;
+
+        /// 固定容量环形缓冲区，用于流式音频采样分析，消除动态 vector 的反复扩容与内存前移
+        class AudioRingBuffer {
+        private:
+
+            std::vector<uint8_t> buffer;
+            size_t               head  = 0;
+            size_t               tail  = 0;
+            size_t               count = 0;
+
+        public:
+
+            void init(size_t capacity) {
+                buffer.assign(capacity, DEF_U8_CENTER);
+                head  = 0;
+                tail  = 0;
+                count = 0;
+            }
+
+            [[nodiscard]] size_t size() const noexcept {
+                return count;
+            }
+
+            [[nodiscard]] size_t capacity() const noexcept {
+                return buffer.size();
+            }
+
+            [[nodiscard]] size_t available_write() const noexcept {
+                return buffer.size() - count;
+            }
+
+            void write(const uint8_t* data, size_t n) {
+                if (0 == n) {
+                    return;
+                }
+                if (n > available_write()) {
+                    const size_t         newCap = std::max(buffer.size() * 2, count + n);
+                    std::vector<uint8_t> newBuf(newCap, DEF_U8_CENTER);
+                    if (count > 0) {
+                        const size_t firstChunk = std::min(count, buffer.size() - tail);
+                        std::memcpy(newBuf.data(), buffer.data() + tail, firstChunk);
+                        if (count > firstChunk) {
+                            std::memcpy(
+                                newBuf.data() + firstChunk,
+                                buffer.data(),
+                                count - firstChunk
+                            );
+                        }
+                    }
+                    buffer = std::move(newBuf);
+                    tail   = 0;
+                    head   = count;
+                }
+                const size_t cap        = buffer.size();
+                const size_t firstChunk = std::min(n, cap - head);
+                std::memcpy(buffer.data() + head, data, firstChunk);
+                if (n > firstChunk) {
+                    std::memcpy(buffer.data(), data + firstChunk, n - firstChunk);
+                }
+                head  = (head + n) % cap;
+                count += n;
+            }
+
+            void read(uint8_t* dest, size_t n) {
+                assert(n <= count);
+                if (0 == n) {
+                    return;
+                }
+                const size_t cap        = buffer.size();
+                const size_t firstChunk = std::min(n, cap - tail);
+                std::memcpy(dest, buffer.data() + tail, firstChunk);
+                if (n > firstChunk) {
+                    std::memcpy(dest + firstChunk, buffer.data(), n - firstChunk);
+                }
+                tail  = (tail + n) % cap;
+                count -= n;
+            }
+
+            void clear() {
+                head  = 0;
+                tail  = 0;
+                count = 0;
+            }
+        };
 
         // ── 编译期预计算表 ──
         inline static constexpr std::array<float, DEF_HANNING_WINDOW_SIZE> makeHanningWindow() {
@@ -338,18 +424,32 @@ namespace mediaxx {
                 return false;
             }
 
+            // 预分配重采样缓冲区（至少能容纳两帧并设有底线容量），避免解码循环中反复分配
+            resampledDataSize
+                = std::max(out_sample_rate / static_cast<int>(DEF_FPS) * 2, 16384);
+            ret = av_samples_alloc(
+                &resampledData,
+                nullptr,
+                1,
+                resampledDataSize,
+                AV_SAMPLE_FMT_U8,
+                0
+            );
+            if (ret < 0) {
+                resampledData     = nullptr;
+                resampledDataSize = 0;
+            }
+
             XX_LOGD("openAudioFile success");
             return true;
         }
 
         bool decodeAudioFrame(
-            std::vector<uint8_t>& data,
-            AVPacket*             packet,
-            AVFrame*              decodedFrame,
-            uint8_t*&             resampledData,
-            int&                  resampledDataSize
+            AudioRingBuffer& ringBuffer,
+            AVPacket*        packet,
+            AVFrame*         decodedFrame
         ) {
-            // packet can be nullptr
+            // packet can be nullptr (flush)
             if (!codecContext || !decodedFrame) {
                 XX_LOGE("decodeAudioFrame: invalid parameters");
                 return false;
@@ -378,6 +478,8 @@ namespace mediaxx {
                             0
                         );
                         if (ret < 0) {
+                            resampledData     = nullptr;
+                            resampledDataSize = 0;
                             return false;
                         }
                         resampledDataSize = outSamplesSize;
@@ -392,11 +494,17 @@ namespace mediaxx {
                     );
                     if (ret >= 0) {
                         haveDecoded = true;
-                        // 校验数据
-                        if (nullptr != resampledData) {
-                            int outSize
-                                = av_samples_get_buffer_size(nullptr, 1, ret, AV_SAMPLE_FMT_U8, 0);
-                            data.insert(data.end(), resampledData, resampledData + outSize);
+                        if (nullptr != resampledData && ret > 0) {
+                            int outSize = av_samples_get_buffer_size(
+                                nullptr,
+                                1,
+                                ret,
+                                AV_SAMPLE_FMT_U8,
+                                0
+                            );
+                            if (outSize > 0) {
+                                ringBuffer.write(resampledData, static_cast<size_t>(outSize));
+                            }
                         } else {
                             XX_LOGW("swr_convert: no valid data (nb_samples: {})", ret);
                         }
@@ -412,10 +520,12 @@ namespace mediaxx {
 
         // [outputSpectrum] 时间-频率-振幅
         // [outputWaveform] 时间-振幅数据
+        // [maxDurationSeconds] 最大分析音频时长（秒），<= 0 时不限制全曲分析
         bool processAudio(
             const char*                                                filepath,
             std::vector<std::array<unsigned char, DEF_SPECTRUM_SIZE>>& outputSpectrum,
-            std::vector<unsigned char>&                                outputWaveform
+            std::vector<unsigned char>&                                outputWaveform,
+            int                                                        maxDurationSeconds = 0
         ) {
             // 清空输出
             outputSpectrum.clear();
@@ -438,6 +548,26 @@ namespace mediaxx {
                 return false;
             }
 
+            // 初始化固定大小环形缓冲区（约 8 帧容量，至少 64 KB），消除动态扩容与大内存前移
+            AudioRingBuffer ringBuffer;
+            const size_t    ringCapacity = std::max(samplesPerFrame * 8, size_t(65536));
+            ringBuffer.init(ringCapacity);
+
+            // 预分配单帧缓冲区，避免在分析过程中频繁分配内存
+            std::vector<uint8_t> frameBuffer(samplesPerFrame, DEF_U8_CENTER);
+
+            // 预估输出帧数并预留空间，避免 outputSpectrum 多次动态扩容与重分配
+            int64_t durationUs = formatContext->duration;
+            if (durationUs > 0) {
+                double durationSec = static_cast<double>(durationUs) / AV_TIME_BASE;
+                if (maxDurationSeconds > 0 && durationSec > maxDurationSeconds) {
+                    durationSec = maxDurationSeconds;
+                }
+                size_t estimatedFrames = static_cast<size_t>(durationSec * DEF_FPS) + 10;
+                outputSpectrum.reserve(estimatedFrames);
+                outputWaveform.reserve(estimatedFrames);
+            }
+
             AVPacket* packet       = av_packet_alloc();
             AVFrame*  decodedFrame = av_frame_alloc();
             if (nullptr == packet || nullptr == decodedFrame) {
@@ -446,56 +576,43 @@ namespace mediaxx {
                 av_frame_free(&decodedFrame);
                 return false;
             }
-            uint8_t*             resampledData     = nullptr;
-            int                  resampledDataSize = 0;
-            std::vector<uint8_t> accumulatedAudio{};
-            // ── 用偏移指针替代 erase，消除 O(N) memmove ──
-            size_t processedOffset = 0;
-            auto   usePacket       = packet;
+
+            auto usePacket    = packet;
+            bool reachedLimit = false;
 
             while (true) {
                 int ret = av_read_frame(formatContext, usePacket);
                 if (ret >= 0) {
                     assert(nullptr != usePacket);
-                } else if (false == outputSpectrum.empty()) {
-                    // 读取失败，但之前积累读取数据，可能是到达末尾，最后调用一次解码
+                } else if (false == outputSpectrum.empty() || ringBuffer.size() > 0) {
+                    // 读取失败但之前积累读取数据，可能是到达末尾，最后调用一次解码冲洗
                     usePacket = nullptr;
                 } else {
                     // 读取失败
                     break;
                 }
                 if (nullptr == usePacket || usePacket->stream_index == audioStreamIndex) {
-                    // 解码并积累音频数据
-                    if (decodeAudioFrame(
-                            accumulatedAudio,
-                            usePacket,
-                            decodedFrame,
-                            resampledData,
-                            resampledDataSize
-                        )) {
-                        // 用指针偏移代替 erase
-                        while (accumulatedAudio.size() - processedOffset >= samplesPerFrame) {
-                            const uint8_t* frameData = accumulatedAudio.data() + processedOffset;
+                    // 解码并积累音频数据到环形缓冲
+                    if (decodeAudioFrame(ringBuffer, usePacket, decodedFrame)) {
+                        // 当环形缓冲区中数据达到一帧时，流式取出计算，无需保留全曲数据
+                        while (ringBuffer.size() >= samplesPerFrame) {
+                            ringBuffer.read(frameBuffer.data(), samplesPerFrame);
 
-                            // 计算频谱数据
+                            // 计算频谱数据与波形振幅数据
                             outputSpectrum.emplace_back();
-                            // 波形振幅数据
                             outputWaveform.emplace_back(0);
                             computeSpectrum(
                                 samplesPerFrame,
-                                frameData,
+                                frameBuffer.data(),
                                 outputSpectrum.back(),
                                 outputWaveform.back()
                             );
-                            processedOffset += samplesPerFrame;
 
-                            // ── 定期 compact，避免 offset 无限增长 ──
-                            if (processedOffset >= samplesPerFrame * DEF_FPS * 2) {
-                                accumulatedAudio.erase(
-                                    accumulatedAudio.begin(),
-                                    accumulatedAudio.begin() + processedOffset
-                                );
-                                processedOffset = 0;
+                            if (maxDurationSeconds > 0
+                                && outputSpectrum.size()
+                                       >= static_cast<size_t>(maxDurationSeconds * DEF_FPS)) {
+                                reachedLimit = true;
+                                break;
                             }
                         }
                     }
@@ -506,25 +623,25 @@ namespace mediaxx {
                 } else {
                     break;
                 }
+
+                if (reachedLimit) {
+                    break;
+                }
             }
             av_packet_free(&packet);
             av_frame_free(&decodedFrame);
-            av_freep(&resampledData);
 
-            // 处理剩余数据,不足一帧时填充0
-            const size_t remaining = accumulatedAudio.size() - processedOffset;
-            if (remaining > 0) {
-                // 拷贝剩余数据到开头并补齐
-                std::vector<uint8_t> lastFrame(samplesPerFrame, DEF_U8_CENTER);
-                for (size_t i = 0; i < remaining; ++i) {
-                    lastFrame[i] = accumulatedAudio[processedOffset + i];
-                }
+            // 处理剩余数据，不足一帧时填充静音（DEF_U8_CENTER）完成最后一帧计算
+            if (!reachedLimit && ringBuffer.size() > 0) {
+                const size_t remaining = ringBuffer.size();
+                ringBuffer.read(frameBuffer.data(), remaining);
+                std::fill(frameBuffer.begin() + remaining, frameBuffer.end(), DEF_U8_CENTER);
 
                 outputSpectrum.emplace_back();
                 outputWaveform.emplace_back(0);
                 computeSpectrum(
                     samplesPerFrame,
-                    lastFrame.data(),
+                    frameBuffer.data(),
                     outputSpectrum.back(),
                     outputWaveform.back()
                 );
@@ -532,11 +649,16 @@ namespace mediaxx {
 
             cleanup();
             assert(outputSpectrum.size() == outputWaveform.size());
-            return (outputSpectrum.size() > 0 && outputWaveform.size() > 0);
+            return (!outputSpectrum.empty() && !outputWaveform.empty());
         }
 
         void cleanup() {
             XX_LOGD("AudioVisuallizationAnalyzer / cleanup ...");
+            if (resampledData) {
+                av_freep(&resampledData);
+                resampledData     = nullptr;
+                resampledDataSize = 0;
+            }
             if (swrContext) {
                 swr_free(&swrContext);
                 swrContext = nullptr;

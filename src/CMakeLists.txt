@@ -385,7 +385,7 @@ target_link_libraries(mediaxx PUBLIC
   iconv
   fmt::fmt
   simdjson
-  uchardet
+  libuchardet
 )
 
 target_compile_options(mediaxx PRIVATE 
@@ -428,6 +428,7 @@ elseif (IS_ANDROID_D)
     target_link_options(mediaxx PRIVATE 
       "-Wl,@${mediaxx_EXPORT_KEEP_SYMBOL}"
       "-Wl,--version-script=${mediaxx_EXPORT_IDS}"
+      "-Wl,--exclude-libs,ALL"
     )
   endif()
 elseif (IS_LINUX_D)

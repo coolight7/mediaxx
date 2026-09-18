@@ -136,17 +136,20 @@ class MediaxxBindings {
   ///
   /// ## Args:
   /// - [filepath] 必要，音视频文件路径
+  /// - [headers] 网络请求头部
   /// - [pictureOutputPath] 必要，完整图片保存本地路径
   /// - [picture96OutputPath] 可选，缩略图保存本地路径; 指定 [pictureOutputPath]
   /// 后这个参数才有效
+  /// - [pictureDisplayOutputPath] 可选，标准显示尺寸（512）缩放封面保存本地路径
   ///
   /// ## Return:
-  /// - 返回操作是否成功
+  /// - 返回操作结果位掩码 (bit 0: 原图成功, bit 1: 96缩略图成功, bit 2: 512显示图成功)
   int mediaxx_get_media_picture(
     ffi.Pointer<ffi.Char> filepath,
     ffi.Pointer<ffi.Char> headers,
     ffi.Pointer<ffi.Char> pictureOutputPath,
     ffi.Pointer<ffi.Char> picture96OutputPath,
+    ffi.Pointer<ffi.Char> pictureDisplayOutputPath,
     ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
   ) {
     return _mediaxx_get_media_picture(
@@ -154,6 +157,7 @@ class MediaxxBindings {
       headers,
       pictureOutputPath,
       picture96OutputPath,
+      pictureDisplayOutputPath,
       outLog,
     );
   }
@@ -166,6 +170,7 @@ class MediaxxBindings {
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Char>,
+            ffi.Pointer<ffi.Char>,
             ffi.Pointer<ffi.Pointer<ffi.Char>>,
           )
         >
@@ -173,6 +178,7 @@ class MediaxxBindings {
   late final _mediaxx_get_media_picture = _mediaxx_get_media_picturePtr
       .asFunction<
         int Function(
+          ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
           ffi.Pointer<ffi.Char>,
@@ -256,17 +262,30 @@ class MediaxxBindings {
             )
           >();
 
+  /// # 分析音频频谱与波形数据
+  ///
+  /// ## Args:
+  /// - [filepath] 必要，音频文件路径
+  /// - [outSpectrums] 输出频谱数据指针
+  /// - [outWavefrom] 输出波形振幅数据指针
+  /// - [outLog] 输出日志
+  /// - [maxDurationSeconds] 可选，最大分析时长限制（秒），<= 0 时不限制
+  ///
+  /// ## Return:
+  /// - 返回生成的频谱字节长度
   int mediaxx_get_audio_visualization(
     ffi.Pointer<ffi.Char> filepath,
     ffi.Pointer<ffi.Pointer<ffi.Char>> outSpectrums,
     ffi.Pointer<ffi.Pointer<ffi.Char>> outWavefrom,
     ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
+    int maxDurationSeconds,
   ) {
     return _mediaxx_get_audio_visualization(
       filepath,
       outSpectrums,
       outWavefrom,
       outLog,
+      maxDurationSeconds,
     );
   }
 
@@ -278,6 +297,7 @@ class MediaxxBindings {
             ffi.Pointer<ffi.Pointer<ffi.Char>>,
             ffi.Pointer<ffi.Pointer<ffi.Char>>,
             ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Int,
           )
         >
       >('mediaxx_get_audio_visualization');
@@ -289,6 +309,7 @@ class MediaxxBindings {
               ffi.Pointer<ffi.Pointer<ffi.Char>>,
               ffi.Pointer<ffi.Pointer<ffi.Char>>,
               ffi.Pointer<ffi.Pointer<ffi.Char>>,
+              int,
             )
           >();
 

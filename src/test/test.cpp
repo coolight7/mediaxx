@@ -97,6 +97,7 @@ void test() {
             std::string str = "Hello 世界";
             const char* out = nullptr;
             assert(mediaxx_convert_char_encoding(str.data(), str.size(), &out) == 12);
+            mediaxx_free(out);
         }
     }
 
@@ -127,6 +128,7 @@ void test() {
     auto result = mediaxx_get_available_hwcodec_list();
     if (nullptr != result) {
         std::cout << "硬件加速编解码器：" << result << std::endl;
+        mediaxx_free(result);
     }
 
     {
@@ -228,6 +230,45 @@ void test() {
         std::cout << "result: 不老不死_洛天依.flac | " << ret / 256 << std::endl;
         mediaxx_free(result);
         mediaxx_free(resultWaveform);
+        mediaxx_free(log);
+    }
+    {
+        std::cout
+            << "AudioSpectrumAnalyzer/mediaxx_get_audio_visualization (limit 10s) ....... ===================="
+            << std::endl;
+        const char* result         = nullptr;
+        const char* resultWaveform = nullptr;
+        const char* log            = nullptr;
+        auto        ret            = mediaxx_get_audio_visualization(
+            "./temp/不老不死_洛天依.flac",
+            &result,
+            &resultWaveform,
+            &log,
+            10
+        );
+        assert(nullptr != result && ret > 0);
+        std::cout << "result: 不老不死_洛天依.flac (limit 10s) | " << ret / 256 << std::endl;
+        assert(ret / 256 == 100);
+        mediaxx_free(result);
+        mediaxx_free(resultWaveform);
+        mediaxx_free(log);
+    }
+    {
+        std::cout << "mediaxx_get_media_picture with 512 display target ....... ===================="
+                  << std::endl;
+        const char* log = nullptr;
+        auto        ret = mediaxx_get_media_picture(
+            "./temp/林力尧 - 初恋旧爱新欢.flac",
+            "",
+            "./temp/中文输出/输出out-cover.jpg",
+            "./temp/中文输出/输出out-cover96.jpg",
+            "./temp/中文输出/输出out-cover512.jpg",
+            &log
+        );
+        std::cout << "mediaxx_get_media_picture ret: " << ret << std::endl;
+        assert((ret & 1) != 0); // 原图成功
+        assert((ret & 2) != 0); // 96 缩略图成功
+        assert((ret & 4) != 0); // 512 显示图成功
         mediaxx_free(log);
     }
     {
@@ -359,6 +400,8 @@ void test() {
             std::cout << std::endl
                       << "## mediaxx_analyse_picture_color_from_decoded_data: ret: " << ret
                       << "  result: " << ((nullptr != result) ? result : "nullptr") << std::endl;
+            mediaxx_free(result);
+            mediaxx_free(log);
         } else {
             std::cout << "无法打开文件进行二进制读取" << std::endl;
         }
@@ -373,7 +416,7 @@ int main(int argn, char** argv) {
     test();
     std::cout << "======= Test Done =======" << std::endl;
     std::cout << ">>>";
-    int num = 0;
-    cin >> num;
+    // int num = 0;
+    // cin >> num;
     return 0;
 }

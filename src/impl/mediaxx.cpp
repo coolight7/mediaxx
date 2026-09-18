@@ -87,19 +87,29 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     const char*  headers,
     const char*  pictureOutputPath,
     const char*  picture96OutputPath,
+    const char*  pictureDisplayOutputPath,
     const char** outLog
 ) {
     assert(nullptr != filepath);
     assert(nullptr != headers);
     assert(nullptr != pictureOutputPath);
     assert(nullptr != picture96OutputPath);
+    assert(nullptr != outLog);
     auto item   = mediaxx::MediaInfoEntity_c{std::string_view{filepath}, outLog};
     int  result = 0;
     // 完整封面路径必须非空
-    auto pOutput   = std::string_view{pictureOutputPath};
-    auto p96Output = std::string_view{picture96OutputPath};
+    auto pOutput        = std::string_view{pictureOutputPath};
+    auto p96Output      = std::string_view{picture96OutputPath};
+    auto pDisplayOutput = (nullptr != pictureDisplayOutputPath)
+                              ? std::string_view{pictureDisplayOutputPath}
+                              : std::string_view{};
     if (false == pOutput.empty() && mediaxx::MediaInfoReader_c::instance.openFile(item, headers)) {
-        result = mediaxx::MediaInfoReader_c::instance.savePicture(item, pOutput, p96Output);
+        result = mediaxx::MediaInfoReader_c::instance.savePicture(
+            item,
+            pOutput,
+            p96Output,
+            pDisplayOutput
+        );
     } else {
         result = 0;
     }
@@ -175,7 +185,8 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
     const char*  filepath,
     const char** outSpectrums,
     const char** outWavefrom,
-    const char** outLog
+    const char** outLog,
+    int          maxDurationSeconds
 ) {
     assert(nullptr != filepath);
     assert(nullptr != outSpectrums);
@@ -188,7 +199,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
     std::vector<std::array<uint8_t, mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE>>
                                spectrumData{};
     std::vector<unsigned char> waveformData{};
-    if (analyzer.processAudio(filepath, spectrumData, waveformData)) {
+    if (analyzer.processAudio(filepath, spectrumData, waveformData, maxDurationSeconds)) {
         assert(spectrumData.size() == waveformData.size());
         const auto len = mediaxx::AudioSpectrumAnalyzer::DEF_SPECTRUM_SIZE * spectrumData.size();
 

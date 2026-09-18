@@ -1,3 +1,5 @@
+#pragma once
+
 #if _WIN32
 #include <windows.h>
 #undef max
@@ -53,14 +55,16 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_info_malloc(
 /// - [pictureOutputPath] 必要，完整图片保存本地路径
 /// - [picture96OutputPath] 可选，缩略图保存本地路径; 指定 [pictureOutputPath]
 /// 后这个参数才有效
+/// - [pictureDisplayOutputPath] 可选，标准显示尺寸（512）缩放封面保存本地路径
 ///
 /// ## Return:
-/// - 返回操作是否成功
+/// - 返回操作结果位掩码 (bit 0: 原图成功, bit 1: 96缩略图成功, bit 2: 512显示图成功)
 FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
     const char*  filepath,
     const char*  headers,
     const char*  pictureOutputPath,
     const char*  picture96OutputPath,
+    const char*  pictureDisplayOutputPath,
     const char** outLog
 );
 
@@ -79,11 +83,27 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
     const char** outLog
 );
 
+/// # 分析音频频谱与波形数据
+///
+/// ## Args:
+/// - [filepath] 必要，音频文件路径
+/// - [outSpectrums] 输出频谱数据指针
+/// - [outWavefrom] 输出波形振幅数据指针
+/// - [outLog] 输出日志
+/// - [maxDurationSeconds] 可选，最大分析时长限制（秒），<= 0 时不限制
+///
+/// ## Return:
+/// - 返回生成的频谱字节长度
 FFI_PLUGIN_EXPORT int mediaxx_get_audio_visualization(
     const char*  filepath,
     const char** outSpectrums,
     const char** outWavefrom,
     const char** outLog
+#if __cplusplus
+    , int maxDurationSeconds = 0
+#else
+    , int maxDurationSeconds
+#endif
 );
 
 FFI_PLUGIN_EXPORT int
