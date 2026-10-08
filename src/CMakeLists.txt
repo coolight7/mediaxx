@@ -380,12 +380,17 @@ target_link_directories(mediaxx PUBLIC
   ${fmt_INSTALL_DIR}
 )
 
+set(UCHARDET_LIB_TARGET uchardet)
+if (TARGET libuchardet)
+  set(UCHARDET_LIB_TARGET libuchardet)
+endif()
+
 target_link_libraries(mediaxx PUBLIC
   ${ffmpeg_mpv_LIBRARIES}
   iconv
   fmt::fmt
   simdjson
-  libuchardet
+  ${UCHARDET_LIB_TARGET}
 )
 
 target_compile_options(mediaxx PRIVATE 
