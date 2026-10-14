@@ -67,6 +67,14 @@ wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz && tar -zxvf libi
 
 ### Linux
 - 整体类似于 Android
+- 系统库副本与系统版本的选择：
+  - `libmpv-linux-build` 的输出目录里带着一批系统库的副本（`libva.so.2`、`libpipewire-0.3.so.0`、`libXpresent.so.1` 等），需要和 `libmediaxx.so` 放在同一目录一起分发
+  - 这些副本在加载时排在系统同名库前面，而副本里的模块目录、驱动目录是打包机器上的路径（`/usr/lib/x86_64-linux-gnu/...`），会让用户系统里更新的库用不上，pipewire 音频输出可能在别的发行版上初始化失败
+  - 因此 dart 插件在加载 `libmediaxx.so` 之前会先加载系统里的同名库，见 [lib/ffi/system_library_preload.dart](lib/ffi/system_library_preload.dart)：
+    - 系统库存在且提供了 `libmediaxx.so` 需要的全部符号 -> 使用系统版本
+    - 系统没装该库，或者系统库缺少符号（版本太旧）-> 使用随包的副本
+  - 直接用 `libmediaxx.so` 的其它语言/项目需要自己做同样的处理，否则会一直使用随包的副本
+  - 符号列表由 `libmpv-linux-build` 的 `help/create_preload_syms.sh` 生成，依赖升级（`libpipewire`、`libva` 版本变化）后需要重新生成；重新编译 `libmediaxx` 时 `bundle_default.sh` 会调用 `help/check_preload_syms.sh` 检查列表是否过期
 
 ### Windows
 - win端的动态库名称为 libmediaxx.dll

@@ -7,6 +7,7 @@ import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:mediaxx/ffi/allocation.dart';
+import 'package:mediaxx/ffi/system_library_preload.dart';
 import 'package:mediaxx/ffi/utf8.dart';
 
 import 'mediaxx_bindings_generated.dart';
@@ -174,7 +175,40 @@ String mediaxx_get_available_hwcodec_list() {
 const String _libName = 'mediaxx';
 
 /// The dynamic library in which the symbols for [MediaxxBindings] can be found.
-final DynamicLibrary _dylib = () {
+final DynamicLibrary _dylib = _openMediaxxLibrary();
+
+/// 预加载的系统库，加载 libmediaxx.so 失败时会卸载它们再重试。
+List<DynamicLibrary> _preloadedSystemLibraries = const <DynamicLibrary>[];
+
+/// 加载 libmediaxx.so。
+///
+/// Linux 上先加载系统里的 libva、libpipewire 等库（见 ffi/system_library_preload.dart），
+/// 让 libmediaxx.so 使用系统版本，随它分发的副本只在系统缺库或系统库太旧时生效；
+/// 万一预加载的系统库让 libmediaxx.so 直接加载失败（缺少依赖库等），
+/// 卸载它们后按原样再试一次，这时会使用分发时带的副本。
+DynamicLibrary _openMediaxxLibrary() {
+  try {
+    _preloadedSystemLibraries = Platform.isLinux
+        ? preloadSystemLibraries()
+        : const <DynamicLibrary>[];
+  } catch (_) {
+    _preloadedSystemLibraries = const <DynamicLibrary>[];
+  }
+  try {
+    return _openMediaxxDynamicLibrary();
+  } catch (_) {
+    if (_preloadedSystemLibraries.isEmpty) {
+      rethrow;
+    }
+    // 系统库和 libmediaxx.so 不兼容，改用分发时带的副本
+    closeSystemLibraries(_preloadedSystemLibraries);
+    _preloadedSystemLibraries = const <DynamicLibrary>[];
+    return _openMediaxxDynamicLibrary();
+  }
+}
+
+/// 按平台打开 libmediaxx 动态库。
+DynamicLibrary _openMediaxxDynamicLibrary() {
   if (Platform.isMacOS || Platform.isIOS) {
     return DynamicLibrary.open('lib$_libName.dylib');
   }
@@ -185,7 +219,7 @@ final DynamicLibrary _dylib = () {
     return DynamicLibrary.open('lib$_libName.dll');
   }
   throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
-}();
+}
 
 /// The bindings to the native functions in [_dylib].
 final MediaxxBindings _bindings = MediaxxBindings(_dylib);
