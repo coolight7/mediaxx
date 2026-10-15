@@ -132,6 +132,57 @@ void test() {
     }
 
     {
+        // 音频、视频过滤器列表：都要是能解析的 json 数组，且每一项都带名字
+        const char* audioFilterList = mediaxx_get_available_audio_filter_list();
+        const char* videoFilterList = mediaxx_get_available_video_filter_list();
+        assert(nullptr != audioFilterList);
+        assert(nullptr != videoFilterList);
+
+        // 一个 parser 只能保留最后解析出的一份文档，两份列表要各用一个 parser
+        simdjson::dom::parser  audioParser;
+        simdjson::dom::parser  videoParser;
+        simdjson::dom::element audioDoc;
+        simdjson::dom::element videoDoc;
+        assert(
+            audioParser.parse(audioFilterList, std::strlen(audioFilterList)).get(audioDoc)
+            == simdjson::SUCCESS
+        );
+        assert(
+            videoParser.parse(videoFilterList, std::strlen(videoFilterList)).get(videoDoc)
+            == simdjson::SUCCESS
+        );
+
+        simdjson::dom::array audioArray;
+        simdjson::dom::array videoArray;
+        assert(audioDoc.get_array().get(audioArray) == simdjson::SUCCESS);
+        assert(videoDoc.get_array().get(videoArray) == simdjson::SUCCESS);
+        assert(audioArray.size() > 0 && videoArray.size() > 0);
+        std::cout << "音频过滤器：" << audioArray.size() << " 个，视频过滤器：" << videoArray.size()
+                  << " 个" << std::endl;
+
+        auto printFilterNames = [](const char* label, const simdjson::dom::array& array) {
+            std::string names;
+            size_t      count = 0;
+            for (const auto& item : array) {
+                std::string_view name;
+                assert(item["name"].get_string().get(name) == simdjson::SUCCESS);
+                assert(!name.empty());
+                if (count < 5) {
+                    names += (count > 0 ? ", " : "") + std::string{name};
+                }
+                count++;
+            }
+            assert(count == array.size());
+            std::cout << label << " 前几个：" << names << std::endl;
+        };
+        printFilterNames("音频过滤器", audioArray);
+        printFilterNames("视频过滤器", videoArray);
+
+        mediaxx_free(audioFilterList);
+        mediaxx_free(videoFilterList);
+    }
+
+    {
         const char* result = nullptr;
         const char* log    = nullptr;
         auto        ret    = mediaxx_get_media_info_malloc(

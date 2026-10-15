@@ -10,6 +10,8 @@
     mediaxx_analyse_picture_color;
     mediaxx_analyse_picture_color_from_decoded_data;
     mediaxx_get_available_hwcodec_list;
+    mediaxx_get_available_audio_filter_list;
+    mediaxx_get_available_video_filter_list;
     mediaxx_get_audio_visualization;
     mediaxx_convert_char_encoding;
     JNI_OnLoad;

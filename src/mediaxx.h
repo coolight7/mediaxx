@@ -111,6 +111,33 @@ FFI_PLUGIN_EXPORT int
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list();
 
+/// # 获取音频过滤器列表
+///
+/// 列出编译进来的 ffmpeg（libavfilter）里能直接写在 mpv 的 af 上的音频过滤器，
+/// 判断规则与 mpv 源码 filters/f_lavfi.c 的 is_usable 相同。
+///
+/// ## Return:
+/// - 返回 json 数组字符串（需调用 mediaxx_free 释放）
+///   ```
+///   [{"name":"volume","desc":"Volume adjustment.","flags":0}, ......]
+///   ```
+///   - [name] 过滤器名
+///   - [desc] 过滤器说明，可能没有这个字段
+///   - [flags] AVFILTER_FLAG_* 位掩码
+///   - [mpv_name] 名字与 mpv 自带过滤器重名时才有的字段，内容为加 `lavfi-` 前缀后的名字
+/// - 列表中不含 mpv 自带的过滤器（format、scaletempo 等），它们由 mpv 编译，
+///   可以读 mpv 的 option-info/af/choices
+FFI_PLUGIN_EXPORT const char* mediaxx_get_available_audio_filter_list();
+
+/// # 获取视频过滤器列表
+///
+/// 列出编译进来的 ffmpeg（libavfilter）里能直接写在 mpv 的 vf 上的视频过滤器，
+/// 字段含义同 [mediaxx_get_available_audio_filter_list]。
+///
+/// ## Return:
+/// - 返回 json 数组字符串（需调用 mediaxx_free 释放）
+FFI_PLUGIN_EXPORT const char* mediaxx_get_available_video_filter_list();
+
 #if __cplusplus
 }
 #endif

@@ -351,4 +351,28 @@ class MediaxxBindings {
   late final _mediaxx_get_available_hwcodec_list =
       _mediaxx_get_available_hwcodec_listPtr
           .asFunction<ffi.Pointer<ffi.Char> Function()>();
+
+  ffi.Pointer<ffi.Char> mediaxx_get_available_audio_filter_list() {
+    return _mediaxx_get_available_audio_filter_list();
+  }
+
+  late final _mediaxx_get_available_audio_filter_listPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function()>>(
+        'mediaxx_get_available_audio_filter_list',
+      );
+  late final _mediaxx_get_available_audio_filter_list =
+      _mediaxx_get_available_audio_filter_listPtr
+          .asFunction<ffi.Pointer<ffi.Char> Function()>();
+
+  ffi.Pointer<ffi.Char> mediaxx_get_available_video_filter_list() {
+    return _mediaxx_get_available_video_filter_list();
+  }
+
+  late final _mediaxx_get_available_video_filter_listPtr =
+      _lookup<ffi.NativeFunction<ffi.Pointer<ffi.Char> Function()>>(
+        'mediaxx_get_available_video_filter_list',
+      );
+  late final _mediaxx_get_available_video_filter_list =
+      _mediaxx_get_available_video_filter_listPtr
+          .asFunction<ffi.Pointer<ffi.Char> Function()>();
 }

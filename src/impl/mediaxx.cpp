@@ -2,6 +2,7 @@
 #include "mediaxx.h"
 #include "analyse/audio_visualization.h"
 #include "analyse/codec_info.h"
+#include "analyse/filter_info.h"
 #include "analyse/image.h"
 #include "analyse/media_info.h"
 #include "simdjson.h"
@@ -255,5 +256,15 @@ FFI_PLUGIN_EXPORT int
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
     auto jsonsb = mediaxx::CodecInfo_c::findAvailCodec();
+    return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
+}
+
+FFI_PLUGIN_EXPORT const char* mediaxx_get_available_audio_filter_list() {
+    auto jsonsb = mediaxx::FilterInfo_c::findAvailFilter(AVMEDIA_TYPE_AUDIO);
+    return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
+}
+
+FFI_PLUGIN_EXPORT const char* mediaxx_get_available_video_filter_list() {
+    auto jsonsb = mediaxx::FilterInfo_c::findAvailFilter(AVMEDIA_TYPE_VIDEO);
     return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
 }

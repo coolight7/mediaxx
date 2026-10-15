@@ -172,6 +172,26 @@ String mediaxx_get_available_hwcodec_list() {
   return str ?? "";
 }
 
+/// 获取音频过滤器列表，返回 json 数组字符串（失败时返回空串）。
+///
+/// 每一项为 `{"name":名字,"desc":说明,"flags":AVFILTER_FLAG_* 位掩码}`，
+/// 名字与 mpv 自带过滤器重名时还会有一项 `mpv_name`，内容为加 `lavfi-` 前缀后的名字。
+String mediaxx_get_available_audio_filter_list() {
+  final result = _bindings.mediaxx_get_available_audio_filter_list();
+  final str = result.cast<Utf8>().tryToDartString();
+  mediaxx_free(result);
+  return str ?? "";
+}
+
+/// 获取视频过滤器列表，返回 json 数组字符串（失败时返回空串），字段含义同
+/// [mediaxx_get_available_audio_filter_list]。
+String mediaxx_get_available_video_filter_list() {
+  final result = _bindings.mediaxx_get_available_video_filter_list();
+  final str = result.cast<Utf8>().tryToDartString();
+  mediaxx_free(result);
+  return str ?? "";
+}
+
 const String _libName = 'mediaxx';
 
 /// The dynamic library in which the symbols for [MediaxxBindings] can be found.

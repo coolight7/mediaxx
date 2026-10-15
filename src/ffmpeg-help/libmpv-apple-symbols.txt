@@ -8,6 +8,8 @@
 -undefined _mediaxx_analyse_picture_color
 -undefined _mediaxx_analyse_picture_color_from_decoded_data
 -undefined _mediaxx_get_available_hwcodec_list
+-undefined _mediaxx_get_available_audio_filter_list
+-undefined _mediaxx_get_available_video_filter_list
 -undefined _mediaxx_get_audio_visualization
 -undefined _mediaxx_convert_char_encoding
 
