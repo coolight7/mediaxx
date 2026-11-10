@@ -15,7 +15,8 @@ namespace mediaxx {
         // ===================================================================
 
         /// 去掉两端的 空格/\t/\r/\n（对应 `StringUtilxx_c.removeBetweenSpace`，只去这几个字符）
-        [[nodiscard]] std::u16string trimSpaces(const std::u16string& str) {
+        /// * 返回视图，不拷贝；[str] 必须在返回值使用期间有效
+        [[nodiscard]] std::u16string_view trimSpacesView(std::u16string_view str) {
             auto isTrim = [](char16_t code) {
                 return code == u' ' || code == u'\t' || code == u'\r' || code == u'\n';
             };
@@ -30,9 +31,14 @@ namespace mediaxx {
             return str.substr(left, right - left);
         }
 
+        /// 同 [trimSpacesView]，需要独立字符串时用它
+        [[nodiscard]] std::u16string trimSpaces(std::u16string_view str) {
+            return std::u16string{trimSpacesView(str)};
+        }
+
         /// 同上，结果为空时返回空（对应 `removeBetweenSpaceMayNull`）
-        [[nodiscard]] std::optional<std::u16string> trimSpacesMayNull(const std::u16string& str) {
-            std::u16string result = trimSpaces(str);
+        [[nodiscard]] std::optional<std::u16string> trimSpacesMayNull(std::u16string_view str) {
+            const std::u16string result = trimSpaces(str);
             if (result.empty()) {
                 return std::nullopt;
             }
@@ -40,8 +46,8 @@ namespace mediaxx {
         }
 
         /// `StringUtilxx_c.subString` 的安全版本（原版越界时返回 null，调用处都保证不越界）
-        [[nodiscard]] std::u16string
-            subString(const std::u16string& str, size_t start, size_t end) {
+        [[nodiscard]] std::u16string_view
+            subStringView(std::u16string_view str, size_t start, size_t end) {
             if (start > str.size()) {
                 return {};
             }
@@ -52,17 +58,18 @@ namespace mediaxx {
         }
 
         /// 按给定码元集合切分（对应 Dart 的 `String.split(RegExp)`，保留空串分片）
-        [[nodiscard]] std::vector<std::u16string>
-            splitByCodeSet(const std::u16string& str, const std::unordered_set<char16_t>& codes) {
-            std::vector<std::u16string> result{};
-            size_t                      start = 0;
+        /// * 返回的是 [str] 的分片视图
+        [[nodiscard]] std::vector<std::u16string_view>
+            splitByCodeSet(std::u16string_view str, const std::unordered_set<char16_t>& codes) {
+            std::vector<std::u16string_view> result{};
+            size_t                           start = 0;
             for (size_t i = 0; i < str.size(); ++i) {
                 if (codes.count(str[i]) > 0) {
-                    result.emplace_back(str.substr(start, i - start));
+                    result.push_back(str.substr(start, i - start));
                     start = i + 1;
                 }
             }
-            result.emplace_back(str.substr(start));
+            result.push_back(str.substr(start));
             return result;
         }
 
@@ -95,6 +102,39 @@ namespace mediaxx {
             return codePoint;
         }
 
+        /// BMP 码元的小写表（没有映射就是原值）
+        ///
+        /// 查表比 [foldCodePoint] 的二分快，热路径（判断一个串要不要小写、或者把它小写）都用它。
+        [[nodiscard]] const std::array<int32_t, 65536>& lowerTable() {
+            static const std::array<int32_t, 65536> table = [] {
+                std::array<int32_t, 65536> result{};
+                for (int32_t code = 0; code <= 0xFFFF; ++code) {
+                    result[static_cast<size_t>(code)] = code;
+                }
+                for (const auto& item : kCaseFold) {
+                    if (item.from >= 0 && item.from <= 0xFFFF) {
+                        result[static_cast<size_t>(item.from)] = item.to;
+                    }
+                }
+                return result;
+            }();
+            return table;
+        }
+
+        /// 单个码点的小写：BMP 查表，非 BMP 才二分
+        [[nodiscard]] int32_t lowerCodePoint(int32_t codePoint) {
+            if (codePoint >= 0 && codePoint <= 0xFFFF) {
+                return lowerTable()[static_cast<size_t>(codePoint)];
+            }
+            return foldCodePoint(codePoint);
+        }
+
+        /// 规范化用的复用缓冲（每个线程一份；只有真的需要小写时才会被写入）
+        [[nodiscard]] std::u16string& canonicalScratch() {
+            static thread_local std::u16string buffer{};
+            return buffer;
+        }
+
         /// 匹配用的码元折叠表（先查码元折叠，再转 ASCII 小写）
         [[nodiscard]] const std::array<char16_t, 65536>& foldTable() {
             static const std::array<char16_t, 65536> table = [] {
@@ -123,9 +163,8 @@ namespace mediaxx {
         /// 例如 `artistSearcher.pattern()` 要返回 `Taylor Swift`），查询键由
         /// [MediaNameFold_c::canonical] 生成，所以加载时就统一规范化。
         template<size_t N>
-        [[nodiscard]] std::unordered_map<std::u16string, std::u16string>
-            toMap(const StringPair_c (&list)[N]) {
-            std::unordered_map<std::u16string, std::u16string> result{};
+        [[nodiscard]] MediaNameMap_c<std::u16string> toMap(const StringPair_c (&list)[N]) {
+            MediaNameMap_c<std::u16string> result{};
             result.reserve(N);
             for (const auto& item : list) {
                 result[MediaNameFold_c::canonical(item.key)] = std::u16string{item.value};
@@ -135,9 +174,8 @@ namespace mediaxx {
 
         /// 表里的字符串 → 忽略大小写查询用的集合（键规范化）
         template<size_t N>
-        [[nodiscard]] std::unordered_set<std::u16string> toSet(const std::u16string_view (&list)[N]
-        ) {
-            std::unordered_set<std::u16string> result{};
+        [[nodiscard]] MediaNameSet_c toSet(const std::u16string_view (&list)[N]) {
+            MediaNameSet_c result{};
             result.reserve(N);
             for (const auto& item : list) {
                 result.insert(MediaNameFold_c::canonical(item));
@@ -217,7 +255,7 @@ namespace mediaxx {
             }
             const std::u16string key = MediaNameFold_c::canonical(item);
             for (const auto& exist : list) {
-                if (MediaNameFold_c::canonical(exist) == key) {
+                if (MediaNameFold_c::canonicalView(exist) == key) {
                     return;
                 }
             }
@@ -243,15 +281,15 @@ namespace mediaxx {
             }
 
             /// 歌手别名（键已规范化）
-            std::unordered_map<std::u16string, std::u16string> artistTagWord{};
+            MediaNameMap_c<std::u16string> artistTagWord{};
             /// 组合歌手词（整体保留，不按 & 切分）
-            std::unordered_map<std::u16string, std::u16string> artistCombinaWord{};
+            MediaNameMap_c<std::u16string> artistCombinaWord{};
             /// 歌手别名反查：规范名 → 表里出现的别名（已排序）
-            std::unordered_map<std::u16string, std::vector<std::u16string>> artistTagWordVK{};
+            MediaNameMap_c<std::vector<std::u16string>> artistTagWordVK{};
             /// 不可用歌曲信息（整串相等）
-            std::unordered_set<std::u16string> notAvailInfoStr{};
+            MediaNameSet_c notAvailInfoStr{};
             /// 无效歌词行（整行相等）
-            std::unordered_set<std::u16string> notAvailLyricLine{};
+            MediaNameSet_c notAvailLyricLine{};
             /// 歌名首尾要剥掉的符号码元
             std::unordered_set<char16_t> groupTagCode{};
             /// 歌手分隔符码元
@@ -270,9 +308,8 @@ namespace mediaxx {
             MediaNameAhoCorasick_c groupTagGuillemetRightSearcher{};
 
             /// 别名反查结果
-            [[nodiscard]] std::vector<std::u16string> aliasesOf(const std::u16string& artist
-            ) const {
-                const auto it = artistTagWordVK.find(MediaNameFold_c::canonical(artist));
+            [[nodiscard]] std::vector<std::u16string> aliasesOf(std::u16string_view artist) const {
+                const auto it = artistTagWordVK.find(MediaNameFold_c::canonicalView(artist));
                 if (it == artistTagWordVK.end()) {
                     return {};
                 }
@@ -328,7 +365,13 @@ namespace mediaxx {
 
     std::u16string MediaNameFold_c::toLower(std::u16string_view str) {
         std::u16string result{};
-        result.reserve(str.size());
+        toLowerInto(result, str);
+        return result;
+    }
+
+    void MediaNameFold_c::toLowerInto(std::u16string& into, std::u16string_view str) {
+        into.clear();
+        into.reserve(str.size());
         for (size_t index = 0; index < str.size();) {
             const char16_t code      = str[index];
             int32_t        codePoint = code;
@@ -340,17 +383,37 @@ namespace mediaxx {
                     width     = 2;
                 }
             }
-            appendCodePoint(result, foldCodePoint(codePoint));
+            appendCodePoint(into, lowerCodePoint(codePoint));
             index += width;
         }
-        return result;
+    }
+
+    std::u16string_view MediaNameFold_c::canonicalView(std::u16string_view str) {
+        // 快路径：没有任何码点需要小写时直接用原视图（中文、已经小写的英文都走这里）
+        bool needLower = false;
+        for (size_t index = 0; index < str.size();) {
+            const int32_t codePoint = MediaNameSymbol_c::codePointAt(str, index);
+            if (lowerCodePoint(codePoint) != codePoint) {
+                needLower = true;
+                break;
+            }
+            index += MediaNameSymbol_c::codePointWidth(codePoint);
+        }
+        if (false == needLower) {
+            return str;
+        }
+        std::u16string& buffer = canonicalScratch();
+        toLowerInto(buffer, str);
+        // 小写后长度变了（某些字母会展开成多个码点）就不算"同一个字符串"，
+        // 与 Dart 的 isIgnoreCaseEqual（先比 length）一致
+        if (buffer.size() != str.size()) {
+            return str;
+        }
+        return buffer;
     }
 
     std::u16string MediaNameFold_c::canonical(std::u16string_view str) {
-        const std::u16string lower = toLower(str);
-        // 小写后长度变了（例如带附加符号的字母展开成多个码点）就不算"同一个字符串"，
-        // 与 Dart 的 isIgnoreCaseEqual（先比 length）一致
-        return (lower.size() == str.size()) ? lower : std::u16string{str};
+        return std::u16string{canonicalView(str)};
     }
 
     // ===================================================================
@@ -428,7 +491,7 @@ namespace mediaxx {
     }
 
     std::vector<MediaNameAhoCorasick_c::Match_c>
-        MediaNameAhoCorasick_c::search(const std::u16string& text, size_t start, bool onlyContains)
+        MediaNameAhoCorasick_c::search(std::u16string_view text, size_t start, bool onlyContains)
             const {
         std::vector<Match_c> matches{};
         if (nodes.empty() || start >= text.size()) {
@@ -474,28 +537,27 @@ namespace mediaxx {
         return result;
     }
 
-    bool MediaNameAhoCorasick_c::contains(const std::u16string& text, size_t start) const {
+    bool MediaNameAhoCorasick_c::contains(std::u16string_view text, size_t start) const {
         return false == search(text, start, true).empty();
     }
 
-    std::u16string
-        MediaNameAhoCorasick_c::removeAll(const std::u16string& text, size_t start) const {
+    std::u16string MediaNameAhoCorasick_c::removeAll(std::u16string_view text, size_t start) const {
         const auto matches = search(text, start, false);
         if (matches.empty()) {
-            return text;
+            return std::u16string{text};
         }
         std::u16string result{};
         size_t         index = 0;
         for (const auto& match : matches) {
             if (match.start > index) {
-                result.append(text, index, match.start - index);
+                result.append(text.data() + index, match.start - index);
             }
             if (match.end > index) {
                 index = match.end;
             }
         }
         if (index < text.size()) {
-            result.append(text, index, text.size() - index);
+            result.append(text.data() + index, text.size() - index);
         }
         return result;
     }
@@ -529,7 +591,7 @@ namespace mediaxx {
             return empty;
         }
 
-        std::unordered_set<std::u16string> crudeArtistSet{};
+        MediaNameSet_c crudeArtistSet{};
         crudeArtistSet.reserve(crudeArtistlist.size());
         for (const auto& item : crudeArtistlist) {
             crudeArtistSet.insert(MediaNameFold_c::canonical(item));
@@ -544,13 +606,14 @@ namespace mediaxx {
         };
 
         struct SubStr_c {
-            bool           found = false;
-            std::u16string str{};
-            size_t         li = 0;
-            size_t         ri = 0;
+            bool                found = false;
+            std::u16string_view str{};
+            size_t              li = 0;
+            size_t              ri = 0;
         };
 
         // 找一对括号里的内容（左右都是单字符，`onlyContains` 拿到的是最早的一个）
+        // 返回的 [SubStr_c::str] 指向 [result]，在 result 被重新赋值前有效
         auto subStr = [&result](
                           const MediaNameAhoCorasick_c& left,
                           const MediaNameAhoCorasick_c& right,
@@ -576,7 +639,7 @@ namespace mediaxx {
             out.found = true;
             out.li    = li;
             out.ri    = ri;
-            out.str   = trimSpaces(result.substr(li + 1, ri - li - 1));
+            out.str   = trimSpacesView(std::u16string_view{result}.substr(li + 1, ri - li - 1));
             return out;
         };
 
@@ -586,11 +649,11 @@ namespace mediaxx {
                 ri = std::nullopt;
             }
             if (ri.has_value()) {
-                const std::u16string right = result.substr(*ri);
+                const std::u16string_view right = std::u16string_view{result}.substr(*ri);
                 if (false == right.empty()) {
                     std::u16string out = result.substr(0, li);
                     out.push_back(u' ');
-                    out += right;
+                    out.append(right);
                     return out;
                 }
             }
@@ -619,13 +682,13 @@ namespace mediaxx {
                 }
                 if (onlyMoveEnd) {
                     // 剥离并挪到后面
-                    tempsb      += result.substr(li, ri + 1 - li);
+                    tempsb.append(std::u16string_view{result}.substr(li, ri + 1 - li));
                     result       = removeStr(li, ri + 1);
                     i           -= static_cast<long long>(ri + 1 - li);
                     addRangeTag  = true;
                     continue;
                 }
-                const std::u16string key = MediaNameFold_c::canonical(found.str);
+                const std::u16string_view key = MediaNameFold_c::canonicalView(found.str);
                 if (unavailTagWord.count(key) > 0 || crudeArtistSet.count(key) > 0) {
                     // 无效词、与歌手重复：移除
                     result       = removeStr(li, ri + 1);
@@ -636,34 +699,39 @@ namespace mediaxx {
                 const auto weakIt = weakTagWord.find(key);
                 if (weakIt != weakTagWord.end()) {
                     // 弱标签：剥离并挪到后面
+                    // 先把要拼接的内容取出来：下一行会重新赋值 result，found.str 指向它
+                    tempsb.append(
+                        weakIt->second.empty() ? found.str : std::u16string_view{weakIt->second}
+                    );
                     result       = removeStr(li, ri + 1);
                     i           -= static_cast<long long>(ri + 1 - li);
-                    tempsb      += weakIt->second.empty() ? found.str : weakIt->second;
                     addRangeTag  = true;
                     continue;
                 }
                 const auto artistIt = data.artistTagWord.find(key);
                 if (artistIt != data.artistTagWord.end()) {
-                    // 尝试切出歌手名
+                    // 尝试切出歌手名（同样先取出来，再重新赋值 result）
+                    const std::u16string art{
+                        artistIt->second.empty() ? found.str : std::u16string_view{artistIt->second}
+                    };
                     result  = removeStr(li, ri + 1);
                     i      -= static_cast<long long>(ri + 1 - li);
-                    addArtist(
-                        artistIt->second.empty() ? std::u16string_view{found.str}
-                                                 : std::u16string_view{artistIt->second}
-                    );
+                    addArtist(art);
                     continue;
                 }
                 // 在内容里查找歌手名
                 const auto relist = data.artistSearcher.search(found.str);
                 if (false == relist.empty()) {
                     for (const auto& item : relist) {
-                        std::u16string art = data.artistSearcher.pattern(item.patternIndex);
-                        const auto     mapped
-                            = data.artistTagWord.find(MediaNameFold_c::canonical(art));
-                        if (mapped != data.artistTagWord.end() && false == mapped->second.empty()) {
-                            art = mapped->second;
-                        }
-                        addArtist(art);
+                        const std::u16string_view art
+                            = data.artistSearcher.pattern(item.patternIndex);
+                        const auto mapped
+                            = data.artistTagWord.find(MediaNameFold_c::canonicalView(art));
+                        addArtist(
+                            mapped != data.artistTagWord.end() && false == mapped->second.empty()
+                                ? std::u16string_view{mapped->second}
+                                : art
+                        );
                     }
                     result  = removeStr(li, ri + 1);
                     i      -= static_cast<long long>(ri + 1 - li);
@@ -688,19 +756,20 @@ namespace mediaxx {
                 if (found.str.empty()) {
                     result = removeStr(found.li, found.ri + 1);
                 } else {
-                    addRangeTag     = false;
-                    const auto rStr = trimSpacesMayNull(removeStr(found.li, found.ri + 1));
+                    addRangeTag = false;
+                    // 先拼好新值：removeStr 之后 result 就变了，found.str 指向它
+                    std::u16string next{found.str};
+                    const auto     rStr = trimSpacesMayNull(removeStr(found.li, found.ri + 1));
                     if (rStr.has_value()) {
-                        result = found.str + u" - " + *rStr;
-                    } else {
-                        result = found.str;
+                        next.append(u" - ");
+                        next.append(*rStr);
                     }
+                    result = std::move(next);
                 }
             }
         }
 
-        const std::u16string tempStr = tempsb;
-        result                       = onAddTempStr(result, addRangeTag, tempStr);
+        result = onAddTempStr(result, addRangeTag, tempsb);
 
         // 4. 合并多余符号（保留左右两个）、去掉开头符号
         result = MediaNameSymbol_c::mergeAndStripSymbols(result);
@@ -734,12 +803,14 @@ namespace mediaxx {
                     continue;
                 }
                 for (const auto& item : relist) {
-                    std::u16string art = data.artistSearcher.pattern(item.patternIndex);
-                    const auto mapped  = data.artistTagWord.find(MediaNameFold_c::canonical(art));
-                    if (mapped != data.artistTagWord.end() && false == mapped->second.empty()) {
-                        art = mapped->second;
-                    }
-                    addArtist(art);
+                    const std::u16string_view art = data.artistSearcher.pattern(item.patternIndex);
+                    const auto                mapped
+                        = data.artistTagWord.find(MediaNameFold_c::canonicalView(art));
+                    addArtist(
+                        mapped != data.artistTagWord.end() && false == mapped->second.empty()
+                            ? std::u16string_view{mapped->second}
+                            : art
+                    );
                 }
             }
         }
@@ -758,9 +829,10 @@ namespace mediaxx {
         bool                  weakArtist,
         std::u16string&       outCrude
     ) {
-        const MediaNameData_c&      data         = MediaNameData_c::instance();
-        const std::u16string        crudeArtist  = trimSpaces(artist);
-        std::u16string              resultArtist = artist;
+        const MediaNameData_c&      data        = MediaNameData_c::instance();
+        const std::u16string_view   crudeArtist = trimSpacesView(artist);
+        std::u16string              resultArtistStorage{};
+        std::u16string_view         resultArtist = artist;
         std::vector<std::u16string> resultlist{};
 
         // 提前提取：组合歌手词整体保留（`伍佰 & China Blue` 不要按 & 切成两个）
@@ -785,9 +857,9 @@ namespace mediaxx {
                           || data.artistSplitCode.count(crudeArtist[endPos]) > 0;
                     if (atStart || (leftIsSplit && rightIsSplit)) {
                         // 开头，或者前后是分隔符：可用
-                        tempArtist += subString(crudeArtist, index, item.start);
+                        tempArtist.append(subStringView(crudeArtist, index, item.start));
                         const auto mapped
-                            = data.artistCombinaWord.find(MediaNameFold_c::canonical(artItem));
+                            = data.artistCombinaWord.find(MediaNameFold_c::canonicalView(artItem));
                         if (mapped != data.artistCombinaWord.end()
                             && false == mapped->second.empty()) {
                             addUnique(resultlist, mapped->second);
@@ -795,23 +867,24 @@ namespace mediaxx {
                             addUnique(resultlist, artItem);
                         }
                     } else {
-                        tempArtist += subString(crudeArtist, index, endPos);
+                        tempArtist.append(subStringView(crudeArtist, index, endPos));
                     }
-                    index       = endPos;
-                    tempArtist += u"&";
+                    index = endPos;
+                    tempArtist.append(u"&");
                 }
-                tempArtist   += subString(crudeArtist, index, crudeArtist.size());
-                resultArtist  = tempArtist;
+                tempArtist.append(subStringView(crudeArtist, index, crudeArtist.size()));
+                resultArtistStorage = std::move(tempArtist);
+                resultArtist        = resultArtistStorage;
             }
         }
 
         const auto parts = splitByCodeSet(resultArtist, data.artistSplitCode);
         for (const auto& part : parts) {
-            const std::u16string item = trimSpaces(part);
+            const std::u16string_view item = trimSpacesView(part);
             if (item.empty()) {
                 continue;
             }
-            const auto target = data.artistTagWord.find(MediaNameFold_c::canonical(item));
+            const auto target = data.artistTagWord.find(MediaNameFold_c::canonicalView(item));
             const bool hasTarget
                 = target != data.artistTagWord.end() && false == target->second.empty();
             if (append < 0) {
@@ -835,7 +908,7 @@ namespace mediaxx {
                     resultlist.begin(),
                     resultlist.end(),
                     [&data](const std::u16string& item) {
-                        return data.artistTagWord.find(MediaNameFold_c::canonical(item))
+                        return data.artistTagWord.find(MediaNameFold_c::canonicalView(item))
                                == data.artistTagWord.end();
                     }
                 ),
@@ -843,7 +916,7 @@ namespace mediaxx {
             );
         }
 
-        outCrude = crudeArtist;
+        outCrude.assign(crudeArtist.data(), crudeArtist.size());
         return resultlist;
     }
 
@@ -868,22 +941,21 @@ namespace mediaxx {
         if (false == current.has_value() || current->empty()) {
             return notAvailResult;
         }
-        if (data.notAvailInfoStr.count(MediaNameFold_c::canonical(*current)) > 0) {
+        if (data.notAvailInfoStr.count(MediaNameFold_c::canonicalView(*current)) > 0) {
             return notAvailResult;
         }
         return current;
     }
 
-    bool MediaNameAnalyseBase_c::checkAvailLyricLine(const std::u16string& line) {
+    bool MediaNameAnalyseBase_c::checkAvailLyricLine(std::u16string_view line) {
         const MediaNameData_c& data = MediaNameData_c::instance();
-        if (data.notAvailLyricLine.count(MediaNameFold_c::canonical(line)) > 0) {
+        if (data.notAvailLyricLine.count(MediaNameFold_c::canonicalView(line)) > 0) {
             return false;
         }
         return false == data.notAvailLyricWordSearcher.contains(line);
     }
 
-    std::vector<std::u16string> MediaNameAnalyseBase_c::artistAliases(const std::u16string& artist
-    ) {
+    std::vector<std::u16string> MediaNameAnalyseBase_c::artistAliases(std::u16string_view artist) {
         return MediaNameData_c::instance().aliasesOf(artist);
     }
 
@@ -962,7 +1034,7 @@ namespace mediaxx {
         for (const auto& item : result.reArtists) {
             if (weakArtist) {
                 // 弱化：记录里没有的歌手直接丢掉
-                if (data.artistTagWord.find(MediaNameFold_c::canonical(item))
+                if (data.artistTagWord.find(MediaNameFold_c::canonicalView(item))
                     != data.artistTagWord.end()) {
                     out += u" - ";
                     out += item;

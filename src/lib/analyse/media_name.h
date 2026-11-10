@@ -2,6 +2,7 @@
 
 #include "analyse/media_name_symbol.h"
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -11,6 +12,37 @@
 #include <vector>
 
 namespace mediaxx {
+
+    /// 查表用的字符串哈希：允许直接用 `std::u16string_view` 查，不必先构造临时串
+    struct MediaNameHash_c {
+        using is_transparent = void;
+
+        [[nodiscard]] size_t operator()(std::u16string_view text) const noexcept {
+            return std::hash<std::u16string_view>{}(text);
+        }
+
+        [[nodiscard]] size_t operator()(const std::u16string& text) const noexcept {
+            return (*this)(std::u16string_view{text});
+        }
+    };
+
+    /// 查表用的相等比较（配合 [MediaNameHash_c] 的透明查找）
+    struct MediaNameEqual_c {
+        using is_transparent = void;
+
+        [[nodiscard]] bool
+            operator()(std::u16string_view left, std::u16string_view right) const noexcept {
+            return left == right;
+        }
+    };
+
+    /// 键已经规范化、支持 [std::u16string_view] 查找的表
+    template<typename Value>
+    using MediaNameMap_c
+        = std::unordered_map<std::u16string, Value, MediaNameHash_c, MediaNameEqual_c>;
+
+    /// 元素已经规范化、支持 [std::u16string_view] 查找的集合
+    using MediaNameSet_c = std::unordered_set<std::u16string, MediaNameHash_c, MediaNameEqual_c>;
 
     /// 多模式匹配（对应 Dart 的 AhoCorasick，行为逐条对齐）
     ///
@@ -43,12 +75,12 @@ namespace mediaxx {
         explicit MediaNameAhoCorasick_c(const std::vector<std::u16string>& patterns);
 
         [[nodiscard]] std::vector<Match_c>
-            search(const std::u16string& text, size_t start = 0, bool onlyContains = false) const;
+            search(std::u16string_view text, size_t start = 0, bool onlyContains = false) const;
 
-        [[nodiscard]] bool contains(const std::u16string& text, size_t start = 0) const;
+        [[nodiscard]] bool contains(std::u16string_view text, size_t start = 0) const;
 
         /// 删掉全部匹配（[start] 之前的保留）
-        [[nodiscard]] std::u16string removeAll(const std::u16string& text, size_t start = 0) const;
+        [[nodiscard]] std::u16string removeAll(std::u16string_view text, size_t start = 0) const;
 
         [[nodiscard]] const std::u16string& pattern(size_t index) const {
             return patterns[index];
@@ -84,15 +116,24 @@ namespace mediaxx {
         /// 整串按码点做完整小写（对应 Dart 的 String.toLowerCase）
         [[nodiscard]] static std::u16string toLower(std::u16string_view str);
 
+        /// 同 [toLower]，但结果写进 [into]（覆盖原内容；容量够时不再分配）
+        static void toLowerInto(std::u16string& into, std::u16string_view str);
+
         /// 忽略大小写比较用的键（等价于 `StringUtilxx_c.isIgnoreCaseEqual`：
         /// 先比长度再比小写，所以小写后长度会变的字符保持原样）
         [[nodiscard]] static std::u16string canonical(std::u16string_view str);
+
+        /// 同 [canonical]，但不分配：本来就是规范形式时直接返回 [str] 的视图，
+        /// 否则写进线程内复用的缓冲。
+        ///
+        /// 只用于查表：**返回的视图在下次调用（同线程）之前有效，不要保存**。
+        [[nodiscard]] static std::u16string_view canonicalView(std::u16string_view str);
     };
 
     /// 歌名 / 歌手智能识别（对应 Dart 的 `MediaInfoAnalyseBase_c` 与它的两个子类）
     ///
     /// 两个子类只有两处不同：无效标签表 / 弱标签表的内容，以及"临时串怎么拼回歌名"
-    /// （`onAddTempStr`）。数据表全部来自 media_name_tables.h（从 Dart 运行期导出）。
+    /// （`onAddTempStr`）。数据表全部来自 media_name_tables.h（由 script/data/media_name 生成）。
     class MediaNameAnalyseBase_c {
     public:
 
@@ -132,15 +173,14 @@ namespace mediaxx {
         );
 
         /// 这一行歌词是否可用（对应 `checkAvailLyricLine`）
-        [[nodiscard]] static bool checkAvailLyricLine(const std::u16string& line);
+        [[nodiscard]] static bool checkAvailLyricLine(std::u16string_view line);
 
         /// 别名反查（对应 `artistTagWordVK[artist]`，结果按字符串排序）
-        [[nodiscard]] static std::vector<std::u16string> artistAliases(const std::u16string& artist
-        );
+        [[nodiscard]] static std::vector<std::u16string> artistAliases(std::u16string_view artist);
 
         // 两个子类各自覆盖的表（对应 Dart 里每个实例自己的一份 addAll 结果）
-        std::unordered_map<std::u16string, std::u16string> weakTagWord{};
-        std::unordered_set<std::u16string>                 unavailTagWord{};
+        MediaNameMap_c<std::u16string> weakTagWord{};
+        MediaNameSet_c                 unavailTagWord{};
 
     protected:
 

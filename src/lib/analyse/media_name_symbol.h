@@ -42,7 +42,7 @@ namespace mediaxx {
         }
 
         /// 取 [index] 处的码点（[index] 必须是码元起点；孤立代理按单码元返回）
-        static int32_t codePointAt(const std::u16string& str, size_t index) {
+        static int32_t codePointAt(std::u16string_view str, size_t index) {
             const char16_t code = str[index];
             if (code >= 0xD800 && code <= 0xDBFF && index + 1 < str.size()) {
                 const char16_t next = str[index + 1];
@@ -59,7 +59,7 @@ namespace mediaxx {
         }
 
         /// [index] 处的码点占用的码元数（[index] 必须是码元起点）
-        static size_t widthAt(const std::u16string& str, size_t index) {
+        static size_t widthAt(std::u16string_view str, size_t index) {
             const char16_t code = str[index];
             if (code >= 0xD800 && code <= 0xDBFF && index + 1 < str.size()) {
                 const char16_t next = str[index + 1];
