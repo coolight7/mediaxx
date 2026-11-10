@@ -16,8 +16,9 @@
 | `symbol_cases.json` | 符号合并/剥离/空格折叠用例（短串穷举 + 随机长串） |
 | `media_name_cases.json` | 歌名解析、歌手切分、歌词搜索串、可用性判断、歌词行、别名反查用例 |
 
-配套的数据表 `src/lib/analyse/media_name_tables.h` 同样由那个脚本导出（大小写折叠表、`\p{P}\p{S}` 与
-空白区间、码元折叠表、各词表），也不要手改。
+智能识别要用的**数据表**（大小写折叠表、`\p{P}\p{S}` 与空白区间、码元折叠表、各词表）不在这里：
+原始数据在 `script/data/media_name/*.json`，由 `script/gen_media_name_tables.dart` 生成
+`src/lib/analyse/media_name_tables.h`，见 [script/README.md](../../../../script/README.md)。
 
 ## 用例怎么造出来的
 
@@ -31,18 +32,24 @@
 
 ## 重新生成与运行
 
+用例和期望结果只能从 Dart 实现导出（C++ 自己算不了"期望值"）：
+
 ```sh
-# 1. 在 musicxx 仓库导出数据表与用例（写到 MEDIAXX_ANALYSE_OUT_DIR 指定的目录）
+# 1. 在 musicxx 仓库导出（写到 MEDIAXX_ANALYSE_OUT_DIR 指定的目录）
 $env:MEDIAXX_ANALYSE_OUT_DIR='<输出目录>'
 flutter test test/tool/mediaxx_analyse_fixture_dump.dart
 
-# 2. 把生成的 media_name_tables.h 放到 src/lib/analyse/，其余 json 放到这个目录
+# 2. 两份数据 JSON 放到本仓库 script/data/media_name/，其余用例 JSON 放到这个目录
+#    数据 JSON 变了就重新生成 C++ 数据表：
+dart run script/gen_media_name_tables.dart
 
 # 3. 在本仓库编译并跑
 cmake -B build/debug -S src -DLUMENXX_BUILD_TYPE=LUMENXX_BUILD_DEBUG -DCMAKE_BUILD_TYPE=Debug
 cmake --build build/debug -j 8
 LD_LIBRARY_PATH=build/debug:build/debug/exec build/debug/test/test
 ```
+
+musicxx 那边的 Dart 实现删掉之后这些 JSON 就是冻结的参考结果（相当于 golden），继续用来验证 C++ 实现。
 
 用例文件按相对路径查找（`./src/test/data/analyse/`、`../src/test/data/analyse/`、`./data/analyse/`、
 `./test/data/analyse/`），从仓库根或 `build/debug` 下运行都能找到。

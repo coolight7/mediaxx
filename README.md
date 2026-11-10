@@ -35,8 +35,11 @@ wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz && tar -zxvf libi
 - `src/lib/analyse/media_name.*`（歌名/歌手识别）与 `src/lib/analyse/chorus_analyse.*`（副歌分析）
   是从拟声（musicxx）的 Dart 实现迁移过来的。Dart 侧仍保留一份可运行的实现，两边结果必须一致，
   改动任一边后要跑一致性用例
-- 数据表 `src/lib/analyse/media_name_tables.h` 与用例 `src/test/data/analyse/*.json` 都由 musicxx
-  仓库的 `test/tool/mediaxx_analyse_fixture_dump.dart` 从 Dart 运行期导出，**不要手改**，详见
+- 数据表的原始数据在 `script/data/media_name/*.json`（可以直接读、直接改），由
+  `script/gen_media_name_tables.dart` 生成 `src/lib/analyse/media_name_tables.h`；生成物**不要手改**，
+  详见 [script/README.md](script/README.md)
+- 一致性用例 `src/test/data/analyse/*.json` 由 musicxx 仓库的
+  `test/tool/mediaxx_analyse_fixture_dump.dart` 从 Dart 运行期导出，详见
   [src/test/data/analyse/README.md](src/test/data/analyse/README.md)
 
 ## 动态库编译简要说明

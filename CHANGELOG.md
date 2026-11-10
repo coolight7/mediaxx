@@ -1,5 +1,6 @@
 ## 0.0.2
 
+* 数据表改由本仓库维护：原始数据在 `script/data/media_name/*.json`，`script/gen_media_name_tables.dart` 生成 C++ 表
 * 新增副歌分析：`mediaxx_analyse_audio_chorus`（区段结果）与 `mediaxx_analyse_audio_chorus_structure`
   （每帧曲线与种子区段，调试与一致性核对用）
 * 新增歌名/歌手智能识别：`mediaxx_analyse_media_name`、`mediaxx_slice_song_artist`、
