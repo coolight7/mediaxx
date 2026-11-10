@@ -15,7 +15,13 @@ extern "C" {
 
 using namespace std;
 
+/// 一致性用例：C++ 实现 vs musicxx 的 Dart 实现（定义在 test_analyse.cpp）
+void runAnalyseTests();
+
 void test() {
+    // 纯计算、不依赖音频文件的一致性用例先跑
+    runAnalyseTests();
+
     {
         std::map<std::string, std::string> data{
             {"name",     "simdjson"    },

@@ -1,6 +1,7 @@
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:isolate';
@@ -24,6 +25,18 @@ Pointer<Void> mediaxx_malloc(int size) {
 
 void mediaxx_free(Pointer ptr) {
   _bindings.mediaxx_free(ptr.cast<Void>());
+}
+
+/// 读取 C 接口通过出参返回的字符串并释放它
+///
+/// C 侧用 `mediaxx_malloc` 分配，所以统一用 [mediaxx_free] 释放。
+String? _takeOwnedString(Pointer<Char>? ptr) {
+  if (null == ptr || nullptr == ptr) {
+    return null;
+  }
+  final text = ptr.cast<Utf8>().tryToDartString();
+  mediaxx_free(ptr);
+  return text;
 }
 
 int mediaxx_get_log_level() {
@@ -151,6 +164,73 @@ mediaxx_get_audio_visualization(
   );
 }
 
+/// # 副歌分析
+///
+/// 输入是 [mediaxx_get_audio_visualization] 的原样输出，分析在 helper isolate 里做：
+/// - [spectrums]：每帧 `spectrumSize` 字节（256 个频点，0 = -80dB，255 = 0dB）
+/// - [waveform]：每帧 1 字节（RMS 响度，-60~+20dB）；传空表示只要频谱
+/// - [durationMs]：音频总时长（毫秒）
+/// - [configJson]：可选配置覆盖，如 `{"bandCount":32,"hopFrames":10}`
+///
+/// ## Return:
+/// - ret：1 成功（没有副歌时 `sections` 为空数组）/ 0 输入不合法（原因在 log）
+/// - result：JSON `{"sections":[{"start","end","confidence","energy","repeat","similarity"}],"totalDuration"}`
+Future<(int ret, String? result, String? log)> mediaxx_analyse_audio_chorus(
+  Uint8List spectrums,
+  Uint8List waveform,
+  int durationMs, {
+  String? configJson,
+}) {
+  return _requestAudioChorus(
+    spectrums,
+    waveform,
+    durationMs,
+    configJson,
+    false,
+  );
+}
+
+/// # 副歌分析的结构中间结果
+///
+/// 参数与 [mediaxx_analyse_audio_chorus] 相同，结果里多出每帧曲线与种子区段，
+/// 用于离线分析、调试与一致性核对。
+///
+/// ## Return:
+/// - ret：1 成功 / 0 音频过短、参数非法或整首静音（这时没有结果）
+Future<(int ret, String? result, String? log)>
+mediaxx_analyse_audio_chorus_structure(
+  Uint8List spectrums,
+  Uint8List waveform,
+  int durationMs, {
+  String? configJson,
+}) {
+  return _requestAudioChorus(spectrums, waveform, durationMs, configJson, true);
+}
+
+Future<(int ret, String? result, String? log)> _requestAudioChorus(
+  Uint8List spectrums,
+  Uint8List waveform,
+  int durationMs,
+  String? configJson,
+  bool structure,
+) async {
+  final SendPort helperIsolateSendPort = await _helperIsolateSendPort;
+  final int requestId = _nextAsyncxxRequestId++;
+  final request = _AsyncxxRequestAnalyseAudioChorus(
+    requestId,
+    spectrums: spectrums,
+    waveform: waveform,
+    durationMs: durationMs,
+    configJson: configJson,
+    structure: structure,
+  );
+  final completer = Completer<_AsyncxxResponseMediaInfo>();
+  _asyncxxRequests[requestId] = completer;
+  helperIsolateSendPort.send(request);
+  final result = await completer.future;
+  return (result.ret, result.result, result.log);
+}
+
 Future<String?> mediaxx_convert_char_encoding(List<int> data) async {
   if (data.isEmpty) {
     return null;
@@ -190,6 +270,216 @@ String mediaxx_get_available_video_filter_list() {
   final str = result.cast<Utf8>().tryToDartString();
   mediaxx_free(result);
   return str ?? "";
+}
+
+/// 读取并释放出参里的结果与日志（同步接口共用）
+(int ret, String? result, String? log) _readOutStrings(
+  int ret,
+  Pointer<Pointer<Char>> resultSlot,
+  Pointer<Pointer<Char>> logSlot,
+) {
+  return (
+    ret,
+    _takeOwnedString(resultSlot.value),
+    _takeOwnedString(logSlot.value),
+  );
+}
+
+/// # 歌名 / 歌手智能识别（同步）
+///
+/// 不联网、不做 IO，纯字符串计算：把「【歌手】歌名【Hi-res】」这类标题拆成规范歌名与歌手。
+///
+/// ## Args:
+/// - [name]：待识别的歌名
+/// - [artists]：已知歌手（为空表示没有）
+///
+/// ## Return:
+/// - result：JSON `{"name":"歌名","artists":["歌手"]}`
+(int ret, String? result, String? log) mediaxx_analyse_media_name(
+  String name, [
+  List<String>? artists,
+]) {
+  final Pointer<Char> namePtr = name.toNativeUtf8().cast<Char>();
+  final String? artistJson = (null == artists || artists.isEmpty)
+      ? null
+      : jsonEncode(artists);
+  final Pointer<Char> artistPtr = null == artistJson
+      ? nullptr
+      : artistJson.toNativeUtf8().cast<Char>();
+  final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+  result.value = nullptr;
+  final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+  log.value = nullptr;
+  try {
+    final ret = _bindings.mediaxx_analyse_media_name(
+      namePtr,
+      artistPtr,
+      result,
+      log,
+    );
+    return _readOutStrings(ret, result, log);
+  } finally {
+    malloc.free(namePtr);
+    if (nullptr != artistPtr) {
+      malloc.free(artistPtr);
+    }
+    malloc.free(result);
+    malloc.free(log);
+  }
+}
+
+/// # 歌手切分（同步）
+///
+/// 按分隔符切开歌手串并统一别名。
+///
+/// ## Args:
+/// - [artist]：歌手串
+/// - [append]：`null` 用映射值替换原值（`周杰倫` → `周杰伦`）、`false` 只保留原值、
+///   `true` 原值和映射值都保留
+/// - [weakArtist]：只要别名表里登记过的名字
+///
+/// ## Return:
+/// - result：JSON `{"artists":["歌手"],"crude":"去掉两端空白的原串"}`
+(int ret, String? result, String? log) mediaxx_slice_song_artist(
+  String artist, {
+  bool? append,
+  bool weakArtist = false,
+}) {
+  // C 接口用整数表示 Dart 的可空布尔：-1 = 替换，0 = 只保留原值，1 = 原值 + 映射值
+  final int appendMode = null == append ? -1 : (append ? 1 : 0);
+  final Pointer<Char> artistPtr = artist.toNativeUtf8().cast<Char>();
+  final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+  result.value = nullptr;
+  final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+  log.value = nullptr;
+  try {
+    final ret = _bindings.mediaxx_slice_song_artist(
+      artistPtr,
+      appendMode,
+      weakArtist ? 1 : 0,
+      result,
+      log,
+    );
+    return _readOutStrings(ret, result, log);
+  } finally {
+    malloc.free(artistPtr);
+    malloc.free(result);
+    malloc.free(log);
+  }
+}
+
+/// # 生成歌词搜索串（同步）
+///
+/// 歌名 + 歌手 → 用于歌词搜索的字符串（去标签、补歌手、超过 50 个码元就截断）。
+///
+/// ## Return:
+/// - result：JSON `{"str":"搜索串"}`
+(int ret, String? result, String? log) mediaxx_create_lyric_search_str(
+  String name,
+  String artist, {
+  bool weakArtist = false,
+}) {
+  final Pointer<Char> namePtr = name.toNativeUtf8().cast<Char>();
+  final Pointer<Char> artistPtr = artist.toNativeUtf8().cast<Char>();
+  final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+  result.value = nullptr;
+  final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+  log.value = nullptr;
+  try {
+    final ret = _bindings.mediaxx_create_lyric_search_str(
+      namePtr,
+      artistPtr,
+      weakArtist ? 1 : 0,
+      result,
+      log,
+    );
+    return _readOutStrings(ret, result, log);
+  } finally {
+    malloc.free(namePtr);
+    malloc.free(artistPtr);
+    malloc.free(result);
+    malloc.free(log);
+  }
+}
+
+/// # 判断歌曲信息是否可用（同步）
+///
+/// 过滤推广词、网址、乱码与 `kuwo` / `kugou` 这类占位值。
+///
+/// ## Args:
+/// - [name]：待检查的名字（null 表示没有）
+/// - [notAvailResult]：不可用时返回的替代值（null 表示没有）
+///
+/// ## Return:
+/// - result：JSON `{"name":"可用的名字"}`，不可用时 `name` 为 `null`
+(int ret, String? result, String? log) mediaxx_get_avail_song_info({
+  String? name,
+  String? notAvailResult,
+}) {
+  final Pointer<Char> namePtr = null == name
+      ? nullptr
+      : name.toNativeUtf8().cast<Char>();
+  final Pointer<Char> notAvailPtr = null == notAvailResult
+      ? nullptr
+      : notAvailResult.toNativeUtf8().cast<Char>();
+  final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+  result.value = nullptr;
+  final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+  log.value = nullptr;
+  try {
+    final ret = _bindings.mediaxx_get_avail_song_info(
+      namePtr,
+      notAvailPtr,
+      result,
+      log,
+    );
+    return _readOutStrings(ret, result, log);
+  } finally {
+    if (nullptr != namePtr) {
+      malloc.free(namePtr);
+    }
+    if (nullptr != notAvailPtr) {
+      malloc.free(notAvailPtr);
+    }
+    malloc.free(result);
+    malloc.free(log);
+  }
+}
+
+/// # 判断歌词行是否可用（同步）
+///
+/// 过滤 `//`、`翻译`、版权声明、音乐平台推广语这类行。
+bool mediaxx_check_avail_lyric_line(String line) {
+  final Pointer<Char> linePtr = line.toNativeUtf8().cast<Char>();
+  try {
+    return 1 == _bindings.mediaxx_check_avail_lyric_line(linePtr);
+  } finally {
+    malloc.free(linePtr);
+  }
+}
+
+/// # 歌手别名反查（同步）
+///
+/// 给一个规范歌手名，返回别名表里映射到它的所有写法（按字符串排序）。
+///
+/// ## Return:
+/// - result：JSON `{"aliases":["别名"]}`（没有别名时是空数组）
+(int ret, String? result, String? log) mediaxx_get_artist_aliases(
+  String artist,
+) {
+  final Pointer<Char> artistPtr = artist.toNativeUtf8().cast<Char>();
+  final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+  result.value = nullptr;
+  final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+  log.value = nullptr;
+  try {
+    final ret = _bindings.mediaxx_get_artist_aliases(artistPtr, result, log);
+    return _readOutStrings(ret, result, log);
+  } finally {
+    malloc.free(artistPtr);
+    malloc.free(result);
+    malloc.free(log);
+  }
 }
 
 const String _libName = 'mediaxx';
@@ -327,8 +617,9 @@ class _AsyncxxRequestMediaPicture {
     headersPtr = headers.toNativeUtf8().cast<Char>();
     pictureOutputPathPtr = pictureOutputPath.toNativeUtf8().cast<Char>();
     picture96OutputPathPtr = picture96OutputPath.toNativeUtf8().cast<Char>();
-    pictureDisplayOutputPathPtr =
-        pictureDisplayOutputPath.toNativeUtf8().cast<Char>();
+    pictureDisplayOutputPathPtr = pictureDisplayOutputPath
+        .toNativeUtf8()
+        .cast<Char>();
   }
 }
 
@@ -381,6 +672,27 @@ class _AsyncxxRequestAnalyseAudioVisualization {
   }) {
     filepathPtr = filepath?.toNativeUtf8().cast<Char>();
   }
+}
+
+class _AsyncxxRequestAnalyseAudioChorus {
+  final int id;
+  final TransferableTypedData transferableSpectrums;
+  final TransferableTypedData transferableWaveform;
+  final int durationMs;
+  final String? configJson;
+  final bool structure;
+
+  bool isDispose = false;
+
+  _AsyncxxRequestAnalyseAudioChorus(
+    this.id, {
+    required Uint8List spectrums,
+    required Uint8List waveform,
+    required this.durationMs,
+    this.configJson,
+    this.structure = false,
+  }) : transferableSpectrums = TransferableTypedData.fromList([spectrums]),
+       transferableWaveform = TransferableTypedData.fromList([waveform]);
 }
 
 class _AsyncxxRequestConvertCharEncoding {
@@ -443,12 +755,14 @@ Future<SendPort> _helperIsolateSendPort = () async {
       // App接收数据，在这里才转 dartStr，减少拷贝
       if (data is _AsyncxxResponseUInt8List) {
         if (null != data.transferableSpectrums) {
-          data.resultSpectrums =
-              data.transferableSpectrums!.materialize().asUint8List();
+          data.resultSpectrums = data.transferableSpectrums!
+              .materialize()
+              .asUint8List();
         }
         if (null != data.transferableWaveform) {
-          data.resultWaveform =
-              data.transferableWaveform!.materialize().asUint8List();
+          data.resultWaveform = data.transferableWaveform!
+              .materialize()
+              .asUint8List();
         }
         completer.complete(data);
         return;
@@ -674,8 +988,9 @@ Future<SendPort> _helperIsolateSendPort = () async {
             }
           }
 
-          final logStr =
-              (nullptr != logPtr) ? logPtr.cast<Utf8>().tryToDartString() : null;
+          final logStr = (nullptr != logPtr)
+              ? logPtr.cast<Utf8>().tryToDartString()
+              : null;
           if (nullptr != logPtr) {
             mediaxx_free(logPtr);
           }
@@ -688,6 +1003,78 @@ Future<SendPort> _helperIsolateSendPort = () async {
             log: logStr,
           );
           sendPort.send(response);
+          return;
+        } else if (data is _AsyncxxRequestAnalyseAudioChorus) {
+          // 副歌分析：频谱与响度在这一侧分配和释放，只回传结果 JSON
+          final spectrums = data.transferableSpectrums
+              .materialize()
+              .asUint8List();
+          final waveform = data.transferableWaveform
+              .materialize()
+              .asUint8List();
+          final Pointer<Uint8> spectrumsPtr = spectrums.isEmpty
+              ? nullptr
+              : malloc<Uint8>(spectrums.length);
+          if (nullptr != spectrumsPtr) {
+            spectrumsPtr.asTypedList(spectrums.length).setAll(0, spectrums);
+          }
+          final Pointer<Uint8> waveformPtr = waveform.isEmpty
+              ? nullptr
+              : malloc<Uint8>(waveform.length);
+          if (nullptr != waveformPtr) {
+            waveformPtr.asTypedList(waveform.length).setAll(0, waveform);
+          }
+          final Pointer<Char> configPtr = null == data.configJson
+              ? nullptr
+              : data.configJson!.toNativeUtf8().cast<Char>();
+          final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();
+          result.value = nullptr;
+          final Pointer<Pointer<Char>> log = malloc<Pointer<Char>>();
+          log.value = nullptr;
+          final int ret = data.structure
+              ? _bindings.mediaxx_analyse_audio_chorus_structure(
+                  spectrumsPtr.cast<Char>(),
+                  spectrums.length,
+                  waveformPtr.cast<Char>(),
+                  waveform.length,
+                  data.durationMs,
+                  configPtr,
+                  result,
+                  log,
+                )
+              : _bindings.mediaxx_analyse_audio_chorus(
+                  spectrumsPtr.cast<Char>(),
+                  spectrums.length,
+                  waveformPtr.cast<Char>(),
+                  waveform.length,
+                  data.durationMs,
+                  configPtr,
+                  result,
+                  log,
+                );
+          final resultPtr = result.value;
+          final logPtr = log.value;
+
+          if (nullptr != spectrumsPtr) {
+            malloc.free(spectrumsPtr);
+          }
+          if (nullptr != waveformPtr) {
+            malloc.free(waveformPtr);
+          }
+          if (nullptr != configPtr) {
+            malloc.free(configPtr);
+          }
+          malloc.free(result);
+          malloc.free(log);
+          data.isDispose = true;
+          sendPort.send(
+            _AsyncxxResponseMediaInfo(
+              data.id,
+              ret: ret,
+              resultPtr: (nullptr != resultPtr) ? resultPtr : null,
+              logPtr: (nullptr != logPtr) ? logPtr : null,
+            ),
+          );
           return;
         } else if (data is _AsyncxxRequestConvertCharEncoding) {
           final Pointer<Pointer<Char>> result = malloc<Pointer<Char>>();

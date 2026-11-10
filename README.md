@@ -9,6 +9,8 @@
     4. 读取链接的 ffmpeg 支持的音频、视频过滤器列表（能写在 mpv 的 af/vf 上的那些）
   - 结合`uchardet`、`iconv`尝试识别字符串的字符编码格式，以及转换到 utf8
   - 分析图片颜色，聚类出 主色调、亮色调4种、暗色调4种、综合颜色占比排序最高的4种
+  - 分析音频频谱与波形，并据此找出重复出现的高能量区段（副歌）
+  - 识别歌名/歌手：剥离【】标签与推广词、统一歌手别名、生成歌词搜索串、判断歌曲信息与歌词行是否可用
 
 ## 开始使用
 - 本项目分为 `c++ 代码` 和 `dart 代码` 两部分，c++ 部分主要是链接依赖库、实现功能，dart 代码为 ffi 调用 c++ 动态库的符号接口，方便 flutter/dart 程序使用
@@ -27,6 +29,15 @@ wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz && tar -zxvf libi
 ```
   - 接着在项目根目录执行 `./script/debug_build.sh` 或 `./script/release_build.sh` 即可编译 c++ 代码，debug 编译脚本在编译完成后会运行 test
 - 当修改导出的头文件(src/mediaxx.h)[src/mediaxx.h]内的函数声明后，需要执行 `dart run ffigen --config ffigen.yaml` 更新生成的dart代码
+
+## 与 Dart 实现的对应关系
+
+- `src/lib/analyse/media_name.*`（歌名/歌手识别）与 `src/lib/analyse/chorus_analyse.*`（副歌分析）
+  是从拟声（musicxx）的 Dart 实现迁移过来的。Dart 侧仍保留一份可运行的实现，两边结果必须一致，
+  改动任一边后要跑一致性用例
+- 数据表 `src/lib/analyse/media_name_tables.h` 与用例 `src/test/data/analyse/*.json` 都由 musicxx
+  仓库的 `test/tool/mediaxx_analyse_fixture_dump.dart` 从 Dart 运行期导出，**不要手改**，详见
+  [src/test/data/analyse/README.md](src/test/data/analyse/README.md)
 
 ## 动态库编译简要说明
 - 该项目需要先编译出动态库 libmediaxx ，然后在主程序编译时复制动态库到 install安装根目录，一般即为主程序编译输出所在目录，dart插件代码运行时即可自动动态加载动态库

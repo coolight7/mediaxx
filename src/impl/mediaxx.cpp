@@ -1,10 +1,12 @@
 
 #include "mediaxx.h"
 #include "analyse/audio_visualization.h"
+#include "analyse/chorus_analyse.h"
 #include "analyse/codec_info.h"
 #include "analyse/filter_info.h"
 #include "analyse/image.h"
 #include "analyse/media_info.h"
+#include "analyse/media_name.h"
 #include "simdjson.h"
 #include "util/log.h"
 #include "util/string_util.h"
@@ -15,6 +17,68 @@
 #include <string_view>
 
 using namespace mediaxx;
+
+namespace {
+
+    /// JSON 输出里的一个字符串字段（UTF-16 结果按 UTF-8 输出）
+    void appendStringValue(simdjson::builder::string_builder& sb, std::u16string_view value) {
+        sb.escape_and_append_with_quotes(stringxx::utf16ToUtf8(value));
+    }
+
+    /// 输出字符串数组字段：`"key":["a","b"]`
+    void appendStringArray(
+        simdjson::builder::string_builder& sb,
+        const std::string_view             key,
+        const std::vector<std::u16string>& list
+    ) {
+        sb.escape_and_append_with_quotes(key);
+        sb.append_colon();
+        sb.start_array();
+        bool isFirst = true;
+        for (const auto& item : list) {
+            if (false == isFirst) {
+                sb.append_comma();
+            }
+            isFirst = false;
+            appendStringValue(sb, item);
+        }
+        sb.end_array();
+    }
+
+    /// 解析歌手的 JSON 数组（NULL / 空串 / null / 非数组都按"没有歌手信息"处理）
+    [[nodiscard]] std::vector<std::u16string> parseArtistList(const char* json) {
+        std::vector<std::u16string> result{};
+        if (nullptr == json) {
+            return result;
+        }
+        const auto text = stringxx::strTrim(std::string_view{json});
+        if (text.empty() || text == "null") {
+            return result;
+        }
+        simdjson::dom::parser  parser{};
+        simdjson::dom::element document{};
+        if (parser.parse(text.data(), text.size()).get(document) != simdjson::SUCCESS) {
+            return result;
+        }
+        simdjson::dom::array array{};
+        if (document.get_array().get(array) != simdjson::SUCCESS) {
+            return result;
+        }
+        for (const auto& item : array) {
+            std::string_view value{};
+            if (item.get_string().get(value) == simdjson::SUCCESS) {
+                result.emplace_back(stringxx::utf8ToUtf16(value));
+            }
+        }
+        return result;
+    }
+
+    /// 输出 `{"sections":[...]}` 之外的通用错误日志
+    void setErrorLog(mediaxx::AnalyseLogItem_c& logItem, std::string_view message) {
+        logItem.setLog(message);
+    }
+
+} // namespace
 
 FFI_PLUGIN_EXPORT void* mediaxx_malloc(unsigned long long size) {
     return malloc(size);
@@ -105,12 +169,8 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_picture(
                               ? std::string_view{pictureDisplayOutputPath}
                               : std::string_view{};
     if (false == pOutput.empty() && mediaxx::MediaInfoReader_c::instance.openFile(item, headers)) {
-        result = mediaxx::MediaInfoReader_c::instance.savePicture(
-            item,
-            pOutput,
-            p96Output,
-            pDisplayOutput
-        );
+        result = mediaxx::MediaInfoReader_c::instance
+                     .savePicture(item, pOutput, p96Output, pDisplayOutput);
     } else {
         result = 0;
     }
@@ -267,4 +327,235 @@ FFI_PLUGIN_EXPORT const char* mediaxx_get_available_audio_filter_list() {
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_video_filter_list() {
     auto jsonsb = mediaxx::FilterInfo_c::findAvailFilter(AVMEDIA_TYPE_VIDEO);
     return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
+}
+
+FFI_PLUGIN_EXPORT int mediaxx_analyse_audio_chorus(
+    const char*  spectrums,
+    size_t       spectrumsSize,
+    const char*  waveform,
+    size_t       waveformSize,
+    long long    durationMs,
+    const char*  configJson,
+    const char** outResult,
+    const char** outLog
+) {
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
+    *outResult   = nullptr;
+    auto logItem = mediaxx::AnalyseLogItem_c{outLog};
+
+    mediaxx::AudioChorusConfig_c config{};
+    if (nullptr != configJson
+        && false == mediaxx::AudioChorusConfig_c::fromJson(configJson, config)) {
+        setErrorLog(logItem, "configJson 不是 JSON 对象");
+        return 0;
+    }
+    if (nullptr == spectrums || 0 == spectrumsSize
+        || 0 != spectrumsSize % mediaxx::AudioChorusAnalyzer_c::DEF_SPECTRUM_SIZE) {
+        setErrorLog(logItem, "spectrums 长度不合法（应为每帧 256 字节的整数倍）");
+        return 0;
+    }
+
+    const auto result = mediaxx::AudioChorusAnalyzer_c::analyse(
+        reinterpret_cast<const uint8_t*>(spectrums),
+        spectrumsSize,
+        (nullptr != waveform && waveformSize > 0) ? reinterpret_cast<const uint8_t*>(waveform)
+                                                  : nullptr,
+        waveformSize,
+        durationMs,
+        config
+    );
+    simdjson::builder::string_builder sb{};
+    result.toJson(sb);
+    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    return 1;
+}
+
+FFI_PLUGIN_EXPORT int mediaxx_analyse_audio_chorus_structure(
+    const char*  spectrums,
+    size_t       spectrumsSize,
+    const char*  waveform,
+    size_t       waveformSize,
+    long long    durationMs,
+    const char*  configJson,
+    const char** outResult,
+    const char** outLog
+) {
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
+    *outResult   = nullptr;
+    auto logItem = mediaxx::AnalyseLogItem_c{outLog};
+
+    mediaxx::AudioChorusConfig_c config{};
+    if (nullptr != configJson
+        && false == mediaxx::AudioChorusConfig_c::fromJson(configJson, config)) {
+        setErrorLog(logItem, "configJson 不是 JSON 对象");
+        return 0;
+    }
+    if (nullptr == spectrums || 0 == spectrumsSize
+        || 0 != spectrumsSize % mediaxx::AudioChorusAnalyzer_c::DEF_SPECTRUM_SIZE) {
+        setErrorLog(logItem, "spectrums 长度不合法（应为每帧 256 字节的整数倍）");
+        return 0;
+    }
+
+    const auto structure = mediaxx::AudioChorusAnalyzer_c::analyseStructure(
+        reinterpret_cast<const uint8_t*>(spectrums),
+        spectrumsSize,
+        (nullptr != waveform && waveformSize > 0) ? reinterpret_cast<const uint8_t*>(waveform)
+                                                  : nullptr,
+        waveformSize,
+        durationMs,
+        config
+    );
+    if (false == structure.has_value()) {
+        setErrorLog(logItem, "没有结构结果（音频过短、参数非法或整首静音）");
+        return 0;
+    }
+    simdjson::builder::string_builder sb{};
+    structure->toJson(sb);
+    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    return 1;
+}
+
+FFI_PLUGIN_EXPORT int mediaxx_analyse_media_name(
+    const char*  name,
+    const char*  artistListJson,
+    const char** outResult,
+    const char** outLog
+) {
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
+    *outResult            = nullptr;
+    const auto artistlist = parseArtistList(artistListJson);
+    const auto result     = mediaxx::MediaInfoNameAnalyse_c::instance().getNameArtist(
+        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(name)),
+        artistlist
+    );
+
+    simdjson::builder::string_builder sb{};
+    sb.start_object();
+    sb.escape_and_append_with_quotes("name");
+    sb.append_colon();
+    appendStringValue(sb, result.first);
+    sb.append_comma();
+    appendStringArray(sb, "artists", result.second);
+    sb.end_object();
+    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    return 1;
+}
+
+FFI_PLUGIN_EXPORT int mediaxx_slice_song_artist(
+    const char*  artist,
+    int          append,
+    int          weakArtist,
+    const char** outResult,
+    const char** outLog
+) {
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
+    *outResult = nullptr;
+    std::u16string crude{};
+    const auto     list = mediaxx::MediaNameAnalyseBase_c::sliceSongArtist(
+        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(artist)),
+        append,
+        0 != weakArtist,
+        crude
+    );
+
+    simdjson::builder::string_builder sb{};
+    sb.start_object();
+    appendStringArray(sb, "artists", list);
+    sb.append_comma();
+    sb.escape_and_append_with_quotes("crude");
+    sb.append_colon();
+    appendStringValue(sb, crude);
+    sb.end_object();
+    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    return 1;
+}
+
+FFI_PLUGIN_EXPORT int mediaxx_create_lyric_search_str(
+    const char*  name,
+    const char*  artist,
+    int          weakArtist,
+    const char** outResult,
+    const char** outLog
+) {
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
+    *outResult        = nullptr;
+    const auto result = mediaxx::LyricSearchStrAnalyse_c::instance().createLyricSearchStr(
+        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(name)),
+        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(artist)),
+        0 != weakArtist
+    );
+
+    simdjson::builder::string_builder sb{};
+    sb.start_object();
+    sb.escape_and_append_with_quotes("str");
+    sb.append_colon();
+    appendStringValue(sb, result);
+    sb.end_object();
+    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    return 1;
+}
+
+FFI_PLUGIN_EXPORT int mediaxx_get_avail_song_info(
+    const char*  name,
+    const char*  notAvailResult,
+    const char** outResult,
+    const char** outLog
+) {
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
+    *outResult = nullptr;
+    std::optional<std::u16string> nameValue{};
+    if (nullptr != name) {
+        nameValue = mediaxx::stringxx::utf8ToUtf16(name);
+    }
+    std::optional<std::u16string> notAvailValue{};
+    if (nullptr != notAvailResult) {
+        notAvailValue = mediaxx::stringxx::utf8ToUtf16(notAvailResult);
+    }
+    const auto value = mediaxx::MediaNameAnalyseBase_c::getAvailSongInfo(nameValue, notAvailValue);
+
+    simdjson::builder::string_builder sb{};
+    sb.start_object();
+    sb.escape_and_append_with_quotes("name");
+    sb.append_colon();
+    if (value.has_value()) {
+        appendStringValue(sb, *value);
+    } else {
+        sb.append_null();
+    }
+    sb.end_object();
+    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    return 1;
+}
+
+FFI_PLUGIN_EXPORT int mediaxx_check_avail_lyric_line(const char* line) {
+    if (nullptr == line) {
+        return 0;
+    }
+    return mediaxx::MediaNameAnalyseBase_c::checkAvailLyricLine(mediaxx::stringxx::utf8ToUtf16(line)
+           )
+               ? 1
+               : 0;
+}
+
+FFI_PLUGIN_EXPORT int
+    mediaxx_get_artist_aliases(const char* artist, const char** outResult, const char** outLog) {
+    assert(nullptr != outResult);
+    assert(nullptr != outLog);
+    *outResult      = nullptr;
+    const auto list = mediaxx::MediaNameAnalyseBase_c::artistAliases(
+        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(artist))
+    );
+
+    simdjson::builder::string_builder sb{};
+    sb.start_object();
+    appendStringArray(sb, "aliases", list);
+    sb.end_object();
+    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    return 1;
 }

@@ -1,0 +1,9377 @@
+{
+ "version": 1,
+ "cases": [
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": " ",
+   "merge": "",
+   "strip": " ",
+   "collapse": " "
+  },
+  {
+   "input": "歌名",
+   "merge": "歌名",
+   "strip": "歌名",
+   "collapse": "歌名"
+  },
+  {
+   "input": "告白气球",
+   "merge": "告白气球",
+   "strip": "告白气球",
+   "collapse": "告白气球"
+  },
+  {
+   "input": "!!!",
+   "merge": "",
+   "strip": "",
+   "collapse": "!!!"
+  },
+  {
+   "input": "！！！",
+   "merge": "",
+   "strip": "",
+   "collapse": "！！！"
+  },
+  {
+   "input": "...",
+   "merge": "",
+   "strip": "",
+   "collapse": "..."
+  },
+  {
+   "input": "a!!!b",
+   "merge": "a!!b",
+   "strip": "a!!!b",
+   "collapse": "a!!!b"
+  },
+  {
+   "input": "!!!a",
+   "merge": "!a",
+   "strip": "a",
+   "collapse": "!!!a"
+  },
+  {
+   "input": "a!!!",
+   "merge": "a!",
+   "strip": "a!!!",
+   "collapse": "a!!!"
+  },
+  {
+   "input": "!!!a!!!b!!!",
+   "merge": "!a!!b!",
+   "strip": "a!!!b!!!",
+   "collapse": "!!!a!!!b!!!"
+  },
+  {
+   "input": "a!!b",
+   "merge": "a!!b",
+   "strip": "a!!b",
+   "collapse": "a!!b"
+  },
+  {
+   "input": "a!b",
+   "merge": "a!b",
+   "strip": "a!b",
+   "collapse": "a!b"
+  },
+  {
+   "input": "——歌名——",
+   "merge": "—歌名—",
+   "strip": "歌名——",
+   "collapse": "——歌名——"
+  },
+  {
+   "input": "【歌名】",
+   "merge": "【歌名】",
+   "strip": "歌名】",
+   "collapse": "【歌名】"
+  },
+  {
+   "input": "《歌名》",
+   "merge": "《歌名》",
+   "strip": "歌名》",
+   "collapse": "《歌名》"
+  },
+  {
+   "input": "（歌名）",
+   "merge": "（歌名）",
+   "strip": "歌名）",
+   "collapse": "（歌名）"
+  },
+  {
+   "input": "【高糖甜文】I LOVE U",
+   "merge": "【高糖甜文】I LOVE U",
+   "strip": "高糖甜文】I LOVE U",
+   "collapse": "【高糖甜文】I LOVE U"
+  },
+  {
+   "input": "（高糖甜文）I LOVE U【完结甜文】 ",
+   "merge": "（高糖甜文）I LOVE U【完结甜文】",
+   "strip": "高糖甜文）I LOVE U【完结甜文】 ",
+   "collapse": "（高糖甜文）I LOVE U【完结甜文】 "
+  },
+  {
+   "input": "【洛天依&乐正绫】在百万豪装录音棚大声听 《东京不太热》【Hi-res】",
+   "merge": "【洛天依&乐正绫】在百万豪装录音棚大声听 《东京不太热》【Hi-res】",
+   "strip": "洛天依&乐正绫】在百万豪装录音棚大声听 《东京不太热》【Hi-res】",
+   "collapse": "【洛天依&乐正绫】在百万豪装录音棚大声听 《东京不太热》【Hi-res】"
+  },
+  {
+   "input": "在百万豪装录音棚大声听 陈粒《小半》【Hi-res】",
+   "merge": "在百万豪装录音棚大声听 陈粒《小半》【Hi-res】",
+   "strip": "在百万豪装录音棚大声听 陈粒《小半》【Hi-res】",
+   "collapse": "在百万豪装录音棚大声听 陈粒《小半》【Hi-res】"
+  },
+  {
+   "input": "🎵歌名🎵",
+   "merge": "🎵歌名🎵",
+   "strip": "歌名🎵",
+   "collapse": "🎵歌名🎵"
+  },
+  {
+   "input": "歌名 🎵🎵 🎵",
+   "merge": "歌名 🎵",
+   "strip": "歌名 🎵🎵 🎵",
+   "collapse": "歌名 🎵🎵 🎵"
+  },
+  {
+   "input": "🅰🅱✅",
+   "merge": "",
+   "strip": "",
+   "collapse": "🅰🅱✅"
+  },
+  {
+   "input": "👨‍👩‍👧‍👦 family",
+   "merge": "👨‍👩‍👧‍👦 family",
+   "strip": "‍👩‍👧‍👦 family",
+   "collapse": "👨‍👩‍👧‍👦 family"
+  },
+  {
+   "input": "❤️.mp3",
+   "merge": "❤️.mp3",
+   "strip": "️.mp3",
+   "collapse": "❤️.mp3"
+  },
+  {
+   "input": "𝟒𝐊 𝟔𝟎𝐅𝐏𝐒",
+   "merge": "𝟒𝐊 𝟔𝟎𝐅𝐏𝐒",
+   "strip": "𝟒𝐊 𝟔𝟎𝐅𝐏𝐒",
+   "collapse": "𝟒𝐊 𝟔𝟎𝐅𝐏𝐒"
+  },
+  {
+   "input": "① ② ③",
+   "merge": "① ② ③",
+   "strip": "① ② ③",
+   "collapse": "① ② ③"
+  },
+  {
+   "input": "a\t\tb",
+   "merge": "a\t\tb",
+   "strip": "a\t\tb",
+   "collapse": "a b"
+  },
+  {
+   "input": "a\n\nb",
+   "merge": "a\n\nb",
+   "strip": "a\n\nb",
+   "collapse": "a b"
+  },
+  {
+   "input": "a\r\n\r\nb",
+   "merge": "a\r\n\r\nb",
+   "strip": "a\r\n\r\nb",
+   "collapse": "a b"
+  },
+  {
+   "input": "a  b",
+   "merge": "a  b",
+   "strip": "a  b",
+   "collapse": "a b"
+  },
+  {
+   "input": "a　　b",
+   "merge": "a　　b",
+   "strip": "a　　b",
+   "collapse": "a b"
+  },
+  {
+   "input": "a  b",
+   "merge": "a  b",
+   "strip": "a  b",
+   "collapse": "a b"
+  },
+  {
+   "input": "a  b   c",
+   "merge": "a  b   c",
+   "strip": "a  b   c",
+   "collapse": "a b c"
+  },
+  {
+   "input": "   a   ",
+   "merge": "   a   ",
+   "strip": "   a   ",
+   "collapse": " a "
+  },
+  {
+   "input": "\t\t",
+   "merge": "",
+   "strip": "\t\t",
+   "collapse": " "
+  },
+  {
+   "input": "　　　",
+   "merge": "",
+   "strip": "　　　",
+   "collapse": " "
+  },
+  {
+   "input": "　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "　"
+  },
+  {
+   "input": "～～～",
+   "merge": "",
+   "strip": "",
+   "collapse": "～～～"
+  },
+  {
+   "input": "___abc___",
+   "merge": "_abc_",
+   "strip": "abc___",
+   "collapse": "___abc___"
+  },
+  {
+   "input": ".....abc",
+   "merge": ".abc",
+   "strip": "abc",
+   "collapse": ".....abc"
+  },
+  {
+   "input": "abc.....",
+   "merge": "abc.",
+   "strip": "abc.....",
+   "collapse": "abc....."
+  },
+  {
+   "input": "《致 零 零 后 的 预 防 针 》",
+   "merge": "《致 零 零 后 的 预 防 针 》",
+   "strip": "致 零 零 后 的 预 防 针 》",
+   "collapse": "《致 零 零 后 的 预 防 针 》"
+  },
+  {
+   "input": "QQ音乐 酷狗音乐 网易云音乐",
+   "merge": "QQ音乐 酷狗音乐 网易云音乐",
+   "strip": "QQ音乐 酷狗音乐 网易云音乐",
+   "collapse": "QQ音乐 酷狗音乐 网易云音乐"
+  },
+  {
+   "input": "[]",
+   "merge": "",
+   "strip": "",
+   "collapse": "[]"
+  },
+  {
+   "input": "【】",
+   "merge": "",
+   "strip": "",
+   "collapse": "【】"
+  },
+  {
+   "input": "a-b-c",
+   "merge": "a-b-c",
+   "strip": "a-b-c",
+   "collapse": "a-b-c"
+  },
+  {
+   "input": "a--b",
+   "merge": "a--b",
+   "strip": "a--b",
+   "collapse": "a--b"
+  },
+  {
+   "input": "4K/60FPS",
+   "merge": "4K/60FPS",
+   "strip": "4K/60FPS",
+   "collapse": "4K/60FPS"
+  },
+  {
+   "input": "--- 歌名 ---",
+   "merge": "- 歌名 -",
+   "strip": " 歌名 ---",
+   "collapse": "--- 歌名 ---"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "a",
+   "merge": "a",
+   "strip": "a",
+   "collapse": "a"
+  },
+  {
+   "input": "!",
+   "merge": "",
+   "strip": "",
+   "collapse": "!"
+  },
+  {
+   "input": " ",
+   "merge": "",
+   "strip": " ",
+   "collapse": " "
+  },
+  {
+   "input": "（",
+   "merge": "",
+   "strip": "",
+   "collapse": "（"
+  },
+  {
+   "input": "🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵"
+  },
+  {
+   "input": " ",
+   "merge": "",
+   "strip": " ",
+   "collapse": " "
+  },
+  {
+   "input": "　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "　"
+  },
+  {
+   "input": "》",
+   "merge": "",
+   "strip": "",
+   "collapse": "》"
+  },
+  {
+   "input": "1",
+   "merge": "1",
+   "strip": "1",
+   "collapse": "1"
+  },
+  {
+   "input": "﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "﻿"
+  },
+  {
+   "input": "aa",
+   "merge": "aa",
+   "strip": "aa",
+   "collapse": "aa"
+  },
+  {
+   "input": "a!",
+   "merge": "a!",
+   "strip": "a!",
+   "collapse": "a!"
+  },
+  {
+   "input": "a ",
+   "merge": "a ",
+   "strip": "a ",
+   "collapse": "a "
+  },
+  {
+   "input": "a（",
+   "merge": "a（",
+   "strip": "a（",
+   "collapse": "a（"
+  },
+  {
+   "input": "a🎵",
+   "merge": "a🎵",
+   "strip": "a🎵",
+   "collapse": "a🎵"
+  },
+  {
+   "input": "a ",
+   "merge": "a ",
+   "strip": "a ",
+   "collapse": "a "
+  },
+  {
+   "input": "a　",
+   "merge": "a　",
+   "strip": "a　",
+   "collapse": "a　"
+  },
+  {
+   "input": "a》",
+   "merge": "a》",
+   "strip": "a》",
+   "collapse": "a》"
+  },
+  {
+   "input": "a1",
+   "merge": "a1",
+   "strip": "a1",
+   "collapse": "a1"
+  },
+  {
+   "input": "a﻿",
+   "merge": "a﻿",
+   "strip": "a﻿",
+   "collapse": "a﻿"
+  },
+  {
+   "input": "!a",
+   "merge": "!a",
+   "strip": "a",
+   "collapse": "!a"
+  },
+  {
+   "input": "!!",
+   "merge": "",
+   "strip": "",
+   "collapse": "!!"
+  },
+  {
+   "input": "! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "! "
+  },
+  {
+   "input": "!（",
+   "merge": "",
+   "strip": "",
+   "collapse": "!（"
+  },
+  {
+   "input": "!🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "!🎵"
+  },
+  {
+   "input": "! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "! "
+  },
+  {
+   "input": "!　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "!　"
+  },
+  {
+   "input": "!》",
+   "merge": "",
+   "strip": "",
+   "collapse": "!》"
+  },
+  {
+   "input": "!1",
+   "merge": "!1",
+   "strip": "1",
+   "collapse": "!1"
+  },
+  {
+   "input": "!﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "!﻿"
+  },
+  {
+   "input": " a",
+   "merge": " a",
+   "strip": " a",
+   "collapse": " a"
+  },
+  {
+   "input": " !",
+   "merge": "",
+   "strip": " !",
+   "collapse": " !"
+  },
+  {
+   "input": "  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": " "
+  },
+  {
+   "input": " （",
+   "merge": "",
+   "strip": " （",
+   "collapse": " （"
+  },
+  {
+   "input": " 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": " "
+  },
+  {
+   "input": " 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": " "
+  },
+  {
+   "input": " 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": " 》"
+  },
+  {
+   "input": " 1",
+   "merge": " 1",
+   "strip": " 1",
+   "collapse": " 1"
+  },
+  {
+   "input": " ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": " "
+  },
+  {
+   "input": "（a",
+   "merge": "（a",
+   "strip": "a",
+   "collapse": "（a"
+  },
+  {
+   "input": "（!",
+   "merge": "",
+   "strip": "",
+   "collapse": "（!"
+  },
+  {
+   "input": "（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（（",
+   "merge": "",
+   "strip": "",
+   "collapse": "（（"
+  },
+  {
+   "input": "（🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "（🎵"
+  },
+  {
+   "input": "（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "（　"
+  },
+  {
+   "input": "（》",
+   "merge": "",
+   "strip": "",
+   "collapse": "（》"
+  },
+  {
+   "input": "（1",
+   "merge": "（1",
+   "strip": "1",
+   "collapse": "（1"
+  },
+  {
+   "input": "（﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "（﻿"
+  },
+  {
+   "input": "🎵a",
+   "merge": "🎵a",
+   "strip": "a",
+   "collapse": "🎵a"
+  },
+  {
+   "input": "🎵!",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵!"
+  },
+  {
+   "input": "🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵（",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵（"
+  },
+  {
+   "input": "🎵🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵🎵"
+  },
+  {
+   "input": "🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "🎵　"
+  },
+  {
+   "input": "🎵》",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵》"
+  },
+  {
+   "input": "🎵1",
+   "merge": "🎵1",
+   "strip": "1",
+   "collapse": "🎵1"
+  },
+  {
+   "input": "🎵﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "🎵﻿"
+  },
+  {
+   "input": " a",
+   "merge": " a",
+   "strip": " a",
+   "collapse": " a"
+  },
+  {
+   "input": " !",
+   "merge": "",
+   "strip": " !",
+   "collapse": " !"
+  },
+  {
+   "input": "  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": " "
+  },
+  {
+   "input": " （",
+   "merge": "",
+   "strip": " （",
+   "collapse": " （"
+  },
+  {
+   "input": " 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": " "
+  },
+  {
+   "input": " 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": " "
+  },
+  {
+   "input": " 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": " 》"
+  },
+  {
+   "input": " 1",
+   "merge": " 1",
+   "strip": " 1",
+   "collapse": " 1"
+  },
+  {
+   "input": " ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": " "
+  },
+  {
+   "input": "　a",
+   "merge": "　a",
+   "strip": "　a",
+   "collapse": "　a"
+  },
+  {
+   "input": "　!",
+   "merge": "",
+   "strip": "　!",
+   "collapse": "　!"
+  },
+  {
+   "input": "　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": " "
+  },
+  {
+   "input": "　（",
+   "merge": "",
+   "strip": "　（",
+   "collapse": "　（"
+  },
+  {
+   "input": "　🎵",
+   "merge": "",
+   "strip": "　🎵",
+   "collapse": "　🎵"
+  },
+  {
+   "input": "　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": " "
+  },
+  {
+   "input": "　　",
+   "merge": "",
+   "strip": "　　",
+   "collapse": " "
+  },
+  {
+   "input": "　》",
+   "merge": "",
+   "strip": "　》",
+   "collapse": "　》"
+  },
+  {
+   "input": "　1",
+   "merge": "　1",
+   "strip": "　1",
+   "collapse": "　1"
+  },
+  {
+   "input": "　﻿",
+   "merge": "",
+   "strip": "　﻿",
+   "collapse": " "
+  },
+  {
+   "input": "》a",
+   "merge": "》a",
+   "strip": "a",
+   "collapse": "》a"
+  },
+  {
+   "input": "》!",
+   "merge": "",
+   "strip": "",
+   "collapse": "》!"
+  },
+  {
+   "input": "》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》（",
+   "merge": "",
+   "strip": "",
+   "collapse": "》（"
+  },
+  {
+   "input": "》🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "》🎵"
+  },
+  {
+   "input": "》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "》　"
+  },
+  {
+   "input": "》》",
+   "merge": "",
+   "strip": "",
+   "collapse": "》》"
+  },
+  {
+   "input": "》1",
+   "merge": "》1",
+   "strip": "1",
+   "collapse": "》1"
+  },
+  {
+   "input": "》﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "》﻿"
+  },
+  {
+   "input": "1a",
+   "merge": "1a",
+   "strip": "1a",
+   "collapse": "1a"
+  },
+  {
+   "input": "1!",
+   "merge": "1!",
+   "strip": "1!",
+   "collapse": "1!"
+  },
+  {
+   "input": "1 ",
+   "merge": "1 ",
+   "strip": "1 ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1（",
+   "merge": "1（",
+   "strip": "1（",
+   "collapse": "1（"
+  },
+  {
+   "input": "1🎵",
+   "merge": "1🎵",
+   "strip": "1🎵",
+   "collapse": "1🎵"
+  },
+  {
+   "input": "1 ",
+   "merge": "1 ",
+   "strip": "1 ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1　",
+   "merge": "1　",
+   "strip": "1　",
+   "collapse": "1　"
+  },
+  {
+   "input": "1》",
+   "merge": "1》",
+   "strip": "1》",
+   "collapse": "1》"
+  },
+  {
+   "input": "11",
+   "merge": "11",
+   "strip": "11",
+   "collapse": "11"
+  },
+  {
+   "input": "1﻿",
+   "merge": "1﻿",
+   "strip": "1﻿",
+   "collapse": "1﻿"
+  },
+  {
+   "input": "﻿a",
+   "merge": "﻿a",
+   "strip": "﻿a",
+   "collapse": "﻿a"
+  },
+  {
+   "input": "﻿!",
+   "merge": "",
+   "strip": "﻿!",
+   "collapse": "﻿!"
+  },
+  {
+   "input": "﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿（",
+   "merge": "",
+   "strip": "﻿（",
+   "collapse": "﻿（"
+  },
+  {
+   "input": "﻿🎵",
+   "merge": "",
+   "strip": "﻿🎵",
+   "collapse": "﻿🎵"
+  },
+  {
+   "input": "﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿　",
+   "merge": "",
+   "strip": "﻿　",
+   "collapse": " "
+  },
+  {
+   "input": "﻿》",
+   "merge": "",
+   "strip": "﻿》",
+   "collapse": "﻿》"
+  },
+  {
+   "input": "﻿1",
+   "merge": "﻿1",
+   "strip": "﻿1",
+   "collapse": "﻿1"
+  },
+  {
+   "input": "﻿﻿",
+   "merge": "",
+   "strip": "﻿﻿",
+   "collapse": " "
+  },
+  {
+   "input": "aaa",
+   "merge": "aaa",
+   "strip": "aaa",
+   "collapse": "aaa"
+  },
+  {
+   "input": "aa!",
+   "merge": "aa!",
+   "strip": "aa!",
+   "collapse": "aa!"
+  },
+  {
+   "input": "aa ",
+   "merge": "aa ",
+   "strip": "aa ",
+   "collapse": "aa "
+  },
+  {
+   "input": "aa（",
+   "merge": "aa（",
+   "strip": "aa（",
+   "collapse": "aa（"
+  },
+  {
+   "input": "aa🎵",
+   "merge": "aa🎵",
+   "strip": "aa🎵",
+   "collapse": "aa🎵"
+  },
+  {
+   "input": "aa ",
+   "merge": "aa ",
+   "strip": "aa ",
+   "collapse": "aa "
+  },
+  {
+   "input": "aa　",
+   "merge": "aa　",
+   "strip": "aa　",
+   "collapse": "aa　"
+  },
+  {
+   "input": "aa》",
+   "merge": "aa》",
+   "strip": "aa》",
+   "collapse": "aa》"
+  },
+  {
+   "input": "aa1",
+   "merge": "aa1",
+   "strip": "aa1",
+   "collapse": "aa1"
+  },
+  {
+   "input": "aa﻿",
+   "merge": "aa﻿",
+   "strip": "aa﻿",
+   "collapse": "aa﻿"
+  },
+  {
+   "input": "a!a",
+   "merge": "a!a",
+   "strip": "a!a",
+   "collapse": "a!a"
+  },
+  {
+   "input": "a!!",
+   "merge": "a!",
+   "strip": "a!!",
+   "collapse": "a!!"
+  },
+  {
+   "input": "a! ",
+   "merge": "a!",
+   "strip": "a! ",
+   "collapse": "a! "
+  },
+  {
+   "input": "a!（",
+   "merge": "a!",
+   "strip": "a!（",
+   "collapse": "a!（"
+  },
+  {
+   "input": "a!🎵",
+   "merge": "a!",
+   "strip": "a!🎵",
+   "collapse": "a!🎵"
+  },
+  {
+   "input": "a! ",
+   "merge": "a!",
+   "strip": "a! ",
+   "collapse": "a! "
+  },
+  {
+   "input": "a!　",
+   "merge": "a!",
+   "strip": "a!　",
+   "collapse": "a!　"
+  },
+  {
+   "input": "a!》",
+   "merge": "a!",
+   "strip": "a!》",
+   "collapse": "a!》"
+  },
+  {
+   "input": "a!1",
+   "merge": "a!1",
+   "strip": "a!1",
+   "collapse": "a!1"
+  },
+  {
+   "input": "a!﻿",
+   "merge": "a!",
+   "strip": "a!﻿",
+   "collapse": "a!﻿"
+  },
+  {
+   "input": "a a",
+   "merge": "a a",
+   "strip": "a a",
+   "collapse": "a a"
+  },
+  {
+   "input": "a !",
+   "merge": "a !",
+   "strip": "a !",
+   "collapse": "a !"
+  },
+  {
+   "input": "a  ",
+   "merge": "a  ",
+   "strip": "a  ",
+   "collapse": "a "
+  },
+  {
+   "input": "a （",
+   "merge": "a （",
+   "strip": "a （",
+   "collapse": "a （"
+  },
+  {
+   "input": "a 🎵",
+   "merge": "a 🎵",
+   "strip": "a 🎵",
+   "collapse": "a 🎵"
+  },
+  {
+   "input": "a  ",
+   "merge": "a  ",
+   "strip": "a  ",
+   "collapse": "a "
+  },
+  {
+   "input": "a 　",
+   "merge": "a 　",
+   "strip": "a 　",
+   "collapse": "a "
+  },
+  {
+   "input": "a 》",
+   "merge": "a 》",
+   "strip": "a 》",
+   "collapse": "a 》"
+  },
+  {
+   "input": "a 1",
+   "merge": "a 1",
+   "strip": "a 1",
+   "collapse": "a 1"
+  },
+  {
+   "input": "a ﻿",
+   "merge": "a ﻿",
+   "strip": "a ﻿",
+   "collapse": "a "
+  },
+  {
+   "input": "a（a",
+   "merge": "a（a",
+   "strip": "a（a",
+   "collapse": "a（a"
+  },
+  {
+   "input": "a（!",
+   "merge": "a（",
+   "strip": "a（!",
+   "collapse": "a（!"
+  },
+  {
+   "input": "a（ ",
+   "merge": "a（",
+   "strip": "a（ ",
+   "collapse": "a（ "
+  },
+  {
+   "input": "a（（",
+   "merge": "a（",
+   "strip": "a（（",
+   "collapse": "a（（"
+  },
+  {
+   "input": "a（🎵",
+   "merge": "a（",
+   "strip": "a（🎵",
+   "collapse": "a（🎵"
+  },
+  {
+   "input": "a（ ",
+   "merge": "a（",
+   "strip": "a（ ",
+   "collapse": "a（ "
+  },
+  {
+   "input": "a（　",
+   "merge": "a（",
+   "strip": "a（　",
+   "collapse": "a（　"
+  },
+  {
+   "input": "a（》",
+   "merge": "a（",
+   "strip": "a（》",
+   "collapse": "a（》"
+  },
+  {
+   "input": "a（1",
+   "merge": "a（1",
+   "strip": "a（1",
+   "collapse": "a（1"
+  },
+  {
+   "input": "a（﻿",
+   "merge": "a（",
+   "strip": "a（﻿",
+   "collapse": "a（﻿"
+  },
+  {
+   "input": "a🎵a",
+   "merge": "a🎵a",
+   "strip": "a🎵a",
+   "collapse": "a🎵a"
+  },
+  {
+   "input": "a🎵!",
+   "merge": "a🎵",
+   "strip": "a🎵!",
+   "collapse": "a🎵!"
+  },
+  {
+   "input": "a🎵 ",
+   "merge": "a🎵",
+   "strip": "a🎵 ",
+   "collapse": "a🎵 "
+  },
+  {
+   "input": "a🎵（",
+   "merge": "a🎵",
+   "strip": "a🎵（",
+   "collapse": "a🎵（"
+  },
+  {
+   "input": "a🎵🎵",
+   "merge": "a🎵",
+   "strip": "a🎵🎵",
+   "collapse": "a🎵🎵"
+  },
+  {
+   "input": "a🎵 ",
+   "merge": "a🎵",
+   "strip": "a🎵 ",
+   "collapse": "a🎵 "
+  },
+  {
+   "input": "a🎵　",
+   "merge": "a🎵",
+   "strip": "a🎵　",
+   "collapse": "a🎵　"
+  },
+  {
+   "input": "a🎵》",
+   "merge": "a🎵",
+   "strip": "a🎵》",
+   "collapse": "a🎵》"
+  },
+  {
+   "input": "a🎵1",
+   "merge": "a🎵1",
+   "strip": "a🎵1",
+   "collapse": "a🎵1"
+  },
+  {
+   "input": "a🎵﻿",
+   "merge": "a🎵",
+   "strip": "a🎵﻿",
+   "collapse": "a🎵﻿"
+  },
+  {
+   "input": "a a",
+   "merge": "a a",
+   "strip": "a a",
+   "collapse": "a a"
+  },
+  {
+   "input": "a !",
+   "merge": "a !",
+   "strip": "a !",
+   "collapse": "a !"
+  },
+  {
+   "input": "a  ",
+   "merge": "a  ",
+   "strip": "a  ",
+   "collapse": "a "
+  },
+  {
+   "input": "a （",
+   "merge": "a （",
+   "strip": "a （",
+   "collapse": "a （"
+  },
+  {
+   "input": "a 🎵",
+   "merge": "a 🎵",
+   "strip": "a 🎵",
+   "collapse": "a 🎵"
+  },
+  {
+   "input": "a  ",
+   "merge": "a  ",
+   "strip": "a  ",
+   "collapse": "a "
+  },
+  {
+   "input": "a 　",
+   "merge": "a 　",
+   "strip": "a 　",
+   "collapse": "a "
+  },
+  {
+   "input": "a 》",
+   "merge": "a 》",
+   "strip": "a 》",
+   "collapse": "a 》"
+  },
+  {
+   "input": "a 1",
+   "merge": "a 1",
+   "strip": "a 1",
+   "collapse": "a 1"
+  },
+  {
+   "input": "a ﻿",
+   "merge": "a ﻿",
+   "strip": "a ﻿",
+   "collapse": "a "
+  },
+  {
+   "input": "a　a",
+   "merge": "a　a",
+   "strip": "a　a",
+   "collapse": "a　a"
+  },
+  {
+   "input": "a　!",
+   "merge": "a　!",
+   "strip": "a　!",
+   "collapse": "a　!"
+  },
+  {
+   "input": "a　 ",
+   "merge": "a　 ",
+   "strip": "a　 ",
+   "collapse": "a "
+  },
+  {
+   "input": "a　（",
+   "merge": "a　（",
+   "strip": "a　（",
+   "collapse": "a　（"
+  },
+  {
+   "input": "a　🎵",
+   "merge": "a　🎵",
+   "strip": "a　🎵",
+   "collapse": "a　🎵"
+  },
+  {
+   "input": "a　 ",
+   "merge": "a　 ",
+   "strip": "a　 ",
+   "collapse": "a "
+  },
+  {
+   "input": "a　　",
+   "merge": "a　　",
+   "strip": "a　　",
+   "collapse": "a "
+  },
+  {
+   "input": "a　》",
+   "merge": "a　》",
+   "strip": "a　》",
+   "collapse": "a　》"
+  },
+  {
+   "input": "a　1",
+   "merge": "a　1",
+   "strip": "a　1",
+   "collapse": "a　1"
+  },
+  {
+   "input": "a　﻿",
+   "merge": "a　﻿",
+   "strip": "a　﻿",
+   "collapse": "a "
+  },
+  {
+   "input": "a》a",
+   "merge": "a》a",
+   "strip": "a》a",
+   "collapse": "a》a"
+  },
+  {
+   "input": "a》!",
+   "merge": "a》",
+   "strip": "a》!",
+   "collapse": "a》!"
+  },
+  {
+   "input": "a》 ",
+   "merge": "a》",
+   "strip": "a》 ",
+   "collapse": "a》 "
+  },
+  {
+   "input": "a》（",
+   "merge": "a》",
+   "strip": "a》（",
+   "collapse": "a》（"
+  },
+  {
+   "input": "a》🎵",
+   "merge": "a》",
+   "strip": "a》🎵",
+   "collapse": "a》🎵"
+  },
+  {
+   "input": "a》 ",
+   "merge": "a》",
+   "strip": "a》 ",
+   "collapse": "a》 "
+  },
+  {
+   "input": "a》　",
+   "merge": "a》",
+   "strip": "a》　",
+   "collapse": "a》　"
+  },
+  {
+   "input": "a》》",
+   "merge": "a》",
+   "strip": "a》》",
+   "collapse": "a》》"
+  },
+  {
+   "input": "a》1",
+   "merge": "a》1",
+   "strip": "a》1",
+   "collapse": "a》1"
+  },
+  {
+   "input": "a》﻿",
+   "merge": "a》",
+   "strip": "a》﻿",
+   "collapse": "a》﻿"
+  },
+  {
+   "input": "a1a",
+   "merge": "a1a",
+   "strip": "a1a",
+   "collapse": "a1a"
+  },
+  {
+   "input": "a1!",
+   "merge": "a1!",
+   "strip": "a1!",
+   "collapse": "a1!"
+  },
+  {
+   "input": "a1 ",
+   "merge": "a1 ",
+   "strip": "a1 ",
+   "collapse": "a1 "
+  },
+  {
+   "input": "a1（",
+   "merge": "a1（",
+   "strip": "a1（",
+   "collapse": "a1（"
+  },
+  {
+   "input": "a1🎵",
+   "merge": "a1🎵",
+   "strip": "a1🎵",
+   "collapse": "a1🎵"
+  },
+  {
+   "input": "a1 ",
+   "merge": "a1 ",
+   "strip": "a1 ",
+   "collapse": "a1 "
+  },
+  {
+   "input": "a1　",
+   "merge": "a1　",
+   "strip": "a1　",
+   "collapse": "a1　"
+  },
+  {
+   "input": "a1》",
+   "merge": "a1》",
+   "strip": "a1》",
+   "collapse": "a1》"
+  },
+  {
+   "input": "a11",
+   "merge": "a11",
+   "strip": "a11",
+   "collapse": "a11"
+  },
+  {
+   "input": "a1﻿",
+   "merge": "a1﻿",
+   "strip": "a1﻿",
+   "collapse": "a1﻿"
+  },
+  {
+   "input": "a﻿a",
+   "merge": "a﻿a",
+   "strip": "a﻿a",
+   "collapse": "a﻿a"
+  },
+  {
+   "input": "a﻿!",
+   "merge": "a﻿!",
+   "strip": "a﻿!",
+   "collapse": "a﻿!"
+  },
+  {
+   "input": "a﻿ ",
+   "merge": "a﻿ ",
+   "strip": "a﻿ ",
+   "collapse": "a "
+  },
+  {
+   "input": "a﻿（",
+   "merge": "a﻿（",
+   "strip": "a﻿（",
+   "collapse": "a﻿（"
+  },
+  {
+   "input": "a﻿🎵",
+   "merge": "a﻿🎵",
+   "strip": "a﻿🎵",
+   "collapse": "a﻿🎵"
+  },
+  {
+   "input": "a﻿ ",
+   "merge": "a﻿ ",
+   "strip": "a﻿ ",
+   "collapse": "a "
+  },
+  {
+   "input": "a﻿　",
+   "merge": "a﻿　",
+   "strip": "a﻿　",
+   "collapse": "a "
+  },
+  {
+   "input": "a﻿》",
+   "merge": "a﻿》",
+   "strip": "a﻿》",
+   "collapse": "a﻿》"
+  },
+  {
+   "input": "a﻿1",
+   "merge": "a﻿1",
+   "strip": "a﻿1",
+   "collapse": "a﻿1"
+  },
+  {
+   "input": "a﻿﻿",
+   "merge": "a﻿﻿",
+   "strip": "a﻿﻿",
+   "collapse": "a "
+  },
+  {
+   "input": "!aa",
+   "merge": "!aa",
+   "strip": "aa",
+   "collapse": "!aa"
+  },
+  {
+   "input": "!a!",
+   "merge": "!a!",
+   "strip": "a!",
+   "collapse": "!a!"
+  },
+  {
+   "input": "!a ",
+   "merge": "!a ",
+   "strip": "a ",
+   "collapse": "!a "
+  },
+  {
+   "input": "!a（",
+   "merge": "!a（",
+   "strip": "a（",
+   "collapse": "!a（"
+  },
+  {
+   "input": "!a🎵",
+   "merge": "!a🎵",
+   "strip": "a🎵",
+   "collapse": "!a🎵"
+  },
+  {
+   "input": "!a ",
+   "merge": "!a ",
+   "strip": "a ",
+   "collapse": "!a "
+  },
+  {
+   "input": "!a　",
+   "merge": "!a　",
+   "strip": "a　",
+   "collapse": "!a　"
+  },
+  {
+   "input": "!a》",
+   "merge": "!a》",
+   "strip": "a》",
+   "collapse": "!a》"
+  },
+  {
+   "input": "!a1",
+   "merge": "!a1",
+   "strip": "a1",
+   "collapse": "!a1"
+  },
+  {
+   "input": "!a﻿",
+   "merge": "!a﻿",
+   "strip": "a﻿",
+   "collapse": "!a﻿"
+  },
+  {
+   "input": "!!a",
+   "merge": "!a",
+   "strip": "a",
+   "collapse": "!!a"
+  },
+  {
+   "input": "!!!",
+   "merge": "",
+   "strip": "",
+   "collapse": "!!!"
+  },
+  {
+   "input": "!! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "!! "
+  },
+  {
+   "input": "!!（",
+   "merge": "",
+   "strip": "",
+   "collapse": "!!（"
+  },
+  {
+   "input": "!!🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "!!🎵"
+  },
+  {
+   "input": "!! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "!! "
+  },
+  {
+   "input": "!!　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "!!　"
+  },
+  {
+   "input": "!!》",
+   "merge": "",
+   "strip": "",
+   "collapse": "!!》"
+  },
+  {
+   "input": "!!1",
+   "merge": "!1",
+   "strip": "1",
+   "collapse": "!!1"
+  },
+  {
+   "input": "!!﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "!!﻿"
+  },
+  {
+   "input": "! a",
+   "merge": "! a",
+   "strip": " a",
+   "collapse": "! a"
+  },
+  {
+   "input": "! !",
+   "merge": "",
+   "strip": " !",
+   "collapse": "! !"
+  },
+  {
+   "input": "!  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "! "
+  },
+  {
+   "input": "! （",
+   "merge": "",
+   "strip": " （",
+   "collapse": "! （"
+  },
+  {
+   "input": "! 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": "! 🎵"
+  },
+  {
+   "input": "!  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "! "
+  },
+  {
+   "input": "! 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": "! "
+  },
+  {
+   "input": "! 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": "! 》"
+  },
+  {
+   "input": "! 1",
+   "merge": "! 1",
+   "strip": " 1",
+   "collapse": "! 1"
+  },
+  {
+   "input": "! ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": "! "
+  },
+  {
+   "input": "!（a",
+   "merge": "（a",
+   "strip": "a",
+   "collapse": "!（a"
+  },
+  {
+   "input": "!（!",
+   "merge": "",
+   "strip": "",
+   "collapse": "!（!"
+  },
+  {
+   "input": "!（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "!（ "
+  },
+  {
+   "input": "!（（",
+   "merge": "",
+   "strip": "",
+   "collapse": "!（（"
+  },
+  {
+   "input": "!（🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "!（🎵"
+  },
+  {
+   "input": "!（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "!（ "
+  },
+  {
+   "input": "!（　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "!（　"
+  },
+  {
+   "input": "!（》",
+   "merge": "",
+   "strip": "",
+   "collapse": "!（》"
+  },
+  {
+   "input": "!（1",
+   "merge": "（1",
+   "strip": "1",
+   "collapse": "!（1"
+  },
+  {
+   "input": "!（﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "!（﻿"
+  },
+  {
+   "input": "!🎵a",
+   "merge": "🎵a",
+   "strip": "a",
+   "collapse": "!🎵a"
+  },
+  {
+   "input": "!🎵!",
+   "merge": "",
+   "strip": "",
+   "collapse": "!🎵!"
+  },
+  {
+   "input": "!🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "!🎵 "
+  },
+  {
+   "input": "!🎵（",
+   "merge": "",
+   "strip": "",
+   "collapse": "!🎵（"
+  },
+  {
+   "input": "!🎵🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "!🎵🎵"
+  },
+  {
+   "input": "!🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "!🎵 "
+  },
+  {
+   "input": "!🎵　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "!🎵　"
+  },
+  {
+   "input": "!🎵》",
+   "merge": "",
+   "strip": "",
+   "collapse": "!🎵》"
+  },
+  {
+   "input": "!🎵1",
+   "merge": "🎵1",
+   "strip": "1",
+   "collapse": "!🎵1"
+  },
+  {
+   "input": "!🎵﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "!🎵﻿"
+  },
+  {
+   "input": "! a",
+   "merge": "! a",
+   "strip": " a",
+   "collapse": "! a"
+  },
+  {
+   "input": "! !",
+   "merge": "",
+   "strip": " !",
+   "collapse": "! !"
+  },
+  {
+   "input": "!  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "! "
+  },
+  {
+   "input": "! （",
+   "merge": "",
+   "strip": " （",
+   "collapse": "! （"
+  },
+  {
+   "input": "! 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": "! 🎵"
+  },
+  {
+   "input": "!  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "! "
+  },
+  {
+   "input": "! 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": "! "
+  },
+  {
+   "input": "! 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": "! 》"
+  },
+  {
+   "input": "! 1",
+   "merge": "! 1",
+   "strip": " 1",
+   "collapse": "! 1"
+  },
+  {
+   "input": "! ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": "! "
+  },
+  {
+   "input": "!　a",
+   "merge": "!　a",
+   "strip": "　a",
+   "collapse": "!　a"
+  },
+  {
+   "input": "!　!",
+   "merge": "",
+   "strip": "　!",
+   "collapse": "!　!"
+  },
+  {
+   "input": "!　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": "! "
+  },
+  {
+   "input": "!　（",
+   "merge": "",
+   "strip": "　（",
+   "collapse": "!　（"
+  },
+  {
+   "input": "!　🎵",
+   "merge": "",
+   "strip": "　🎵",
+   "collapse": "!　🎵"
+  },
+  {
+   "input": "!　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": "! "
+  },
+  {
+   "input": "!　　",
+   "merge": "",
+   "strip": "　　",
+   "collapse": "! "
+  },
+  {
+   "input": "!　》",
+   "merge": "",
+   "strip": "　》",
+   "collapse": "!　》"
+  },
+  {
+   "input": "!　1",
+   "merge": "!　1",
+   "strip": "　1",
+   "collapse": "!　1"
+  },
+  {
+   "input": "!　﻿",
+   "merge": "",
+   "strip": "　﻿",
+   "collapse": "! "
+  },
+  {
+   "input": "!》a",
+   "merge": "》a",
+   "strip": "a",
+   "collapse": "!》a"
+  },
+  {
+   "input": "!》!",
+   "merge": "",
+   "strip": "",
+   "collapse": "!》!"
+  },
+  {
+   "input": "!》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "!》 "
+  },
+  {
+   "input": "!》（",
+   "merge": "",
+   "strip": "",
+   "collapse": "!》（"
+  },
+  {
+   "input": "!》🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "!》🎵"
+  },
+  {
+   "input": "!》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "!》 "
+  },
+  {
+   "input": "!》　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "!》　"
+  },
+  {
+   "input": "!》》",
+   "merge": "",
+   "strip": "",
+   "collapse": "!》》"
+  },
+  {
+   "input": "!》1",
+   "merge": "》1",
+   "strip": "1",
+   "collapse": "!》1"
+  },
+  {
+   "input": "!》﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "!》﻿"
+  },
+  {
+   "input": "!1a",
+   "merge": "!1a",
+   "strip": "1a",
+   "collapse": "!1a"
+  },
+  {
+   "input": "!1!",
+   "merge": "!1!",
+   "strip": "1!",
+   "collapse": "!1!"
+  },
+  {
+   "input": "!1 ",
+   "merge": "!1 ",
+   "strip": "1 ",
+   "collapse": "!1 "
+  },
+  {
+   "input": "!1（",
+   "merge": "!1（",
+   "strip": "1（",
+   "collapse": "!1（"
+  },
+  {
+   "input": "!1🎵",
+   "merge": "!1🎵",
+   "strip": "1🎵",
+   "collapse": "!1🎵"
+  },
+  {
+   "input": "!1 ",
+   "merge": "!1 ",
+   "strip": "1 ",
+   "collapse": "!1 "
+  },
+  {
+   "input": "!1　",
+   "merge": "!1　",
+   "strip": "1　",
+   "collapse": "!1　"
+  },
+  {
+   "input": "!1》",
+   "merge": "!1》",
+   "strip": "1》",
+   "collapse": "!1》"
+  },
+  {
+   "input": "!11",
+   "merge": "!11",
+   "strip": "11",
+   "collapse": "!11"
+  },
+  {
+   "input": "!1﻿",
+   "merge": "!1﻿",
+   "strip": "1﻿",
+   "collapse": "!1﻿"
+  },
+  {
+   "input": "!﻿a",
+   "merge": "!﻿a",
+   "strip": "﻿a",
+   "collapse": "!﻿a"
+  },
+  {
+   "input": "!﻿!",
+   "merge": "",
+   "strip": "﻿!",
+   "collapse": "!﻿!"
+  },
+  {
+   "input": "!﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": "! "
+  },
+  {
+   "input": "!﻿（",
+   "merge": "",
+   "strip": "﻿（",
+   "collapse": "!﻿（"
+  },
+  {
+   "input": "!﻿🎵",
+   "merge": "",
+   "strip": "﻿🎵",
+   "collapse": "!﻿🎵"
+  },
+  {
+   "input": "!﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": "! "
+  },
+  {
+   "input": "!﻿　",
+   "merge": "",
+   "strip": "﻿　",
+   "collapse": "! "
+  },
+  {
+   "input": "!﻿》",
+   "merge": "",
+   "strip": "﻿》",
+   "collapse": "!﻿》"
+  },
+  {
+   "input": "!﻿1",
+   "merge": "!﻿1",
+   "strip": "﻿1",
+   "collapse": "!﻿1"
+  },
+  {
+   "input": "!﻿﻿",
+   "merge": "",
+   "strip": "﻿﻿",
+   "collapse": "! "
+  },
+  {
+   "input": " aa",
+   "merge": " aa",
+   "strip": " aa",
+   "collapse": " aa"
+  },
+  {
+   "input": " a!",
+   "merge": " a!",
+   "strip": " a!",
+   "collapse": " a!"
+  },
+  {
+   "input": " a ",
+   "merge": " a ",
+   "strip": " a ",
+   "collapse": " a "
+  },
+  {
+   "input": " a（",
+   "merge": " a（",
+   "strip": " a（",
+   "collapse": " a（"
+  },
+  {
+   "input": " a🎵",
+   "merge": " a🎵",
+   "strip": " a🎵",
+   "collapse": " a🎵"
+  },
+  {
+   "input": " a ",
+   "merge": " a ",
+   "strip": " a ",
+   "collapse": " a "
+  },
+  {
+   "input": " a　",
+   "merge": " a　",
+   "strip": " a　",
+   "collapse": " a　"
+  },
+  {
+   "input": " a》",
+   "merge": " a》",
+   "strip": " a》",
+   "collapse": " a》"
+  },
+  {
+   "input": " a1",
+   "merge": " a1",
+   "strip": " a1",
+   "collapse": " a1"
+  },
+  {
+   "input": " a﻿",
+   "merge": " a﻿",
+   "strip": " a﻿",
+   "collapse": " a﻿"
+  },
+  {
+   "input": " !a",
+   "merge": "!a",
+   "strip": " !a",
+   "collapse": " !a"
+  },
+  {
+   "input": " !!",
+   "merge": "",
+   "strip": " !!",
+   "collapse": " !!"
+  },
+  {
+   "input": " ! ",
+   "merge": "",
+   "strip": " ! ",
+   "collapse": " ! "
+  },
+  {
+   "input": " !（",
+   "merge": "",
+   "strip": " !（",
+   "collapse": " !（"
+  },
+  {
+   "input": " !🎵",
+   "merge": "",
+   "strip": " !🎵",
+   "collapse": " !🎵"
+  },
+  {
+   "input": " ! ",
+   "merge": "",
+   "strip": " ! ",
+   "collapse": " ! "
+  },
+  {
+   "input": " !　",
+   "merge": "",
+   "strip": " !　",
+   "collapse": " !　"
+  },
+  {
+   "input": " !》",
+   "merge": "",
+   "strip": " !》",
+   "collapse": " !》"
+  },
+  {
+   "input": " !1",
+   "merge": "!1",
+   "strip": " !1",
+   "collapse": " !1"
+  },
+  {
+   "input": " !﻿",
+   "merge": "",
+   "strip": " !﻿",
+   "collapse": " !﻿"
+  },
+  {
+   "input": "  a",
+   "merge": "  a",
+   "strip": "  a",
+   "collapse": " a"
+  },
+  {
+   "input": "  !",
+   "merge": "",
+   "strip": "  !",
+   "collapse": " !"
+  },
+  {
+   "input": "   ",
+   "merge": "",
+   "strip": "   ",
+   "collapse": " "
+  },
+  {
+   "input": "  （",
+   "merge": "",
+   "strip": "  （",
+   "collapse": " （"
+  },
+  {
+   "input": "  🎵",
+   "merge": "",
+   "strip": "  🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "   ",
+   "merge": "",
+   "strip": "   ",
+   "collapse": " "
+  },
+  {
+   "input": "  　",
+   "merge": "",
+   "strip": "  　",
+   "collapse": " "
+  },
+  {
+   "input": "  》",
+   "merge": "",
+   "strip": "  》",
+   "collapse": " 》"
+  },
+  {
+   "input": "  1",
+   "merge": "  1",
+   "strip": "  1",
+   "collapse": " 1"
+  },
+  {
+   "input": "  ﻿",
+   "merge": "",
+   "strip": "  ﻿",
+   "collapse": " "
+  },
+  {
+   "input": " （a",
+   "merge": "（a",
+   "strip": " （a",
+   "collapse": " （a"
+  },
+  {
+   "input": " （!",
+   "merge": "",
+   "strip": " （!",
+   "collapse": " （!"
+  },
+  {
+   "input": " （ ",
+   "merge": "",
+   "strip": " （ ",
+   "collapse": " （ "
+  },
+  {
+   "input": " （（",
+   "merge": "",
+   "strip": " （（",
+   "collapse": " （（"
+  },
+  {
+   "input": " （🎵",
+   "merge": "",
+   "strip": " （🎵",
+   "collapse": " （🎵"
+  },
+  {
+   "input": " （ ",
+   "merge": "",
+   "strip": " （ ",
+   "collapse": " （ "
+  },
+  {
+   "input": " （　",
+   "merge": "",
+   "strip": " （　",
+   "collapse": " （　"
+  },
+  {
+   "input": " （》",
+   "merge": "",
+   "strip": " （》",
+   "collapse": " （》"
+  },
+  {
+   "input": " （1",
+   "merge": "（1",
+   "strip": " （1",
+   "collapse": " （1"
+  },
+  {
+   "input": " （﻿",
+   "merge": "",
+   "strip": " （﻿",
+   "collapse": " （﻿"
+  },
+  {
+   "input": " 🎵a",
+   "merge": "🎵a",
+   "strip": " 🎵a",
+   "collapse": " 🎵a"
+  },
+  {
+   "input": " 🎵!",
+   "merge": "",
+   "strip": " 🎵!",
+   "collapse": " 🎵!"
+  },
+  {
+   "input": " 🎵 ",
+   "merge": "",
+   "strip": " 🎵 ",
+   "collapse": " 🎵 "
+  },
+  {
+   "input": " 🎵（",
+   "merge": "",
+   "strip": " 🎵（",
+   "collapse": " 🎵（"
+  },
+  {
+   "input": " 🎵🎵",
+   "merge": "",
+   "strip": " 🎵🎵",
+   "collapse": " 🎵🎵"
+  },
+  {
+   "input": " 🎵 ",
+   "merge": "",
+   "strip": " 🎵 ",
+   "collapse": " 🎵 "
+  },
+  {
+   "input": " 🎵　",
+   "merge": "",
+   "strip": " 🎵　",
+   "collapse": " 🎵　"
+  },
+  {
+   "input": " 🎵》",
+   "merge": "",
+   "strip": " 🎵》",
+   "collapse": " 🎵》"
+  },
+  {
+   "input": " 🎵1",
+   "merge": "🎵1",
+   "strip": " 🎵1",
+   "collapse": " 🎵1"
+  },
+  {
+   "input": " 🎵﻿",
+   "merge": "",
+   "strip": " 🎵﻿",
+   "collapse": " 🎵﻿"
+  },
+  {
+   "input": "  a",
+   "merge": "  a",
+   "strip": "  a",
+   "collapse": " a"
+  },
+  {
+   "input": "  !",
+   "merge": "",
+   "strip": "  !",
+   "collapse": " !"
+  },
+  {
+   "input": "   ",
+   "merge": "",
+   "strip": "   ",
+   "collapse": " "
+  },
+  {
+   "input": "  （",
+   "merge": "",
+   "strip": "  （",
+   "collapse": " （"
+  },
+  {
+   "input": "  🎵",
+   "merge": "",
+   "strip": "  🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "   ",
+   "merge": "",
+   "strip": "   ",
+   "collapse": " "
+  },
+  {
+   "input": "  　",
+   "merge": "",
+   "strip": "  　",
+   "collapse": " "
+  },
+  {
+   "input": "  》",
+   "merge": "",
+   "strip": "  》",
+   "collapse": " 》"
+  },
+  {
+   "input": "  1",
+   "merge": "  1",
+   "strip": "  1",
+   "collapse": " 1"
+  },
+  {
+   "input": "  ﻿",
+   "merge": "",
+   "strip": "  ﻿",
+   "collapse": " "
+  },
+  {
+   "input": " 　a",
+   "merge": " 　a",
+   "strip": " 　a",
+   "collapse": " a"
+  },
+  {
+   "input": " 　!",
+   "merge": "",
+   "strip": " 　!",
+   "collapse": " !"
+  },
+  {
+   "input": " 　 ",
+   "merge": "",
+   "strip": " 　 ",
+   "collapse": " "
+  },
+  {
+   "input": " 　（",
+   "merge": "",
+   "strip": " 　（",
+   "collapse": " （"
+  },
+  {
+   "input": " 　🎵",
+   "merge": "",
+   "strip": " 　🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": " 　 ",
+   "merge": "",
+   "strip": " 　 ",
+   "collapse": " "
+  },
+  {
+   "input": " 　　",
+   "merge": "",
+   "strip": " 　　",
+   "collapse": " "
+  },
+  {
+   "input": " 　》",
+   "merge": "",
+   "strip": " 　》",
+   "collapse": " 》"
+  },
+  {
+   "input": " 　1",
+   "merge": " 　1",
+   "strip": " 　1",
+   "collapse": " 1"
+  },
+  {
+   "input": " 　﻿",
+   "merge": "",
+   "strip": " 　﻿",
+   "collapse": " "
+  },
+  {
+   "input": " 》a",
+   "merge": "》a",
+   "strip": " 》a",
+   "collapse": " 》a"
+  },
+  {
+   "input": " 》!",
+   "merge": "",
+   "strip": " 》!",
+   "collapse": " 》!"
+  },
+  {
+   "input": " 》 ",
+   "merge": "",
+   "strip": " 》 ",
+   "collapse": " 》 "
+  },
+  {
+   "input": " 》（",
+   "merge": "",
+   "strip": " 》（",
+   "collapse": " 》（"
+  },
+  {
+   "input": " 》🎵",
+   "merge": "",
+   "strip": " 》🎵",
+   "collapse": " 》🎵"
+  },
+  {
+   "input": " 》 ",
+   "merge": "",
+   "strip": " 》 ",
+   "collapse": " 》 "
+  },
+  {
+   "input": " 》　",
+   "merge": "",
+   "strip": " 》　",
+   "collapse": " 》　"
+  },
+  {
+   "input": " 》》",
+   "merge": "",
+   "strip": " 》》",
+   "collapse": " 》》"
+  },
+  {
+   "input": " 》1",
+   "merge": "》1",
+   "strip": " 》1",
+   "collapse": " 》1"
+  },
+  {
+   "input": " 》﻿",
+   "merge": "",
+   "strip": " 》﻿",
+   "collapse": " 》﻿"
+  },
+  {
+   "input": " 1a",
+   "merge": " 1a",
+   "strip": " 1a",
+   "collapse": " 1a"
+  },
+  {
+   "input": " 1!",
+   "merge": " 1!",
+   "strip": " 1!",
+   "collapse": " 1!"
+  },
+  {
+   "input": " 1 ",
+   "merge": " 1 ",
+   "strip": " 1 ",
+   "collapse": " 1 "
+  },
+  {
+   "input": " 1（",
+   "merge": " 1（",
+   "strip": " 1（",
+   "collapse": " 1（"
+  },
+  {
+   "input": " 1🎵",
+   "merge": " 1🎵",
+   "strip": " 1🎵",
+   "collapse": " 1🎵"
+  },
+  {
+   "input": " 1 ",
+   "merge": " 1 ",
+   "strip": " 1 ",
+   "collapse": " 1 "
+  },
+  {
+   "input": " 1　",
+   "merge": " 1　",
+   "strip": " 1　",
+   "collapse": " 1　"
+  },
+  {
+   "input": " 1》",
+   "merge": " 1》",
+   "strip": " 1》",
+   "collapse": " 1》"
+  },
+  {
+   "input": " 11",
+   "merge": " 11",
+   "strip": " 11",
+   "collapse": " 11"
+  },
+  {
+   "input": " 1﻿",
+   "merge": " 1﻿",
+   "strip": " 1﻿",
+   "collapse": " 1﻿"
+  },
+  {
+   "input": " ﻿a",
+   "merge": " ﻿a",
+   "strip": " ﻿a",
+   "collapse": " a"
+  },
+  {
+   "input": " ﻿!",
+   "merge": "",
+   "strip": " ﻿!",
+   "collapse": " !"
+  },
+  {
+   "input": " ﻿ ",
+   "merge": "",
+   "strip": " ﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": " ﻿（",
+   "merge": "",
+   "strip": " ﻿（",
+   "collapse": " （"
+  },
+  {
+   "input": " ﻿🎵",
+   "merge": "",
+   "strip": " ﻿🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": " ﻿ ",
+   "merge": "",
+   "strip": " ﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": " ﻿　",
+   "merge": "",
+   "strip": " ﻿　",
+   "collapse": " "
+  },
+  {
+   "input": " ﻿》",
+   "merge": "",
+   "strip": " ﻿》",
+   "collapse": " 》"
+  },
+  {
+   "input": " ﻿1",
+   "merge": " ﻿1",
+   "strip": " ﻿1",
+   "collapse": " 1"
+  },
+  {
+   "input": " ﻿﻿",
+   "merge": "",
+   "strip": " ﻿﻿",
+   "collapse": " "
+  },
+  {
+   "input": "（aa",
+   "merge": "（aa",
+   "strip": "aa",
+   "collapse": "（aa"
+  },
+  {
+   "input": "（a!",
+   "merge": "（a!",
+   "strip": "a!",
+   "collapse": "（a!"
+  },
+  {
+   "input": "（a ",
+   "merge": "（a ",
+   "strip": "a ",
+   "collapse": "（a "
+  },
+  {
+   "input": "（a（",
+   "merge": "（a（",
+   "strip": "a（",
+   "collapse": "（a（"
+  },
+  {
+   "input": "（a🎵",
+   "merge": "（a🎵",
+   "strip": "a🎵",
+   "collapse": "（a🎵"
+  },
+  {
+   "input": "（a ",
+   "merge": "（a ",
+   "strip": "a ",
+   "collapse": "（a "
+  },
+  {
+   "input": "（a　",
+   "merge": "（a　",
+   "strip": "a　",
+   "collapse": "（a　"
+  },
+  {
+   "input": "（a》",
+   "merge": "（a》",
+   "strip": "a》",
+   "collapse": "（a》"
+  },
+  {
+   "input": "（a1",
+   "merge": "（a1",
+   "strip": "a1",
+   "collapse": "（a1"
+  },
+  {
+   "input": "（a﻿",
+   "merge": "（a﻿",
+   "strip": "a﻿",
+   "collapse": "（a﻿"
+  },
+  {
+   "input": "（!a",
+   "merge": "!a",
+   "strip": "a",
+   "collapse": "（!a"
+  },
+  {
+   "input": "（!!",
+   "merge": "",
+   "strip": "",
+   "collapse": "（!!"
+  },
+  {
+   "input": "（! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（! "
+  },
+  {
+   "input": "（!（",
+   "merge": "",
+   "strip": "",
+   "collapse": "（!（"
+  },
+  {
+   "input": "（!🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "（!🎵"
+  },
+  {
+   "input": "（! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（! "
+  },
+  {
+   "input": "（!　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "（!　"
+  },
+  {
+   "input": "（!》",
+   "merge": "",
+   "strip": "",
+   "collapse": "（!》"
+  },
+  {
+   "input": "（!1",
+   "merge": "!1",
+   "strip": "1",
+   "collapse": "（!1"
+  },
+  {
+   "input": "（!﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "（!﻿"
+  },
+  {
+   "input": "（ a",
+   "merge": "（ a",
+   "strip": " a",
+   "collapse": "（ a"
+  },
+  {
+   "input": "（ !",
+   "merge": "",
+   "strip": " !",
+   "collapse": "（ !"
+  },
+  {
+   "input": "（  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（ （",
+   "merge": "",
+   "strip": " （",
+   "collapse": "（ （"
+  },
+  {
+   "input": "（ 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": "（ 🎵"
+  },
+  {
+   "input": "（  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（ 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": "（ "
+  },
+  {
+   "input": "（ 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": "（ 》"
+  },
+  {
+   "input": "（ 1",
+   "merge": "（ 1",
+   "strip": " 1",
+   "collapse": "（ 1"
+  },
+  {
+   "input": "（ ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": "（ "
+  },
+  {
+   "input": "（（a",
+   "merge": "（a",
+   "strip": "a",
+   "collapse": "（（a"
+  },
+  {
+   "input": "（（!",
+   "merge": "",
+   "strip": "",
+   "collapse": "（（!"
+  },
+  {
+   "input": "（（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（（ "
+  },
+  {
+   "input": "（（（",
+   "merge": "",
+   "strip": "",
+   "collapse": "（（（"
+  },
+  {
+   "input": "（（🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "（（🎵"
+  },
+  {
+   "input": "（（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（（ "
+  },
+  {
+   "input": "（（　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "（（　"
+  },
+  {
+   "input": "（（》",
+   "merge": "",
+   "strip": "",
+   "collapse": "（（》"
+  },
+  {
+   "input": "（（1",
+   "merge": "（1",
+   "strip": "1",
+   "collapse": "（（1"
+  },
+  {
+   "input": "（（﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "（（﻿"
+  },
+  {
+   "input": "（🎵a",
+   "merge": "🎵a",
+   "strip": "a",
+   "collapse": "（🎵a"
+  },
+  {
+   "input": "（🎵!",
+   "merge": "",
+   "strip": "",
+   "collapse": "（🎵!"
+  },
+  {
+   "input": "（🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（🎵 "
+  },
+  {
+   "input": "（🎵（",
+   "merge": "",
+   "strip": "",
+   "collapse": "（🎵（"
+  },
+  {
+   "input": "（🎵🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "（🎵🎵"
+  },
+  {
+   "input": "（🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（🎵 "
+  },
+  {
+   "input": "（🎵　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "（🎵　"
+  },
+  {
+   "input": "（🎵》",
+   "merge": "",
+   "strip": "",
+   "collapse": "（🎵》"
+  },
+  {
+   "input": "（🎵1",
+   "merge": "🎵1",
+   "strip": "1",
+   "collapse": "（🎵1"
+  },
+  {
+   "input": "（🎵﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "（🎵﻿"
+  },
+  {
+   "input": "（ a",
+   "merge": "（ a",
+   "strip": " a",
+   "collapse": "（ a"
+  },
+  {
+   "input": "（ !",
+   "merge": "",
+   "strip": " !",
+   "collapse": "（ !"
+  },
+  {
+   "input": "（  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（ （",
+   "merge": "",
+   "strip": " （",
+   "collapse": "（ （"
+  },
+  {
+   "input": "（ 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": "（ 🎵"
+  },
+  {
+   "input": "（  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（ 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": "（ "
+  },
+  {
+   "input": "（ 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": "（ 》"
+  },
+  {
+   "input": "（ 1",
+   "merge": "（ 1",
+   "strip": " 1",
+   "collapse": "（ 1"
+  },
+  {
+   "input": "（ ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": "（ "
+  },
+  {
+   "input": "（　a",
+   "merge": "（　a",
+   "strip": "　a",
+   "collapse": "（　a"
+  },
+  {
+   "input": "（　!",
+   "merge": "",
+   "strip": "　!",
+   "collapse": "（　!"
+  },
+  {
+   "input": "（　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（　（",
+   "merge": "",
+   "strip": "　（",
+   "collapse": "（　（"
+  },
+  {
+   "input": "（　🎵",
+   "merge": "",
+   "strip": "　🎵",
+   "collapse": "（　🎵"
+  },
+  {
+   "input": "（　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（　　",
+   "merge": "",
+   "strip": "　　",
+   "collapse": "（ "
+  },
+  {
+   "input": "（　》",
+   "merge": "",
+   "strip": "　》",
+   "collapse": "（　》"
+  },
+  {
+   "input": "（　1",
+   "merge": "（　1",
+   "strip": "　1",
+   "collapse": "（　1"
+  },
+  {
+   "input": "（　﻿",
+   "merge": "",
+   "strip": "　﻿",
+   "collapse": "（ "
+  },
+  {
+   "input": "（》a",
+   "merge": "》a",
+   "strip": "a",
+   "collapse": "（》a"
+  },
+  {
+   "input": "（》!",
+   "merge": "",
+   "strip": "",
+   "collapse": "（》!"
+  },
+  {
+   "input": "（》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（》 "
+  },
+  {
+   "input": "（》（",
+   "merge": "",
+   "strip": "",
+   "collapse": "（》（"
+  },
+  {
+   "input": "（》🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "（》🎵"
+  },
+  {
+   "input": "（》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "（》 "
+  },
+  {
+   "input": "（》　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "（》　"
+  },
+  {
+   "input": "（》》",
+   "merge": "",
+   "strip": "",
+   "collapse": "（》》"
+  },
+  {
+   "input": "（》1",
+   "merge": "》1",
+   "strip": "1",
+   "collapse": "（》1"
+  },
+  {
+   "input": "（》﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "（》﻿"
+  },
+  {
+   "input": "（1a",
+   "merge": "（1a",
+   "strip": "1a",
+   "collapse": "（1a"
+  },
+  {
+   "input": "（1!",
+   "merge": "（1!",
+   "strip": "1!",
+   "collapse": "（1!"
+  },
+  {
+   "input": "（1 ",
+   "merge": "（1 ",
+   "strip": "1 ",
+   "collapse": "（1 "
+  },
+  {
+   "input": "（1（",
+   "merge": "（1（",
+   "strip": "1（",
+   "collapse": "（1（"
+  },
+  {
+   "input": "（1🎵",
+   "merge": "（1🎵",
+   "strip": "1🎵",
+   "collapse": "（1🎵"
+  },
+  {
+   "input": "（1 ",
+   "merge": "（1 ",
+   "strip": "1 ",
+   "collapse": "（1 "
+  },
+  {
+   "input": "（1　",
+   "merge": "（1　",
+   "strip": "1　",
+   "collapse": "（1　"
+  },
+  {
+   "input": "（1》",
+   "merge": "（1》",
+   "strip": "1》",
+   "collapse": "（1》"
+  },
+  {
+   "input": "（11",
+   "merge": "（11",
+   "strip": "11",
+   "collapse": "（11"
+  },
+  {
+   "input": "（1﻿",
+   "merge": "（1﻿",
+   "strip": "1﻿",
+   "collapse": "（1﻿"
+  },
+  {
+   "input": "（﻿a",
+   "merge": "（﻿a",
+   "strip": "﻿a",
+   "collapse": "（﻿a"
+  },
+  {
+   "input": "（﻿!",
+   "merge": "",
+   "strip": "﻿!",
+   "collapse": "（﻿!"
+  },
+  {
+   "input": "（﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（﻿（",
+   "merge": "",
+   "strip": "﻿（",
+   "collapse": "（﻿（"
+  },
+  {
+   "input": "（﻿🎵",
+   "merge": "",
+   "strip": "﻿🎵",
+   "collapse": "（﻿🎵"
+  },
+  {
+   "input": "（﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": "（ "
+  },
+  {
+   "input": "（﻿　",
+   "merge": "",
+   "strip": "﻿　",
+   "collapse": "（ "
+  },
+  {
+   "input": "（﻿》",
+   "merge": "",
+   "strip": "﻿》",
+   "collapse": "（﻿》"
+  },
+  {
+   "input": "（﻿1",
+   "merge": "（﻿1",
+   "strip": "﻿1",
+   "collapse": "（﻿1"
+  },
+  {
+   "input": "（﻿﻿",
+   "merge": "",
+   "strip": "﻿﻿",
+   "collapse": "（ "
+  },
+  {
+   "input": "🎵aa",
+   "merge": "🎵aa",
+   "strip": "aa",
+   "collapse": "🎵aa"
+  },
+  {
+   "input": "🎵a!",
+   "merge": "🎵a!",
+   "strip": "a!",
+   "collapse": "🎵a!"
+  },
+  {
+   "input": "🎵a ",
+   "merge": "🎵a ",
+   "strip": "a ",
+   "collapse": "🎵a "
+  },
+  {
+   "input": "🎵a（",
+   "merge": "🎵a（",
+   "strip": "a（",
+   "collapse": "🎵a（"
+  },
+  {
+   "input": "🎵a🎵",
+   "merge": "🎵a🎵",
+   "strip": "a🎵",
+   "collapse": "🎵a🎵"
+  },
+  {
+   "input": "🎵a ",
+   "merge": "🎵a ",
+   "strip": "a ",
+   "collapse": "🎵a "
+  },
+  {
+   "input": "🎵a　",
+   "merge": "🎵a　",
+   "strip": "a　",
+   "collapse": "🎵a　"
+  },
+  {
+   "input": "🎵a》",
+   "merge": "🎵a》",
+   "strip": "a》",
+   "collapse": "🎵a》"
+  },
+  {
+   "input": "🎵a1",
+   "merge": "🎵a1",
+   "strip": "a1",
+   "collapse": "🎵a1"
+  },
+  {
+   "input": "🎵a﻿",
+   "merge": "🎵a﻿",
+   "strip": "a﻿",
+   "collapse": "🎵a﻿"
+  },
+  {
+   "input": "🎵!a",
+   "merge": "!a",
+   "strip": "a",
+   "collapse": "🎵!a"
+  },
+  {
+   "input": "🎵!!",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵!!"
+  },
+  {
+   "input": "🎵! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵! "
+  },
+  {
+   "input": "🎵!（",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵!（"
+  },
+  {
+   "input": "🎵!🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵!🎵"
+  },
+  {
+   "input": "🎵! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵! "
+  },
+  {
+   "input": "🎵!　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "🎵!　"
+  },
+  {
+   "input": "🎵!》",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵!》"
+  },
+  {
+   "input": "🎵!1",
+   "merge": "!1",
+   "strip": "1",
+   "collapse": "🎵!1"
+  },
+  {
+   "input": "🎵!﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "🎵!﻿"
+  },
+  {
+   "input": "🎵 a",
+   "merge": "🎵 a",
+   "strip": " a",
+   "collapse": "🎵 a"
+  },
+  {
+   "input": "🎵 !",
+   "merge": "",
+   "strip": " !",
+   "collapse": "🎵 !"
+  },
+  {
+   "input": "🎵  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵 （",
+   "merge": "",
+   "strip": " （",
+   "collapse": "🎵 （"
+  },
+  {
+   "input": "🎵 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": "🎵 🎵"
+  },
+  {
+   "input": "🎵  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": "🎵 》"
+  },
+  {
+   "input": "🎵 1",
+   "merge": "🎵 1",
+   "strip": " 1",
+   "collapse": "🎵 1"
+  },
+  {
+   "input": "🎵 ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵（a",
+   "merge": "（a",
+   "strip": "a",
+   "collapse": "🎵（a"
+  },
+  {
+   "input": "🎵（!",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵（!"
+  },
+  {
+   "input": "🎵（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵（ "
+  },
+  {
+   "input": "🎵（（",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵（（"
+  },
+  {
+   "input": "🎵（🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵（🎵"
+  },
+  {
+   "input": "🎵（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵（ "
+  },
+  {
+   "input": "🎵（　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "🎵（　"
+  },
+  {
+   "input": "🎵（》",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵（》"
+  },
+  {
+   "input": "🎵（1",
+   "merge": "（1",
+   "strip": "1",
+   "collapse": "🎵（1"
+  },
+  {
+   "input": "🎵（﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "🎵（﻿"
+  },
+  {
+   "input": "🎵🎵a",
+   "merge": "🎵a",
+   "strip": "a",
+   "collapse": "🎵🎵a"
+  },
+  {
+   "input": "🎵🎵!",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵🎵!"
+  },
+  {
+   "input": "🎵🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵🎵 "
+  },
+  {
+   "input": "🎵🎵（",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵🎵（"
+  },
+  {
+   "input": "🎵🎵🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵🎵🎵"
+  },
+  {
+   "input": "🎵🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵🎵 "
+  },
+  {
+   "input": "🎵🎵　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "🎵🎵　"
+  },
+  {
+   "input": "🎵🎵》",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵🎵》"
+  },
+  {
+   "input": "🎵🎵1",
+   "merge": "🎵1",
+   "strip": "1",
+   "collapse": "🎵🎵1"
+  },
+  {
+   "input": "🎵🎵﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "🎵🎵﻿"
+  },
+  {
+   "input": "🎵 a",
+   "merge": "🎵 a",
+   "strip": " a",
+   "collapse": "🎵 a"
+  },
+  {
+   "input": "🎵 !",
+   "merge": "",
+   "strip": " !",
+   "collapse": "🎵 !"
+  },
+  {
+   "input": "🎵  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵 （",
+   "merge": "",
+   "strip": " （",
+   "collapse": "🎵 （"
+  },
+  {
+   "input": "🎵 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": "🎵 🎵"
+  },
+  {
+   "input": "🎵  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": "🎵 》"
+  },
+  {
+   "input": "🎵 1",
+   "merge": "🎵 1",
+   "strip": " 1",
+   "collapse": "🎵 1"
+  },
+  {
+   "input": "🎵 ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵　a",
+   "merge": "🎵　a",
+   "strip": "　a",
+   "collapse": "🎵　a"
+  },
+  {
+   "input": "🎵　!",
+   "merge": "",
+   "strip": "　!",
+   "collapse": "🎵　!"
+  },
+  {
+   "input": "🎵　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵　（",
+   "merge": "",
+   "strip": "　（",
+   "collapse": "🎵　（"
+  },
+  {
+   "input": "🎵　🎵",
+   "merge": "",
+   "strip": "　🎵",
+   "collapse": "🎵　🎵"
+  },
+  {
+   "input": "🎵　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵　　",
+   "merge": "",
+   "strip": "　　",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵　》",
+   "merge": "",
+   "strip": "　》",
+   "collapse": "🎵　》"
+  },
+  {
+   "input": "🎵　1",
+   "merge": "🎵　1",
+   "strip": "　1",
+   "collapse": "🎵　1"
+  },
+  {
+   "input": "🎵　﻿",
+   "merge": "",
+   "strip": "　﻿",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵》a",
+   "merge": "》a",
+   "strip": "a",
+   "collapse": "🎵》a"
+  },
+  {
+   "input": "🎵》!",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵》!"
+  },
+  {
+   "input": "🎵》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵》 "
+  },
+  {
+   "input": "🎵》（",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵》（"
+  },
+  {
+   "input": "🎵》🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵》🎵"
+  },
+  {
+   "input": "🎵》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "🎵》 "
+  },
+  {
+   "input": "🎵》　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "🎵》　"
+  },
+  {
+   "input": "🎵》》",
+   "merge": "",
+   "strip": "",
+   "collapse": "🎵》》"
+  },
+  {
+   "input": "🎵》1",
+   "merge": "》1",
+   "strip": "1",
+   "collapse": "🎵》1"
+  },
+  {
+   "input": "🎵》﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "🎵》﻿"
+  },
+  {
+   "input": "🎵1a",
+   "merge": "🎵1a",
+   "strip": "1a",
+   "collapse": "🎵1a"
+  },
+  {
+   "input": "🎵1!",
+   "merge": "🎵1!",
+   "strip": "1!",
+   "collapse": "🎵1!"
+  },
+  {
+   "input": "🎵1 ",
+   "merge": "🎵1 ",
+   "strip": "1 ",
+   "collapse": "🎵1 "
+  },
+  {
+   "input": "🎵1（",
+   "merge": "🎵1（",
+   "strip": "1（",
+   "collapse": "🎵1（"
+  },
+  {
+   "input": "🎵1🎵",
+   "merge": "🎵1🎵",
+   "strip": "1🎵",
+   "collapse": "🎵1🎵"
+  },
+  {
+   "input": "🎵1 ",
+   "merge": "🎵1 ",
+   "strip": "1 ",
+   "collapse": "🎵1 "
+  },
+  {
+   "input": "🎵1　",
+   "merge": "🎵1　",
+   "strip": "1　",
+   "collapse": "🎵1　"
+  },
+  {
+   "input": "🎵1》",
+   "merge": "🎵1》",
+   "strip": "1》",
+   "collapse": "🎵1》"
+  },
+  {
+   "input": "🎵11",
+   "merge": "🎵11",
+   "strip": "11",
+   "collapse": "🎵11"
+  },
+  {
+   "input": "🎵1﻿",
+   "merge": "🎵1﻿",
+   "strip": "1﻿",
+   "collapse": "🎵1﻿"
+  },
+  {
+   "input": "🎵﻿a",
+   "merge": "🎵﻿a",
+   "strip": "﻿a",
+   "collapse": "🎵﻿a"
+  },
+  {
+   "input": "🎵﻿!",
+   "merge": "",
+   "strip": "﻿!",
+   "collapse": "🎵﻿!"
+  },
+  {
+   "input": "🎵﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵﻿（",
+   "merge": "",
+   "strip": "﻿（",
+   "collapse": "🎵﻿（"
+  },
+  {
+   "input": "🎵﻿🎵",
+   "merge": "",
+   "strip": "﻿🎵",
+   "collapse": "🎵﻿🎵"
+  },
+  {
+   "input": "🎵﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵﻿　",
+   "merge": "",
+   "strip": "﻿　",
+   "collapse": "🎵 "
+  },
+  {
+   "input": "🎵﻿》",
+   "merge": "",
+   "strip": "﻿》",
+   "collapse": "🎵﻿》"
+  },
+  {
+   "input": "🎵﻿1",
+   "merge": "🎵﻿1",
+   "strip": "﻿1",
+   "collapse": "🎵﻿1"
+  },
+  {
+   "input": "🎵﻿﻿",
+   "merge": "",
+   "strip": "﻿﻿",
+   "collapse": "🎵 "
+  },
+  {
+   "input": " aa",
+   "merge": " aa",
+   "strip": " aa",
+   "collapse": " aa"
+  },
+  {
+   "input": " a!",
+   "merge": " a!",
+   "strip": " a!",
+   "collapse": " a!"
+  },
+  {
+   "input": " a ",
+   "merge": " a ",
+   "strip": " a ",
+   "collapse": " a "
+  },
+  {
+   "input": " a（",
+   "merge": " a（",
+   "strip": " a（",
+   "collapse": " a（"
+  },
+  {
+   "input": " a🎵",
+   "merge": " a🎵",
+   "strip": " a🎵",
+   "collapse": " a🎵"
+  },
+  {
+   "input": " a ",
+   "merge": " a ",
+   "strip": " a ",
+   "collapse": " a "
+  },
+  {
+   "input": " a　",
+   "merge": " a　",
+   "strip": " a　",
+   "collapse": " a　"
+  },
+  {
+   "input": " a》",
+   "merge": " a》",
+   "strip": " a》",
+   "collapse": " a》"
+  },
+  {
+   "input": " a1",
+   "merge": " a1",
+   "strip": " a1",
+   "collapse": " a1"
+  },
+  {
+   "input": " a﻿",
+   "merge": " a﻿",
+   "strip": " a﻿",
+   "collapse": " a﻿"
+  },
+  {
+   "input": " !a",
+   "merge": "!a",
+   "strip": " !a",
+   "collapse": " !a"
+  },
+  {
+   "input": " !!",
+   "merge": "",
+   "strip": " !!",
+   "collapse": " !!"
+  },
+  {
+   "input": " ! ",
+   "merge": "",
+   "strip": " ! ",
+   "collapse": " ! "
+  },
+  {
+   "input": " !（",
+   "merge": "",
+   "strip": " !（",
+   "collapse": " !（"
+  },
+  {
+   "input": " !🎵",
+   "merge": "",
+   "strip": " !🎵",
+   "collapse": " !🎵"
+  },
+  {
+   "input": " ! ",
+   "merge": "",
+   "strip": " ! ",
+   "collapse": " ! "
+  },
+  {
+   "input": " !　",
+   "merge": "",
+   "strip": " !　",
+   "collapse": " !　"
+  },
+  {
+   "input": " !》",
+   "merge": "",
+   "strip": " !》",
+   "collapse": " !》"
+  },
+  {
+   "input": " !1",
+   "merge": "!1",
+   "strip": " !1",
+   "collapse": " !1"
+  },
+  {
+   "input": " !﻿",
+   "merge": "",
+   "strip": " !﻿",
+   "collapse": " !﻿"
+  },
+  {
+   "input": "  a",
+   "merge": "  a",
+   "strip": "  a",
+   "collapse": " a"
+  },
+  {
+   "input": "  !",
+   "merge": "",
+   "strip": "  !",
+   "collapse": " !"
+  },
+  {
+   "input": "   ",
+   "merge": "",
+   "strip": "   ",
+   "collapse": " "
+  },
+  {
+   "input": "  （",
+   "merge": "",
+   "strip": "  （",
+   "collapse": " （"
+  },
+  {
+   "input": "  🎵",
+   "merge": "",
+   "strip": "  🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "   ",
+   "merge": "",
+   "strip": "   ",
+   "collapse": " "
+  },
+  {
+   "input": "  　",
+   "merge": "",
+   "strip": "  　",
+   "collapse": " "
+  },
+  {
+   "input": "  》",
+   "merge": "",
+   "strip": "  》",
+   "collapse": " 》"
+  },
+  {
+   "input": "  1",
+   "merge": "  1",
+   "strip": "  1",
+   "collapse": " 1"
+  },
+  {
+   "input": "  ﻿",
+   "merge": "",
+   "strip": "  ﻿",
+   "collapse": " "
+  },
+  {
+   "input": " （a",
+   "merge": "（a",
+   "strip": " （a",
+   "collapse": " （a"
+  },
+  {
+   "input": " （!",
+   "merge": "",
+   "strip": " （!",
+   "collapse": " （!"
+  },
+  {
+   "input": " （ ",
+   "merge": "",
+   "strip": " （ ",
+   "collapse": " （ "
+  },
+  {
+   "input": " （（",
+   "merge": "",
+   "strip": " （（",
+   "collapse": " （（"
+  },
+  {
+   "input": " （🎵",
+   "merge": "",
+   "strip": " （🎵",
+   "collapse": " （🎵"
+  },
+  {
+   "input": " （ ",
+   "merge": "",
+   "strip": " （ ",
+   "collapse": " （ "
+  },
+  {
+   "input": " （　",
+   "merge": "",
+   "strip": " （　",
+   "collapse": " （　"
+  },
+  {
+   "input": " （》",
+   "merge": "",
+   "strip": " （》",
+   "collapse": " （》"
+  },
+  {
+   "input": " （1",
+   "merge": "（1",
+   "strip": " （1",
+   "collapse": " （1"
+  },
+  {
+   "input": " （﻿",
+   "merge": "",
+   "strip": " （﻿",
+   "collapse": " （﻿"
+  },
+  {
+   "input": " 🎵a",
+   "merge": "🎵a",
+   "strip": " 🎵a",
+   "collapse": " 🎵a"
+  },
+  {
+   "input": " 🎵!",
+   "merge": "",
+   "strip": " 🎵!",
+   "collapse": " 🎵!"
+  },
+  {
+   "input": " 🎵 ",
+   "merge": "",
+   "strip": " 🎵 ",
+   "collapse": " 🎵 "
+  },
+  {
+   "input": " 🎵（",
+   "merge": "",
+   "strip": " 🎵（",
+   "collapse": " 🎵（"
+  },
+  {
+   "input": " 🎵🎵",
+   "merge": "",
+   "strip": " 🎵🎵",
+   "collapse": " 🎵🎵"
+  },
+  {
+   "input": " 🎵 ",
+   "merge": "",
+   "strip": " 🎵 ",
+   "collapse": " 🎵 "
+  },
+  {
+   "input": " 🎵　",
+   "merge": "",
+   "strip": " 🎵　",
+   "collapse": " 🎵　"
+  },
+  {
+   "input": " 🎵》",
+   "merge": "",
+   "strip": " 🎵》",
+   "collapse": " 🎵》"
+  },
+  {
+   "input": " 🎵1",
+   "merge": "🎵1",
+   "strip": " 🎵1",
+   "collapse": " 🎵1"
+  },
+  {
+   "input": " 🎵﻿",
+   "merge": "",
+   "strip": " 🎵﻿",
+   "collapse": " 🎵﻿"
+  },
+  {
+   "input": "  a",
+   "merge": "  a",
+   "strip": "  a",
+   "collapse": " a"
+  },
+  {
+   "input": "  !",
+   "merge": "",
+   "strip": "  !",
+   "collapse": " !"
+  },
+  {
+   "input": "   ",
+   "merge": "",
+   "strip": "   ",
+   "collapse": " "
+  },
+  {
+   "input": "  （",
+   "merge": "",
+   "strip": "  （",
+   "collapse": " （"
+  },
+  {
+   "input": "  🎵",
+   "merge": "",
+   "strip": "  🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "   ",
+   "merge": "",
+   "strip": "   ",
+   "collapse": " "
+  },
+  {
+   "input": "  　",
+   "merge": "",
+   "strip": "  　",
+   "collapse": " "
+  },
+  {
+   "input": "  》",
+   "merge": "",
+   "strip": "  》",
+   "collapse": " 》"
+  },
+  {
+   "input": "  1",
+   "merge": "  1",
+   "strip": "  1",
+   "collapse": " 1"
+  },
+  {
+   "input": "  ﻿",
+   "merge": "",
+   "strip": "  ﻿",
+   "collapse": " "
+  },
+  {
+   "input": " 　a",
+   "merge": " 　a",
+   "strip": " 　a",
+   "collapse": " a"
+  },
+  {
+   "input": " 　!",
+   "merge": "",
+   "strip": " 　!",
+   "collapse": " !"
+  },
+  {
+   "input": " 　 ",
+   "merge": "",
+   "strip": " 　 ",
+   "collapse": " "
+  },
+  {
+   "input": " 　（",
+   "merge": "",
+   "strip": " 　（",
+   "collapse": " （"
+  },
+  {
+   "input": " 　🎵",
+   "merge": "",
+   "strip": " 　🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": " 　 ",
+   "merge": "",
+   "strip": " 　 ",
+   "collapse": " "
+  },
+  {
+   "input": " 　　",
+   "merge": "",
+   "strip": " 　　",
+   "collapse": " "
+  },
+  {
+   "input": " 　》",
+   "merge": "",
+   "strip": " 　》",
+   "collapse": " 》"
+  },
+  {
+   "input": " 　1",
+   "merge": " 　1",
+   "strip": " 　1",
+   "collapse": " 1"
+  },
+  {
+   "input": " 　﻿",
+   "merge": "",
+   "strip": " 　﻿",
+   "collapse": " "
+  },
+  {
+   "input": " 》a",
+   "merge": "》a",
+   "strip": " 》a",
+   "collapse": " 》a"
+  },
+  {
+   "input": " 》!",
+   "merge": "",
+   "strip": " 》!",
+   "collapse": " 》!"
+  },
+  {
+   "input": " 》 ",
+   "merge": "",
+   "strip": " 》 ",
+   "collapse": " 》 "
+  },
+  {
+   "input": " 》（",
+   "merge": "",
+   "strip": " 》（",
+   "collapse": " 》（"
+  },
+  {
+   "input": " 》🎵",
+   "merge": "",
+   "strip": " 》🎵",
+   "collapse": " 》🎵"
+  },
+  {
+   "input": " 》 ",
+   "merge": "",
+   "strip": " 》 ",
+   "collapse": " 》 "
+  },
+  {
+   "input": " 》　",
+   "merge": "",
+   "strip": " 》　",
+   "collapse": " 》　"
+  },
+  {
+   "input": " 》》",
+   "merge": "",
+   "strip": " 》》",
+   "collapse": " 》》"
+  },
+  {
+   "input": " 》1",
+   "merge": "》1",
+   "strip": " 》1",
+   "collapse": " 》1"
+  },
+  {
+   "input": " 》﻿",
+   "merge": "",
+   "strip": " 》﻿",
+   "collapse": " 》﻿"
+  },
+  {
+   "input": " 1a",
+   "merge": " 1a",
+   "strip": " 1a",
+   "collapse": " 1a"
+  },
+  {
+   "input": " 1!",
+   "merge": " 1!",
+   "strip": " 1!",
+   "collapse": " 1!"
+  },
+  {
+   "input": " 1 ",
+   "merge": " 1 ",
+   "strip": " 1 ",
+   "collapse": " 1 "
+  },
+  {
+   "input": " 1（",
+   "merge": " 1（",
+   "strip": " 1（",
+   "collapse": " 1（"
+  },
+  {
+   "input": " 1🎵",
+   "merge": " 1🎵",
+   "strip": " 1🎵",
+   "collapse": " 1🎵"
+  },
+  {
+   "input": " 1 ",
+   "merge": " 1 ",
+   "strip": " 1 ",
+   "collapse": " 1 "
+  },
+  {
+   "input": " 1　",
+   "merge": " 1　",
+   "strip": " 1　",
+   "collapse": " 1　"
+  },
+  {
+   "input": " 1》",
+   "merge": " 1》",
+   "strip": " 1》",
+   "collapse": " 1》"
+  },
+  {
+   "input": " 11",
+   "merge": " 11",
+   "strip": " 11",
+   "collapse": " 11"
+  },
+  {
+   "input": " 1﻿",
+   "merge": " 1﻿",
+   "strip": " 1﻿",
+   "collapse": " 1﻿"
+  },
+  {
+   "input": " ﻿a",
+   "merge": " ﻿a",
+   "strip": " ﻿a",
+   "collapse": " a"
+  },
+  {
+   "input": " ﻿!",
+   "merge": "",
+   "strip": " ﻿!",
+   "collapse": " !"
+  },
+  {
+   "input": " ﻿ ",
+   "merge": "",
+   "strip": " ﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": " ﻿（",
+   "merge": "",
+   "strip": " ﻿（",
+   "collapse": " （"
+  },
+  {
+   "input": " ﻿🎵",
+   "merge": "",
+   "strip": " ﻿🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": " ﻿ ",
+   "merge": "",
+   "strip": " ﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": " ﻿　",
+   "merge": "",
+   "strip": " ﻿　",
+   "collapse": " "
+  },
+  {
+   "input": " ﻿》",
+   "merge": "",
+   "strip": " ﻿》",
+   "collapse": " 》"
+  },
+  {
+   "input": " ﻿1",
+   "merge": " ﻿1",
+   "strip": " ﻿1",
+   "collapse": " 1"
+  },
+  {
+   "input": " ﻿﻿",
+   "merge": "",
+   "strip": " ﻿﻿",
+   "collapse": " "
+  },
+  {
+   "input": "　aa",
+   "merge": "　aa",
+   "strip": "　aa",
+   "collapse": "　aa"
+  },
+  {
+   "input": "　a!",
+   "merge": "　a!",
+   "strip": "　a!",
+   "collapse": "　a!"
+  },
+  {
+   "input": "　a ",
+   "merge": "　a ",
+   "strip": "　a ",
+   "collapse": "　a "
+  },
+  {
+   "input": "　a（",
+   "merge": "　a（",
+   "strip": "　a（",
+   "collapse": "　a（"
+  },
+  {
+   "input": "　a🎵",
+   "merge": "　a🎵",
+   "strip": "　a🎵",
+   "collapse": "　a🎵"
+  },
+  {
+   "input": "　a ",
+   "merge": "　a ",
+   "strip": "　a ",
+   "collapse": "　a "
+  },
+  {
+   "input": "　a　",
+   "merge": "　a　",
+   "strip": "　a　",
+   "collapse": "　a　"
+  },
+  {
+   "input": "　a》",
+   "merge": "　a》",
+   "strip": "　a》",
+   "collapse": "　a》"
+  },
+  {
+   "input": "　a1",
+   "merge": "　a1",
+   "strip": "　a1",
+   "collapse": "　a1"
+  },
+  {
+   "input": "　a﻿",
+   "merge": "　a﻿",
+   "strip": "　a﻿",
+   "collapse": "　a﻿"
+  },
+  {
+   "input": "　!a",
+   "merge": "!a",
+   "strip": "　!a",
+   "collapse": "　!a"
+  },
+  {
+   "input": "　!!",
+   "merge": "",
+   "strip": "　!!",
+   "collapse": "　!!"
+  },
+  {
+   "input": "　! ",
+   "merge": "",
+   "strip": "　! ",
+   "collapse": "　! "
+  },
+  {
+   "input": "　!（",
+   "merge": "",
+   "strip": "　!（",
+   "collapse": "　!（"
+  },
+  {
+   "input": "　!🎵",
+   "merge": "",
+   "strip": "　!🎵",
+   "collapse": "　!🎵"
+  },
+  {
+   "input": "　! ",
+   "merge": "",
+   "strip": "　! ",
+   "collapse": "　! "
+  },
+  {
+   "input": "　!　",
+   "merge": "",
+   "strip": "　!　",
+   "collapse": "　!　"
+  },
+  {
+   "input": "　!》",
+   "merge": "",
+   "strip": "　!》",
+   "collapse": "　!》"
+  },
+  {
+   "input": "　!1",
+   "merge": "!1",
+   "strip": "　!1",
+   "collapse": "　!1"
+  },
+  {
+   "input": "　!﻿",
+   "merge": "",
+   "strip": "　!﻿",
+   "collapse": "　!﻿"
+  },
+  {
+   "input": "　 a",
+   "merge": "　 a",
+   "strip": "　 a",
+   "collapse": " a"
+  },
+  {
+   "input": "　 !",
+   "merge": "",
+   "strip": "　 !",
+   "collapse": " !"
+  },
+  {
+   "input": "　  ",
+   "merge": "",
+   "strip": "　  ",
+   "collapse": " "
+  },
+  {
+   "input": "　 （",
+   "merge": "",
+   "strip": "　 （",
+   "collapse": " （"
+  },
+  {
+   "input": "　 🎵",
+   "merge": "",
+   "strip": "　 🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "　  ",
+   "merge": "",
+   "strip": "　  ",
+   "collapse": " "
+  },
+  {
+   "input": "　 　",
+   "merge": "",
+   "strip": "　 　",
+   "collapse": " "
+  },
+  {
+   "input": "　 》",
+   "merge": "",
+   "strip": "　 》",
+   "collapse": " 》"
+  },
+  {
+   "input": "　 1",
+   "merge": "　 1",
+   "strip": "　 1",
+   "collapse": " 1"
+  },
+  {
+   "input": "　 ﻿",
+   "merge": "",
+   "strip": "　 ﻿",
+   "collapse": " "
+  },
+  {
+   "input": "　（a",
+   "merge": "（a",
+   "strip": "　（a",
+   "collapse": "　（a"
+  },
+  {
+   "input": "　（!",
+   "merge": "",
+   "strip": "　（!",
+   "collapse": "　（!"
+  },
+  {
+   "input": "　（ ",
+   "merge": "",
+   "strip": "　（ ",
+   "collapse": "　（ "
+  },
+  {
+   "input": "　（（",
+   "merge": "",
+   "strip": "　（（",
+   "collapse": "　（（"
+  },
+  {
+   "input": "　（🎵",
+   "merge": "",
+   "strip": "　（🎵",
+   "collapse": "　（🎵"
+  },
+  {
+   "input": "　（ ",
+   "merge": "",
+   "strip": "　（ ",
+   "collapse": "　（ "
+  },
+  {
+   "input": "　（　",
+   "merge": "",
+   "strip": "　（　",
+   "collapse": "　（　"
+  },
+  {
+   "input": "　（》",
+   "merge": "",
+   "strip": "　（》",
+   "collapse": "　（》"
+  },
+  {
+   "input": "　（1",
+   "merge": "（1",
+   "strip": "　（1",
+   "collapse": "　（1"
+  },
+  {
+   "input": "　（﻿",
+   "merge": "",
+   "strip": "　（﻿",
+   "collapse": "　（﻿"
+  },
+  {
+   "input": "　🎵a",
+   "merge": "🎵a",
+   "strip": "　🎵a",
+   "collapse": "　🎵a"
+  },
+  {
+   "input": "　🎵!",
+   "merge": "",
+   "strip": "　🎵!",
+   "collapse": "　🎵!"
+  },
+  {
+   "input": "　🎵 ",
+   "merge": "",
+   "strip": "　🎵 ",
+   "collapse": "　🎵 "
+  },
+  {
+   "input": "　🎵（",
+   "merge": "",
+   "strip": "　🎵（",
+   "collapse": "　🎵（"
+  },
+  {
+   "input": "　🎵🎵",
+   "merge": "",
+   "strip": "　🎵🎵",
+   "collapse": "　🎵🎵"
+  },
+  {
+   "input": "　🎵 ",
+   "merge": "",
+   "strip": "　🎵 ",
+   "collapse": "　🎵 "
+  },
+  {
+   "input": "　🎵　",
+   "merge": "",
+   "strip": "　🎵　",
+   "collapse": "　🎵　"
+  },
+  {
+   "input": "　🎵》",
+   "merge": "",
+   "strip": "　🎵》",
+   "collapse": "　🎵》"
+  },
+  {
+   "input": "　🎵1",
+   "merge": "🎵1",
+   "strip": "　🎵1",
+   "collapse": "　🎵1"
+  },
+  {
+   "input": "　🎵﻿",
+   "merge": "",
+   "strip": "　🎵﻿",
+   "collapse": "　🎵﻿"
+  },
+  {
+   "input": "　 a",
+   "merge": "　 a",
+   "strip": "　 a",
+   "collapse": " a"
+  },
+  {
+   "input": "　 !",
+   "merge": "",
+   "strip": "　 !",
+   "collapse": " !"
+  },
+  {
+   "input": "　  ",
+   "merge": "",
+   "strip": "　  ",
+   "collapse": " "
+  },
+  {
+   "input": "　 （",
+   "merge": "",
+   "strip": "　 （",
+   "collapse": " （"
+  },
+  {
+   "input": "　 🎵",
+   "merge": "",
+   "strip": "　 🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "　  ",
+   "merge": "",
+   "strip": "　  ",
+   "collapse": " "
+  },
+  {
+   "input": "　 　",
+   "merge": "",
+   "strip": "　 　",
+   "collapse": " "
+  },
+  {
+   "input": "　 》",
+   "merge": "",
+   "strip": "　 》",
+   "collapse": " 》"
+  },
+  {
+   "input": "　 1",
+   "merge": "　 1",
+   "strip": "　 1",
+   "collapse": " 1"
+  },
+  {
+   "input": "　 ﻿",
+   "merge": "",
+   "strip": "　 ﻿",
+   "collapse": " "
+  },
+  {
+   "input": "　　a",
+   "merge": "　　a",
+   "strip": "　　a",
+   "collapse": " a"
+  },
+  {
+   "input": "　　!",
+   "merge": "",
+   "strip": "　　!",
+   "collapse": " !"
+  },
+  {
+   "input": "　　 ",
+   "merge": "",
+   "strip": "　　 ",
+   "collapse": " "
+  },
+  {
+   "input": "　　（",
+   "merge": "",
+   "strip": "　　（",
+   "collapse": " （"
+  },
+  {
+   "input": "　　🎵",
+   "merge": "",
+   "strip": "　　🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "　　 ",
+   "merge": "",
+   "strip": "　　 ",
+   "collapse": " "
+  },
+  {
+   "input": "　　　",
+   "merge": "",
+   "strip": "　　　",
+   "collapse": " "
+  },
+  {
+   "input": "　　》",
+   "merge": "",
+   "strip": "　　》",
+   "collapse": " 》"
+  },
+  {
+   "input": "　　1",
+   "merge": "　　1",
+   "strip": "　　1",
+   "collapse": " 1"
+  },
+  {
+   "input": "　　﻿",
+   "merge": "",
+   "strip": "　　﻿",
+   "collapse": " "
+  },
+  {
+   "input": "　》a",
+   "merge": "》a",
+   "strip": "　》a",
+   "collapse": "　》a"
+  },
+  {
+   "input": "　》!",
+   "merge": "",
+   "strip": "　》!",
+   "collapse": "　》!"
+  },
+  {
+   "input": "　》 ",
+   "merge": "",
+   "strip": "　》 ",
+   "collapse": "　》 "
+  },
+  {
+   "input": "　》（",
+   "merge": "",
+   "strip": "　》（",
+   "collapse": "　》（"
+  },
+  {
+   "input": "　》🎵",
+   "merge": "",
+   "strip": "　》🎵",
+   "collapse": "　》🎵"
+  },
+  {
+   "input": "　》 ",
+   "merge": "",
+   "strip": "　》 ",
+   "collapse": "　》 "
+  },
+  {
+   "input": "　》　",
+   "merge": "",
+   "strip": "　》　",
+   "collapse": "　》　"
+  },
+  {
+   "input": "　》》",
+   "merge": "",
+   "strip": "　》》",
+   "collapse": "　》》"
+  },
+  {
+   "input": "　》1",
+   "merge": "》1",
+   "strip": "　》1",
+   "collapse": "　》1"
+  },
+  {
+   "input": "　》﻿",
+   "merge": "",
+   "strip": "　》﻿",
+   "collapse": "　》﻿"
+  },
+  {
+   "input": "　1a",
+   "merge": "　1a",
+   "strip": "　1a",
+   "collapse": "　1a"
+  },
+  {
+   "input": "　1!",
+   "merge": "　1!",
+   "strip": "　1!",
+   "collapse": "　1!"
+  },
+  {
+   "input": "　1 ",
+   "merge": "　1 ",
+   "strip": "　1 ",
+   "collapse": "　1 "
+  },
+  {
+   "input": "　1（",
+   "merge": "　1（",
+   "strip": "　1（",
+   "collapse": "　1（"
+  },
+  {
+   "input": "　1🎵",
+   "merge": "　1🎵",
+   "strip": "　1🎵",
+   "collapse": "　1🎵"
+  },
+  {
+   "input": "　1 ",
+   "merge": "　1 ",
+   "strip": "　1 ",
+   "collapse": "　1 "
+  },
+  {
+   "input": "　1　",
+   "merge": "　1　",
+   "strip": "　1　",
+   "collapse": "　1　"
+  },
+  {
+   "input": "　1》",
+   "merge": "　1》",
+   "strip": "　1》",
+   "collapse": "　1》"
+  },
+  {
+   "input": "　11",
+   "merge": "　11",
+   "strip": "　11",
+   "collapse": "　11"
+  },
+  {
+   "input": "　1﻿",
+   "merge": "　1﻿",
+   "strip": "　1﻿",
+   "collapse": "　1﻿"
+  },
+  {
+   "input": "　﻿a",
+   "merge": "　﻿a",
+   "strip": "　﻿a",
+   "collapse": " a"
+  },
+  {
+   "input": "　﻿!",
+   "merge": "",
+   "strip": "　﻿!",
+   "collapse": " !"
+  },
+  {
+   "input": "　﻿ ",
+   "merge": "",
+   "strip": "　﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": "　﻿（",
+   "merge": "",
+   "strip": "　﻿（",
+   "collapse": " （"
+  },
+  {
+   "input": "　﻿🎵",
+   "merge": "",
+   "strip": "　﻿🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "　﻿ ",
+   "merge": "",
+   "strip": "　﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": "　﻿　",
+   "merge": "",
+   "strip": "　﻿　",
+   "collapse": " "
+  },
+  {
+   "input": "　﻿》",
+   "merge": "",
+   "strip": "　﻿》",
+   "collapse": " 》"
+  },
+  {
+   "input": "　﻿1",
+   "merge": "　﻿1",
+   "strip": "　﻿1",
+   "collapse": " 1"
+  },
+  {
+   "input": "　﻿﻿",
+   "merge": "",
+   "strip": "　﻿﻿",
+   "collapse": " "
+  },
+  {
+   "input": "》aa",
+   "merge": "》aa",
+   "strip": "aa",
+   "collapse": "》aa"
+  },
+  {
+   "input": "》a!",
+   "merge": "》a!",
+   "strip": "a!",
+   "collapse": "》a!"
+  },
+  {
+   "input": "》a ",
+   "merge": "》a ",
+   "strip": "a ",
+   "collapse": "》a "
+  },
+  {
+   "input": "》a（",
+   "merge": "》a（",
+   "strip": "a（",
+   "collapse": "》a（"
+  },
+  {
+   "input": "》a🎵",
+   "merge": "》a🎵",
+   "strip": "a🎵",
+   "collapse": "》a🎵"
+  },
+  {
+   "input": "》a ",
+   "merge": "》a ",
+   "strip": "a ",
+   "collapse": "》a "
+  },
+  {
+   "input": "》a　",
+   "merge": "》a　",
+   "strip": "a　",
+   "collapse": "》a　"
+  },
+  {
+   "input": "》a》",
+   "merge": "》a》",
+   "strip": "a》",
+   "collapse": "》a》"
+  },
+  {
+   "input": "》a1",
+   "merge": "》a1",
+   "strip": "a1",
+   "collapse": "》a1"
+  },
+  {
+   "input": "》a﻿",
+   "merge": "》a﻿",
+   "strip": "a﻿",
+   "collapse": "》a﻿"
+  },
+  {
+   "input": "》!a",
+   "merge": "!a",
+   "strip": "a",
+   "collapse": "》!a"
+  },
+  {
+   "input": "》!!",
+   "merge": "",
+   "strip": "",
+   "collapse": "》!!"
+  },
+  {
+   "input": "》! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》! "
+  },
+  {
+   "input": "》!（",
+   "merge": "",
+   "strip": "",
+   "collapse": "》!（"
+  },
+  {
+   "input": "》!🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "》!🎵"
+  },
+  {
+   "input": "》! ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》! "
+  },
+  {
+   "input": "》!　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "》!　"
+  },
+  {
+   "input": "》!》",
+   "merge": "",
+   "strip": "",
+   "collapse": "》!》"
+  },
+  {
+   "input": "》!1",
+   "merge": "!1",
+   "strip": "1",
+   "collapse": "》!1"
+  },
+  {
+   "input": "》!﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "》!﻿"
+  },
+  {
+   "input": "》 a",
+   "merge": "》 a",
+   "strip": " a",
+   "collapse": "》 a"
+  },
+  {
+   "input": "》 !",
+   "merge": "",
+   "strip": " !",
+   "collapse": "》 !"
+  },
+  {
+   "input": "》  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》 （",
+   "merge": "",
+   "strip": " （",
+   "collapse": "》 （"
+  },
+  {
+   "input": "》 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": "》 🎵"
+  },
+  {
+   "input": "》  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": "》 "
+  },
+  {
+   "input": "》 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": "》 》"
+  },
+  {
+   "input": "》 1",
+   "merge": "》 1",
+   "strip": " 1",
+   "collapse": "》 1"
+  },
+  {
+   "input": "》 ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": "》 "
+  },
+  {
+   "input": "》（a",
+   "merge": "（a",
+   "strip": "a",
+   "collapse": "》（a"
+  },
+  {
+   "input": "》（!",
+   "merge": "",
+   "strip": "",
+   "collapse": "》（!"
+  },
+  {
+   "input": "》（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》（ "
+  },
+  {
+   "input": "》（（",
+   "merge": "",
+   "strip": "",
+   "collapse": "》（（"
+  },
+  {
+   "input": "》（🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "》（🎵"
+  },
+  {
+   "input": "》（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》（ "
+  },
+  {
+   "input": "》（　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "》（　"
+  },
+  {
+   "input": "》（》",
+   "merge": "",
+   "strip": "",
+   "collapse": "》（》"
+  },
+  {
+   "input": "》（1",
+   "merge": "（1",
+   "strip": "1",
+   "collapse": "》（1"
+  },
+  {
+   "input": "》（﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "》（﻿"
+  },
+  {
+   "input": "》🎵a",
+   "merge": "🎵a",
+   "strip": "a",
+   "collapse": "》🎵a"
+  },
+  {
+   "input": "》🎵!",
+   "merge": "",
+   "strip": "",
+   "collapse": "》🎵!"
+  },
+  {
+   "input": "》🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》🎵 "
+  },
+  {
+   "input": "》🎵（",
+   "merge": "",
+   "strip": "",
+   "collapse": "》🎵（"
+  },
+  {
+   "input": "》🎵🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "》🎵🎵"
+  },
+  {
+   "input": "》🎵 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》🎵 "
+  },
+  {
+   "input": "》🎵　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "》🎵　"
+  },
+  {
+   "input": "》🎵》",
+   "merge": "",
+   "strip": "",
+   "collapse": "》🎵》"
+  },
+  {
+   "input": "》🎵1",
+   "merge": "🎵1",
+   "strip": "1",
+   "collapse": "》🎵1"
+  },
+  {
+   "input": "》🎵﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "》🎵﻿"
+  },
+  {
+   "input": "》 a",
+   "merge": "》 a",
+   "strip": " a",
+   "collapse": "》 a"
+  },
+  {
+   "input": "》 !",
+   "merge": "",
+   "strip": " !",
+   "collapse": "》 !"
+  },
+  {
+   "input": "》  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》 （",
+   "merge": "",
+   "strip": " （",
+   "collapse": "》 （"
+  },
+  {
+   "input": "》 🎵",
+   "merge": "",
+   "strip": " 🎵",
+   "collapse": "》 🎵"
+  },
+  {
+   "input": "》  ",
+   "merge": "",
+   "strip": "  ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》 　",
+   "merge": "",
+   "strip": " 　",
+   "collapse": "》 "
+  },
+  {
+   "input": "》 》",
+   "merge": "",
+   "strip": " 》",
+   "collapse": "》 》"
+  },
+  {
+   "input": "》 1",
+   "merge": "》 1",
+   "strip": " 1",
+   "collapse": "》 1"
+  },
+  {
+   "input": "》 ﻿",
+   "merge": "",
+   "strip": " ﻿",
+   "collapse": "》 "
+  },
+  {
+   "input": "》　a",
+   "merge": "》　a",
+   "strip": "　a",
+   "collapse": "》　a"
+  },
+  {
+   "input": "》　!",
+   "merge": "",
+   "strip": "　!",
+   "collapse": "》　!"
+  },
+  {
+   "input": "》　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》　（",
+   "merge": "",
+   "strip": "　（",
+   "collapse": "》　（"
+  },
+  {
+   "input": "》　🎵",
+   "merge": "",
+   "strip": "　🎵",
+   "collapse": "》　🎵"
+  },
+  {
+   "input": "》　 ",
+   "merge": "",
+   "strip": "　 ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》　　",
+   "merge": "",
+   "strip": "　　",
+   "collapse": "》 "
+  },
+  {
+   "input": "》　》",
+   "merge": "",
+   "strip": "　》",
+   "collapse": "》　》"
+  },
+  {
+   "input": "》　1",
+   "merge": "》　1",
+   "strip": "　1",
+   "collapse": "》　1"
+  },
+  {
+   "input": "》　﻿",
+   "merge": "",
+   "strip": "　﻿",
+   "collapse": "》 "
+  },
+  {
+   "input": "》》a",
+   "merge": "》a",
+   "strip": "a",
+   "collapse": "》》a"
+  },
+  {
+   "input": "》》!",
+   "merge": "",
+   "strip": "",
+   "collapse": "》》!"
+  },
+  {
+   "input": "》》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》》 "
+  },
+  {
+   "input": "》》（",
+   "merge": "",
+   "strip": "",
+   "collapse": "》》（"
+  },
+  {
+   "input": "》》🎵",
+   "merge": "",
+   "strip": "",
+   "collapse": "》》🎵"
+  },
+  {
+   "input": "》》 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "》》 "
+  },
+  {
+   "input": "》》　",
+   "merge": "",
+   "strip": "　",
+   "collapse": "》》　"
+  },
+  {
+   "input": "》》》",
+   "merge": "",
+   "strip": "",
+   "collapse": "》》》"
+  },
+  {
+   "input": "》》1",
+   "merge": "》1",
+   "strip": "1",
+   "collapse": "》》1"
+  },
+  {
+   "input": "》》﻿",
+   "merge": "",
+   "strip": "﻿",
+   "collapse": "》》﻿"
+  },
+  {
+   "input": "》1a",
+   "merge": "》1a",
+   "strip": "1a",
+   "collapse": "》1a"
+  },
+  {
+   "input": "》1!",
+   "merge": "》1!",
+   "strip": "1!",
+   "collapse": "》1!"
+  },
+  {
+   "input": "》1 ",
+   "merge": "》1 ",
+   "strip": "1 ",
+   "collapse": "》1 "
+  },
+  {
+   "input": "》1（",
+   "merge": "》1（",
+   "strip": "1（",
+   "collapse": "》1（"
+  },
+  {
+   "input": "》1🎵",
+   "merge": "》1🎵",
+   "strip": "1🎵",
+   "collapse": "》1🎵"
+  },
+  {
+   "input": "》1 ",
+   "merge": "》1 ",
+   "strip": "1 ",
+   "collapse": "》1 "
+  },
+  {
+   "input": "》1　",
+   "merge": "》1　",
+   "strip": "1　",
+   "collapse": "》1　"
+  },
+  {
+   "input": "》1》",
+   "merge": "》1》",
+   "strip": "1》",
+   "collapse": "》1》"
+  },
+  {
+   "input": "》11",
+   "merge": "》11",
+   "strip": "11",
+   "collapse": "》11"
+  },
+  {
+   "input": "》1﻿",
+   "merge": "》1﻿",
+   "strip": "1﻿",
+   "collapse": "》1﻿"
+  },
+  {
+   "input": "》﻿a",
+   "merge": "》﻿a",
+   "strip": "﻿a",
+   "collapse": "》﻿a"
+  },
+  {
+   "input": "》﻿!",
+   "merge": "",
+   "strip": "﻿!",
+   "collapse": "》﻿!"
+  },
+  {
+   "input": "》﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》﻿（",
+   "merge": "",
+   "strip": "﻿（",
+   "collapse": "》﻿（"
+  },
+  {
+   "input": "》﻿🎵",
+   "merge": "",
+   "strip": "﻿🎵",
+   "collapse": "》﻿🎵"
+  },
+  {
+   "input": "》﻿ ",
+   "merge": "",
+   "strip": "﻿ ",
+   "collapse": "》 "
+  },
+  {
+   "input": "》﻿　",
+   "merge": "",
+   "strip": "﻿　",
+   "collapse": "》 "
+  },
+  {
+   "input": "》﻿》",
+   "merge": "",
+   "strip": "﻿》",
+   "collapse": "》﻿》"
+  },
+  {
+   "input": "》﻿1",
+   "merge": "》﻿1",
+   "strip": "﻿1",
+   "collapse": "》﻿1"
+  },
+  {
+   "input": "》﻿﻿",
+   "merge": "",
+   "strip": "﻿﻿",
+   "collapse": "》 "
+  },
+  {
+   "input": "1aa",
+   "merge": "1aa",
+   "strip": "1aa",
+   "collapse": "1aa"
+  },
+  {
+   "input": "1a!",
+   "merge": "1a!",
+   "strip": "1a!",
+   "collapse": "1a!"
+  },
+  {
+   "input": "1a ",
+   "merge": "1a ",
+   "strip": "1a ",
+   "collapse": "1a "
+  },
+  {
+   "input": "1a（",
+   "merge": "1a（",
+   "strip": "1a（",
+   "collapse": "1a（"
+  },
+  {
+   "input": "1a🎵",
+   "merge": "1a🎵",
+   "strip": "1a🎵",
+   "collapse": "1a🎵"
+  },
+  {
+   "input": "1a ",
+   "merge": "1a ",
+   "strip": "1a ",
+   "collapse": "1a "
+  },
+  {
+   "input": "1a　",
+   "merge": "1a　",
+   "strip": "1a　",
+   "collapse": "1a　"
+  },
+  {
+   "input": "1a》",
+   "merge": "1a》",
+   "strip": "1a》",
+   "collapse": "1a》"
+  },
+  {
+   "input": "1a1",
+   "merge": "1a1",
+   "strip": "1a1",
+   "collapse": "1a1"
+  },
+  {
+   "input": "1a﻿",
+   "merge": "1a﻿",
+   "strip": "1a﻿",
+   "collapse": "1a﻿"
+  },
+  {
+   "input": "1!a",
+   "merge": "1!a",
+   "strip": "1!a",
+   "collapse": "1!a"
+  },
+  {
+   "input": "1!!",
+   "merge": "1!",
+   "strip": "1!!",
+   "collapse": "1!!"
+  },
+  {
+   "input": "1! ",
+   "merge": "1!",
+   "strip": "1! ",
+   "collapse": "1! "
+  },
+  {
+   "input": "1!（",
+   "merge": "1!",
+   "strip": "1!（",
+   "collapse": "1!（"
+  },
+  {
+   "input": "1!🎵",
+   "merge": "1!",
+   "strip": "1!🎵",
+   "collapse": "1!🎵"
+  },
+  {
+   "input": "1! ",
+   "merge": "1!",
+   "strip": "1! ",
+   "collapse": "1! "
+  },
+  {
+   "input": "1!　",
+   "merge": "1!",
+   "strip": "1!　",
+   "collapse": "1!　"
+  },
+  {
+   "input": "1!》",
+   "merge": "1!",
+   "strip": "1!》",
+   "collapse": "1!》"
+  },
+  {
+   "input": "1!1",
+   "merge": "1!1",
+   "strip": "1!1",
+   "collapse": "1!1"
+  },
+  {
+   "input": "1!﻿",
+   "merge": "1!",
+   "strip": "1!﻿",
+   "collapse": "1!﻿"
+  },
+  {
+   "input": "1 a",
+   "merge": "1 a",
+   "strip": "1 a",
+   "collapse": "1 a"
+  },
+  {
+   "input": "1 !",
+   "merge": "1 !",
+   "strip": "1 !",
+   "collapse": "1 !"
+  },
+  {
+   "input": "1  ",
+   "merge": "1  ",
+   "strip": "1  ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1 （",
+   "merge": "1 （",
+   "strip": "1 （",
+   "collapse": "1 （"
+  },
+  {
+   "input": "1 🎵",
+   "merge": "1 🎵",
+   "strip": "1 🎵",
+   "collapse": "1 🎵"
+  },
+  {
+   "input": "1  ",
+   "merge": "1  ",
+   "strip": "1  ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1 　",
+   "merge": "1 　",
+   "strip": "1 　",
+   "collapse": "1 "
+  },
+  {
+   "input": "1 》",
+   "merge": "1 》",
+   "strip": "1 》",
+   "collapse": "1 》"
+  },
+  {
+   "input": "1 1",
+   "merge": "1 1",
+   "strip": "1 1",
+   "collapse": "1 1"
+  },
+  {
+   "input": "1 ﻿",
+   "merge": "1 ﻿",
+   "strip": "1 ﻿",
+   "collapse": "1 "
+  },
+  {
+   "input": "1（a",
+   "merge": "1（a",
+   "strip": "1（a",
+   "collapse": "1（a"
+  },
+  {
+   "input": "1（!",
+   "merge": "1（",
+   "strip": "1（!",
+   "collapse": "1（!"
+  },
+  {
+   "input": "1（ ",
+   "merge": "1（",
+   "strip": "1（ ",
+   "collapse": "1（ "
+  },
+  {
+   "input": "1（（",
+   "merge": "1（",
+   "strip": "1（（",
+   "collapse": "1（（"
+  },
+  {
+   "input": "1（🎵",
+   "merge": "1（",
+   "strip": "1（🎵",
+   "collapse": "1（🎵"
+  },
+  {
+   "input": "1（ ",
+   "merge": "1（",
+   "strip": "1（ ",
+   "collapse": "1（ "
+  },
+  {
+   "input": "1（　",
+   "merge": "1（",
+   "strip": "1（　",
+   "collapse": "1（　"
+  },
+  {
+   "input": "1（》",
+   "merge": "1（",
+   "strip": "1（》",
+   "collapse": "1（》"
+  },
+  {
+   "input": "1（1",
+   "merge": "1（1",
+   "strip": "1（1",
+   "collapse": "1（1"
+  },
+  {
+   "input": "1（﻿",
+   "merge": "1（",
+   "strip": "1（﻿",
+   "collapse": "1（﻿"
+  },
+  {
+   "input": "1🎵a",
+   "merge": "1🎵a",
+   "strip": "1🎵a",
+   "collapse": "1🎵a"
+  },
+  {
+   "input": "1🎵!",
+   "merge": "1🎵",
+   "strip": "1🎵!",
+   "collapse": "1🎵!"
+  },
+  {
+   "input": "1🎵 ",
+   "merge": "1🎵",
+   "strip": "1🎵 ",
+   "collapse": "1🎵 "
+  },
+  {
+   "input": "1🎵（",
+   "merge": "1🎵",
+   "strip": "1🎵（",
+   "collapse": "1🎵（"
+  },
+  {
+   "input": "1🎵🎵",
+   "merge": "1🎵",
+   "strip": "1🎵🎵",
+   "collapse": "1🎵🎵"
+  },
+  {
+   "input": "1🎵 ",
+   "merge": "1🎵",
+   "strip": "1🎵 ",
+   "collapse": "1🎵 "
+  },
+  {
+   "input": "1🎵　",
+   "merge": "1🎵",
+   "strip": "1🎵　",
+   "collapse": "1🎵　"
+  },
+  {
+   "input": "1🎵》",
+   "merge": "1🎵",
+   "strip": "1🎵》",
+   "collapse": "1🎵》"
+  },
+  {
+   "input": "1🎵1",
+   "merge": "1🎵1",
+   "strip": "1🎵1",
+   "collapse": "1🎵1"
+  },
+  {
+   "input": "1🎵﻿",
+   "merge": "1🎵",
+   "strip": "1🎵﻿",
+   "collapse": "1🎵﻿"
+  },
+  {
+   "input": "1 a",
+   "merge": "1 a",
+   "strip": "1 a",
+   "collapse": "1 a"
+  },
+  {
+   "input": "1 !",
+   "merge": "1 !",
+   "strip": "1 !",
+   "collapse": "1 !"
+  },
+  {
+   "input": "1  ",
+   "merge": "1  ",
+   "strip": "1  ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1 （",
+   "merge": "1 （",
+   "strip": "1 （",
+   "collapse": "1 （"
+  },
+  {
+   "input": "1 🎵",
+   "merge": "1 🎵",
+   "strip": "1 🎵",
+   "collapse": "1 🎵"
+  },
+  {
+   "input": "1  ",
+   "merge": "1  ",
+   "strip": "1  ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1 　",
+   "merge": "1 　",
+   "strip": "1 　",
+   "collapse": "1 "
+  },
+  {
+   "input": "1 》",
+   "merge": "1 》",
+   "strip": "1 》",
+   "collapse": "1 》"
+  },
+  {
+   "input": "1 1",
+   "merge": "1 1",
+   "strip": "1 1",
+   "collapse": "1 1"
+  },
+  {
+   "input": "1 ﻿",
+   "merge": "1 ﻿",
+   "strip": "1 ﻿",
+   "collapse": "1 "
+  },
+  {
+   "input": "1　a",
+   "merge": "1　a",
+   "strip": "1　a",
+   "collapse": "1　a"
+  },
+  {
+   "input": "1　!",
+   "merge": "1　!",
+   "strip": "1　!",
+   "collapse": "1　!"
+  },
+  {
+   "input": "1　 ",
+   "merge": "1　 ",
+   "strip": "1　 ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1　（",
+   "merge": "1　（",
+   "strip": "1　（",
+   "collapse": "1　（"
+  },
+  {
+   "input": "1　🎵",
+   "merge": "1　🎵",
+   "strip": "1　🎵",
+   "collapse": "1　🎵"
+  },
+  {
+   "input": "1　 ",
+   "merge": "1　 ",
+   "strip": "1　 ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1　　",
+   "merge": "1　　",
+   "strip": "1　　",
+   "collapse": "1 "
+  },
+  {
+   "input": "1　》",
+   "merge": "1　》",
+   "strip": "1　》",
+   "collapse": "1　》"
+  },
+  {
+   "input": "1　1",
+   "merge": "1　1",
+   "strip": "1　1",
+   "collapse": "1　1"
+  },
+  {
+   "input": "1　﻿",
+   "merge": "1　﻿",
+   "strip": "1　﻿",
+   "collapse": "1 "
+  },
+  {
+   "input": "1》a",
+   "merge": "1》a",
+   "strip": "1》a",
+   "collapse": "1》a"
+  },
+  {
+   "input": "1》!",
+   "merge": "1》",
+   "strip": "1》!",
+   "collapse": "1》!"
+  },
+  {
+   "input": "1》 ",
+   "merge": "1》",
+   "strip": "1》 ",
+   "collapse": "1》 "
+  },
+  {
+   "input": "1》（",
+   "merge": "1》",
+   "strip": "1》（",
+   "collapse": "1》（"
+  },
+  {
+   "input": "1》🎵",
+   "merge": "1》",
+   "strip": "1》🎵",
+   "collapse": "1》🎵"
+  },
+  {
+   "input": "1》 ",
+   "merge": "1》",
+   "strip": "1》 ",
+   "collapse": "1》 "
+  },
+  {
+   "input": "1》　",
+   "merge": "1》",
+   "strip": "1》　",
+   "collapse": "1》　"
+  },
+  {
+   "input": "1》》",
+   "merge": "1》",
+   "strip": "1》》",
+   "collapse": "1》》"
+  },
+  {
+   "input": "1》1",
+   "merge": "1》1",
+   "strip": "1》1",
+   "collapse": "1》1"
+  },
+  {
+   "input": "1》﻿",
+   "merge": "1》",
+   "strip": "1》﻿",
+   "collapse": "1》﻿"
+  },
+  {
+   "input": "11a",
+   "merge": "11a",
+   "strip": "11a",
+   "collapse": "11a"
+  },
+  {
+   "input": "11!",
+   "merge": "11!",
+   "strip": "11!",
+   "collapse": "11!"
+  },
+  {
+   "input": "11 ",
+   "merge": "11 ",
+   "strip": "11 ",
+   "collapse": "11 "
+  },
+  {
+   "input": "11（",
+   "merge": "11（",
+   "strip": "11（",
+   "collapse": "11（"
+  },
+  {
+   "input": "11🎵",
+   "merge": "11🎵",
+   "strip": "11🎵",
+   "collapse": "11🎵"
+  },
+  {
+   "input": "11 ",
+   "merge": "11 ",
+   "strip": "11 ",
+   "collapse": "11 "
+  },
+  {
+   "input": "11　",
+   "merge": "11　",
+   "strip": "11　",
+   "collapse": "11　"
+  },
+  {
+   "input": "11》",
+   "merge": "11》",
+   "strip": "11》",
+   "collapse": "11》"
+  },
+  {
+   "input": "111",
+   "merge": "111",
+   "strip": "111",
+   "collapse": "111"
+  },
+  {
+   "input": "11﻿",
+   "merge": "11﻿",
+   "strip": "11﻿",
+   "collapse": "11﻿"
+  },
+  {
+   "input": "1﻿a",
+   "merge": "1﻿a",
+   "strip": "1﻿a",
+   "collapse": "1﻿a"
+  },
+  {
+   "input": "1﻿!",
+   "merge": "1﻿!",
+   "strip": "1﻿!",
+   "collapse": "1﻿!"
+  },
+  {
+   "input": "1﻿ ",
+   "merge": "1﻿ ",
+   "strip": "1﻿ ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1﻿（",
+   "merge": "1﻿（",
+   "strip": "1﻿（",
+   "collapse": "1﻿（"
+  },
+  {
+   "input": "1﻿🎵",
+   "merge": "1﻿🎵",
+   "strip": "1﻿🎵",
+   "collapse": "1﻿🎵"
+  },
+  {
+   "input": "1﻿ ",
+   "merge": "1﻿ ",
+   "strip": "1﻿ ",
+   "collapse": "1 "
+  },
+  {
+   "input": "1﻿　",
+   "merge": "1﻿　",
+   "strip": "1﻿　",
+   "collapse": "1 "
+  },
+  {
+   "input": "1﻿》",
+   "merge": "1﻿》",
+   "strip": "1﻿》",
+   "collapse": "1﻿》"
+  },
+  {
+   "input": "1﻿1",
+   "merge": "1﻿1",
+   "strip": "1﻿1",
+   "collapse": "1﻿1"
+  },
+  {
+   "input": "1﻿﻿",
+   "merge": "1﻿﻿",
+   "strip": "1﻿﻿",
+   "collapse": "1 "
+  },
+  {
+   "input": "﻿aa",
+   "merge": "﻿aa",
+   "strip": "﻿aa",
+   "collapse": "﻿aa"
+  },
+  {
+   "input": "﻿a!",
+   "merge": "﻿a!",
+   "strip": "﻿a!",
+   "collapse": "﻿a!"
+  },
+  {
+   "input": "﻿a ",
+   "merge": "﻿a ",
+   "strip": "﻿a ",
+   "collapse": "﻿a "
+  },
+  {
+   "input": "﻿a（",
+   "merge": "﻿a（",
+   "strip": "﻿a（",
+   "collapse": "﻿a（"
+  },
+  {
+   "input": "﻿a🎵",
+   "merge": "﻿a🎵",
+   "strip": "﻿a🎵",
+   "collapse": "﻿a🎵"
+  },
+  {
+   "input": "﻿a ",
+   "merge": "﻿a ",
+   "strip": "﻿a ",
+   "collapse": "﻿a "
+  },
+  {
+   "input": "﻿a　",
+   "merge": "﻿a　",
+   "strip": "﻿a　",
+   "collapse": "﻿a　"
+  },
+  {
+   "input": "﻿a》",
+   "merge": "﻿a》",
+   "strip": "﻿a》",
+   "collapse": "﻿a》"
+  },
+  {
+   "input": "﻿a1",
+   "merge": "﻿a1",
+   "strip": "﻿a1",
+   "collapse": "﻿a1"
+  },
+  {
+   "input": "﻿a﻿",
+   "merge": "﻿a﻿",
+   "strip": "﻿a﻿",
+   "collapse": "﻿a﻿"
+  },
+  {
+   "input": "﻿!a",
+   "merge": "!a",
+   "strip": "﻿!a",
+   "collapse": "﻿!a"
+  },
+  {
+   "input": "﻿!!",
+   "merge": "",
+   "strip": "﻿!!",
+   "collapse": "﻿!!"
+  },
+  {
+   "input": "﻿! ",
+   "merge": "",
+   "strip": "﻿! ",
+   "collapse": "﻿! "
+  },
+  {
+   "input": "﻿!（",
+   "merge": "",
+   "strip": "﻿!（",
+   "collapse": "﻿!（"
+  },
+  {
+   "input": "﻿!🎵",
+   "merge": "",
+   "strip": "﻿!🎵",
+   "collapse": "﻿!🎵"
+  },
+  {
+   "input": "﻿! ",
+   "merge": "",
+   "strip": "﻿! ",
+   "collapse": "﻿! "
+  },
+  {
+   "input": "﻿!　",
+   "merge": "",
+   "strip": "﻿!　",
+   "collapse": "﻿!　"
+  },
+  {
+   "input": "﻿!》",
+   "merge": "",
+   "strip": "﻿!》",
+   "collapse": "﻿!》"
+  },
+  {
+   "input": "﻿!1",
+   "merge": "!1",
+   "strip": "﻿!1",
+   "collapse": "﻿!1"
+  },
+  {
+   "input": "﻿!﻿",
+   "merge": "",
+   "strip": "﻿!﻿",
+   "collapse": "﻿!﻿"
+  },
+  {
+   "input": "﻿ a",
+   "merge": "﻿ a",
+   "strip": "﻿ a",
+   "collapse": " a"
+  },
+  {
+   "input": "﻿ !",
+   "merge": "",
+   "strip": "﻿ !",
+   "collapse": " !"
+  },
+  {
+   "input": "﻿  ",
+   "merge": "",
+   "strip": "﻿  ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿ （",
+   "merge": "",
+   "strip": "﻿ （",
+   "collapse": " （"
+  },
+  {
+   "input": "﻿ 🎵",
+   "merge": "",
+   "strip": "﻿ 🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "﻿  ",
+   "merge": "",
+   "strip": "﻿  ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿ 　",
+   "merge": "",
+   "strip": "﻿ 　",
+   "collapse": " "
+  },
+  {
+   "input": "﻿ 》",
+   "merge": "",
+   "strip": "﻿ 》",
+   "collapse": " 》"
+  },
+  {
+   "input": "﻿ 1",
+   "merge": "﻿ 1",
+   "strip": "﻿ 1",
+   "collapse": " 1"
+  },
+  {
+   "input": "﻿ ﻿",
+   "merge": "",
+   "strip": "﻿ ﻿",
+   "collapse": " "
+  },
+  {
+   "input": "﻿（a",
+   "merge": "（a",
+   "strip": "﻿（a",
+   "collapse": "﻿（a"
+  },
+  {
+   "input": "﻿（!",
+   "merge": "",
+   "strip": "﻿（!",
+   "collapse": "﻿（!"
+  },
+  {
+   "input": "﻿（ ",
+   "merge": "",
+   "strip": "﻿（ ",
+   "collapse": "﻿（ "
+  },
+  {
+   "input": "﻿（（",
+   "merge": "",
+   "strip": "﻿（（",
+   "collapse": "﻿（（"
+  },
+  {
+   "input": "﻿（🎵",
+   "merge": "",
+   "strip": "﻿（🎵",
+   "collapse": "﻿（🎵"
+  },
+  {
+   "input": "﻿（ ",
+   "merge": "",
+   "strip": "﻿（ ",
+   "collapse": "﻿（ "
+  },
+  {
+   "input": "﻿（　",
+   "merge": "",
+   "strip": "﻿（　",
+   "collapse": "﻿（　"
+  },
+  {
+   "input": "﻿（》",
+   "merge": "",
+   "strip": "﻿（》",
+   "collapse": "﻿（》"
+  },
+  {
+   "input": "﻿（1",
+   "merge": "（1",
+   "strip": "﻿（1",
+   "collapse": "﻿（1"
+  },
+  {
+   "input": "﻿（﻿",
+   "merge": "",
+   "strip": "﻿（﻿",
+   "collapse": "﻿（﻿"
+  },
+  {
+   "input": "﻿🎵a",
+   "merge": "🎵a",
+   "strip": "﻿🎵a",
+   "collapse": "﻿🎵a"
+  },
+  {
+   "input": "﻿🎵!",
+   "merge": "",
+   "strip": "﻿🎵!",
+   "collapse": "﻿🎵!"
+  },
+  {
+   "input": "﻿🎵 ",
+   "merge": "",
+   "strip": "﻿🎵 ",
+   "collapse": "﻿🎵 "
+  },
+  {
+   "input": "﻿🎵（",
+   "merge": "",
+   "strip": "﻿🎵（",
+   "collapse": "﻿🎵（"
+  },
+  {
+   "input": "﻿🎵🎵",
+   "merge": "",
+   "strip": "﻿🎵🎵",
+   "collapse": "﻿🎵🎵"
+  },
+  {
+   "input": "﻿🎵 ",
+   "merge": "",
+   "strip": "﻿🎵 ",
+   "collapse": "﻿🎵 "
+  },
+  {
+   "input": "﻿🎵　",
+   "merge": "",
+   "strip": "﻿🎵　",
+   "collapse": "﻿🎵　"
+  },
+  {
+   "input": "﻿🎵》",
+   "merge": "",
+   "strip": "﻿🎵》",
+   "collapse": "﻿🎵》"
+  },
+  {
+   "input": "﻿🎵1",
+   "merge": "🎵1",
+   "strip": "﻿🎵1",
+   "collapse": "﻿🎵1"
+  },
+  {
+   "input": "﻿🎵﻿",
+   "merge": "",
+   "strip": "﻿🎵﻿",
+   "collapse": "﻿🎵﻿"
+  },
+  {
+   "input": "﻿ a",
+   "merge": "﻿ a",
+   "strip": "﻿ a",
+   "collapse": " a"
+  },
+  {
+   "input": "﻿ !",
+   "merge": "",
+   "strip": "﻿ !",
+   "collapse": " !"
+  },
+  {
+   "input": "﻿  ",
+   "merge": "",
+   "strip": "﻿  ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿ （",
+   "merge": "",
+   "strip": "﻿ （",
+   "collapse": " （"
+  },
+  {
+   "input": "﻿ 🎵",
+   "merge": "",
+   "strip": "﻿ 🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "﻿  ",
+   "merge": "",
+   "strip": "﻿  ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿ 　",
+   "merge": "",
+   "strip": "﻿ 　",
+   "collapse": " "
+  },
+  {
+   "input": "﻿ 》",
+   "merge": "",
+   "strip": "﻿ 》",
+   "collapse": " 》"
+  },
+  {
+   "input": "﻿ 1",
+   "merge": "﻿ 1",
+   "strip": "﻿ 1",
+   "collapse": " 1"
+  },
+  {
+   "input": "﻿ ﻿",
+   "merge": "",
+   "strip": "﻿ ﻿",
+   "collapse": " "
+  },
+  {
+   "input": "﻿　a",
+   "merge": "﻿　a",
+   "strip": "﻿　a",
+   "collapse": " a"
+  },
+  {
+   "input": "﻿　!",
+   "merge": "",
+   "strip": "﻿　!",
+   "collapse": " !"
+  },
+  {
+   "input": "﻿　 ",
+   "merge": "",
+   "strip": "﻿　 ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿　（",
+   "merge": "",
+   "strip": "﻿　（",
+   "collapse": " （"
+  },
+  {
+   "input": "﻿　🎵",
+   "merge": "",
+   "strip": "﻿　🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "﻿　 ",
+   "merge": "",
+   "strip": "﻿　 ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿　　",
+   "merge": "",
+   "strip": "﻿　　",
+   "collapse": " "
+  },
+  {
+   "input": "﻿　》",
+   "merge": "",
+   "strip": "﻿　》",
+   "collapse": " 》"
+  },
+  {
+   "input": "﻿　1",
+   "merge": "﻿　1",
+   "strip": "﻿　1",
+   "collapse": " 1"
+  },
+  {
+   "input": "﻿　﻿",
+   "merge": "",
+   "strip": "﻿　﻿",
+   "collapse": " "
+  },
+  {
+   "input": "﻿》a",
+   "merge": "》a",
+   "strip": "﻿》a",
+   "collapse": "﻿》a"
+  },
+  {
+   "input": "﻿》!",
+   "merge": "",
+   "strip": "﻿》!",
+   "collapse": "﻿》!"
+  },
+  {
+   "input": "﻿》 ",
+   "merge": "",
+   "strip": "﻿》 ",
+   "collapse": "﻿》 "
+  },
+  {
+   "input": "﻿》（",
+   "merge": "",
+   "strip": "﻿》（",
+   "collapse": "﻿》（"
+  },
+  {
+   "input": "﻿》🎵",
+   "merge": "",
+   "strip": "﻿》🎵",
+   "collapse": "﻿》🎵"
+  },
+  {
+   "input": "﻿》 ",
+   "merge": "",
+   "strip": "﻿》 ",
+   "collapse": "﻿》 "
+  },
+  {
+   "input": "﻿》　",
+   "merge": "",
+   "strip": "﻿》　",
+   "collapse": "﻿》　"
+  },
+  {
+   "input": "﻿》》",
+   "merge": "",
+   "strip": "﻿》》",
+   "collapse": "﻿》》"
+  },
+  {
+   "input": "﻿》1",
+   "merge": "》1",
+   "strip": "﻿》1",
+   "collapse": "﻿》1"
+  },
+  {
+   "input": "﻿》﻿",
+   "merge": "",
+   "strip": "﻿》﻿",
+   "collapse": "﻿》﻿"
+  },
+  {
+   "input": "﻿1a",
+   "merge": "﻿1a",
+   "strip": "﻿1a",
+   "collapse": "﻿1a"
+  },
+  {
+   "input": "﻿1!",
+   "merge": "﻿1!",
+   "strip": "﻿1!",
+   "collapse": "﻿1!"
+  },
+  {
+   "input": "﻿1 ",
+   "merge": "﻿1 ",
+   "strip": "﻿1 ",
+   "collapse": "﻿1 "
+  },
+  {
+   "input": "﻿1（",
+   "merge": "﻿1（",
+   "strip": "﻿1（",
+   "collapse": "﻿1（"
+  },
+  {
+   "input": "﻿1🎵",
+   "merge": "﻿1🎵",
+   "strip": "﻿1🎵",
+   "collapse": "﻿1🎵"
+  },
+  {
+   "input": "﻿1 ",
+   "merge": "﻿1 ",
+   "strip": "﻿1 ",
+   "collapse": "﻿1 "
+  },
+  {
+   "input": "﻿1　",
+   "merge": "﻿1　",
+   "strip": "﻿1　",
+   "collapse": "﻿1　"
+  },
+  {
+   "input": "﻿1》",
+   "merge": "﻿1》",
+   "strip": "﻿1》",
+   "collapse": "﻿1》"
+  },
+  {
+   "input": "﻿11",
+   "merge": "﻿11",
+   "strip": "﻿11",
+   "collapse": "﻿11"
+  },
+  {
+   "input": "﻿1﻿",
+   "merge": "﻿1﻿",
+   "strip": "﻿1﻿",
+   "collapse": "﻿1﻿"
+  },
+  {
+   "input": "﻿﻿a",
+   "merge": "﻿﻿a",
+   "strip": "﻿﻿a",
+   "collapse": " a"
+  },
+  {
+   "input": "﻿﻿!",
+   "merge": "",
+   "strip": "﻿﻿!",
+   "collapse": " !"
+  },
+  {
+   "input": "﻿﻿ ",
+   "merge": "",
+   "strip": "﻿﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿﻿（",
+   "merge": "",
+   "strip": "﻿﻿（",
+   "collapse": " （"
+  },
+  {
+   "input": "﻿﻿🎵",
+   "merge": "",
+   "strip": "﻿﻿🎵",
+   "collapse": " 🎵"
+  },
+  {
+   "input": "﻿﻿ ",
+   "merge": "",
+   "strip": "﻿﻿ ",
+   "collapse": " "
+  },
+  {
+   "input": "﻿﻿　",
+   "merge": "",
+   "strip": "﻿﻿　",
+   "collapse": " "
+  },
+  {
+   "input": "﻿﻿》",
+   "merge": "",
+   "strip": "﻿﻿》",
+   "collapse": " 》"
+  },
+  {
+   "input": "﻿﻿1",
+   "merge": "﻿﻿1",
+   "strip": "﻿﻿1",
+   "collapse": " 1"
+  },
+  {
+   "input": "﻿﻿﻿",
+   "merge": "",
+   "strip": "﻿﻿﻿",
+   "collapse": " "
+  },
+  {
+   "input": "~^>‍、👩o`．",
+   "merge": ">‍、👩o`",
+   "strip": "‍、👩o`．",
+   "collapse": "~^>‍、👩o`．"
+  },
+  {
+   "input": "👧t、",
+   "merge": "👧t、",
+   "strip": "t、",
+   "collapse": "👧t、"
+  },
+  {
+   "input": "i|，𝐀//！天Z ）0|\n”✅️./",
+   "merge": "i|，𝐀/！天Z ）0|✅️.",
+   "strip": "i|，𝐀//！天Z ）0|\n”✅️./",
+   "collapse": "i|，𝐀//！天Z ）0|\n”✅️./"
+  },
+  {
+   "input": "1❤洛%c—𝐀「🎵洛𝐀T0👧-",
+   "merge": "1❤洛%c—𝐀「🎵洛𝐀T0👧",
+   "strip": "1❤洛%c—𝐀「🎵洛𝐀T0👧-",
+   "collapse": "1❤洛%c—𝐀「🎵洛𝐀T0👧-"
+  },
+  {
+   "input": "Z",
+   "merge": "Z",
+   "strip": "Z",
+   "collapse": "Z"
+  },
+  {
+   "input": "👦y「（",
+   "merge": "👦y「",
+   "strip": "y「（",
+   "collapse": "👦y「（"
+  },
+  {
+   "input": "】】[‍✅%",
+   "merge": "[‍✅",
+   "strip": "‍✅%",
+   "collapse": "】】[‍✅%"
+  },
+  {
+   "input": "wlf天 o依0c、【{　[👩 ",
+   "merge": "wlf天 o依0c、",
+   "strip": "wlf天 o依0c、【{　[👩 ",
+   "collapse": "wlf天 o依0c、【{　[👩 "
+  },
+  {
+   "input": "y【‍𝐀洛👧\\𝟎】-@^‍、",
+   "merge": "y【‍𝐀洛👧\\𝟎】^‍、",
+   "strip": "y【‍𝐀洛👧\\𝟎】-@^‍、",
+   "collapse": "y【‍𝐀洛👧\\𝟎】-@^‍、"
+  },
+  {
+   "input": "&》—S—🎵9 %c❤‘👧~🎵b’‍",
+   "merge": "—S—🎵9 %c❤🎵b’‍",
+   "strip": "S—🎵9 %c❤‘👧~🎵b’‍",
+   "collapse": "&》—S—🎵9 %c❤‘👧~🎵b’‍"
+  },
+  {
+   "input": "S’—️ i ）r依\n伦\n「",
+   "merge": "S’—️ i ）r依\n伦\n「",
+   "strip": "S’—️ i ）r依\n伦\n「",
+   "collapse": "S’—️ i ）r依\n伦\n「"
+  },
+  {
+   "input": "，‘‍；>X]，天",
+   "merge": "‘‍；>X]，天",
+   "strip": "‍；>X]，天",
+   "collapse": "，‘‍；>X]，天"
+  },
+  {
+   "input": "y\\ⓐ~【w|·= f）a ",
+   "merge": "y\\【w|= f）a ",
+   "strip": "y\\ⓐ~【w|·= f）a ",
+   "collapse": "y\\ⓐ~【w|·= f）a "
+  },
+  {
+   "input": ")．，$洛依\n🎵🎵%　>",
+   "merge": "$洛依\n🎵",
+   "strip": "洛依\n🎵🎵%　>",
+   "collapse": ")．，$洛依\n🎵🎵%　>"
+  },
+  {
+   "input": "$❤👦】",
+   "merge": "",
+   "strip": "",
+   "collapse": "$❤👦】"
+  },
+  {
+   "input": "‍y 《bS/X👦",
+   "merge": "‍y 《bS/X👦",
+   "strip": "‍y 《bS/X👦",
+   "collapse": "‍y 《bS/X👦"
+  },
+  {
+   "input": "《𝐀a’杰洛‍洛>fa@f‍’",
+   "merge": "《𝐀a’杰洛‍洛>fa@f‍’",
+   "strip": "𝐀a’杰洛‍洛>fa@f‍’",
+   "collapse": "《𝐀a’杰洛‍洛>fa@f‍’"
+  },
+  {
+   "input": "）o《（【·伦Y\tZl　b9\n‘：·",
+   "merge": "）o《·伦Y\tZl　b9\n‘",
+   "strip": "o《（【·伦Y\tZl　b9\n‘：·",
+   "collapse": "）o《（【·伦Y\tZl　b9\n‘：·"
+  },
+  {
+   "input": "c𝟎+[「|？",
+   "merge": "c𝟎+",
+   "strip": "c𝟎+[「|？",
+   "collapse": "c𝟎+[「|？"
+  },
+  {
+   "input": "？、&。$T周a&&w#　+Y‍YT",
+   "merge": "$T周a&&w#+Y‍YT",
+   "strip": "T周a&&w#　+Y‍YT",
+   "collapse": "？、&。$T周a&&w#　+Y‍YT"
+  },
+  {
+   "input": "aX　🅰‘=！} [—&·　>】“X️",
+   "merge": "aX　🅰“X️",
+   "strip": "aX　🅰‘=！} [—&·　>】“X️",
+   "collapse": "aX　🅰‘=！} [—&·　>】“X️"
+  },
+  {
+   "input": "。‘Z9　「？·@！\tt👨（t^．$fⓐa🎵",
+   "merge": "‘Z9　「！\tt👨（t^$fⓐa🎵",
+   "strip": "Z9　「？·@！\tt👨（t^．$fⓐa🎵",
+   "collapse": "。‘Z9　「？·@！\tt👨（t^．$fⓐa🎵"
+  },
+  {
+   "input": "c依oy\t|c天！>「𝟎】#ya 👧·🎵✅",
+   "merge": "c依oy\t|c天！「𝟎】#ya 👧",
+   "strip": "c依oy\t|c天！>「𝟎】#ya 👧·🎵✅",
+   "collapse": "c依oy\t|c天！>「𝟎】#ya 👧·🎵✅"
+  },
+  {
+   "input": "𝟎️t#，",
+   "merge": "𝟎️t#",
+   "strip": "𝟎️t#，",
+   "collapse": "𝟎️t#，"
+  },
+  {
+   "input": "o@$+洛 w；r#}l)b？",
+   "merge": "o@+洛 w；r#}l)b？",
+   "strip": "o@$+洛 w；r#}l)b？",
+   "collapse": "o@$+洛 w；r#}l)b？"
+  },
+  {
+   "input": "】。 ‍",
+   "merge": "。 ‍",
+   "strip": " ‍",
+   "collapse": "】。 ‍"
+  },
+  {
+   "input": "+(~]|①《T$=》（‍c’c‍𝟎}",
+   "merge": "|①《T$（‍c’c‍𝟎}",
+   "strip": "①《T$=》（‍c’c‍𝟎}",
+   "collapse": "+(~]|①《T$=》（‍c’c‍𝟎}"
+  },
+  {
+   "input": "：🅰？「周𝐀y🅰👦“r，「/\\}👦「👦 ",
+   "merge": "「周𝐀y🅰“r，",
+   "strip": "周𝐀y🅰👦“r，「/\\}👦「👦 ",
+   "collapse": "：🅰？「周𝐀y🅰👦“r，「/\\}👦「👦 "
+  },
+  {
+   "input": "f杰[依；✅@",
+   "merge": "f杰[依；",
+   "strip": "f杰[依；✅@",
+   "collapse": "f杰[依；✅@"
+  },
+  {
+   "input": "🅰/‘」%　~“9.iy#‍①",
+   "merge": "“9.iy#‍①",
+   "strip": "　~“9.iy#‍①",
+   "collapse": "🅰/‘」%　~“9.iy#‍①"
+  },
+  {
+   "input": "、`(",
+   "merge": "",
+   "strip": "",
+   "collapse": "、`("
+  },
+  {
+   "input": "%=\\b|Z🎵+天‍\t}ⓐ $✅”️ ”！",
+   "merge": "\\b|Z🎵+天‍\t}”️ ”",
+   "strip": "b|Z🎵+天‍\t}ⓐ $✅”️ ”！",
+   "collapse": "%=\\b|Z🎵+天‍\t}ⓐ $✅”️ ”！"
+  },
+  {
+   "input": "），”ⓐ)tZ（🎵\tc\n",
+   "merge": ")tZ（🎵\tc\n",
+   "strip": "tZ（🎵\tc\n",
+   "collapse": "），”ⓐ)tZ（🎵\tc\n"
+  },
+  {
+   "input": "X》%—。1&．",
+   "merge": "X》。1&",
+   "strip": "X》%—。1&．",
+   "collapse": "X》%—。1&．"
+  },
+  {
+   "input": "👩① 天》「！。伦《<\n①",
+   "merge": "👩① 天》。伦《<\n①",
+   "strip": "① 天》「！。伦《<\n①",
+   "collapse": "👩① 天》「！。伦《<\n①"
+  },
+  {
+   "input": "「，\t👩a",
+   "merge": "👩a",
+   "strip": "\t👩a",
+   "collapse": "「，\t👩a"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "‘~，”T‘\t0❤、🅰o%「🅰",
+   "merge": "”T‘\t0❤🅰o%",
+   "strip": "T‘\t0❤、🅰o%「🅰",
+   "collapse": "‘~，”T‘\t0❤、🅰o%「🅰"
+  },
+  {
+   "input": "，‍．",
+   "merge": "，‍．",
+   "strip": "‍．",
+   "collapse": "，‍．"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "=1𝟎ai」&依$\n【#c》‍(“",
+   "merge": "=1𝟎ai」&依$#c》‍(",
+   "strip": "1𝟎ai」&依$\n【#c》‍(“",
+   "collapse": "=1𝟎ai」&依$\n【#c》‍(“"
+  },
+  {
+   "input": "&-✅？”“$0’️“<",
+   "merge": "$0’️“",
+   "strip": "0’️“<",
+   "collapse": "&-✅？”“$0’️“<"
+  },
+  {
+   "input": "@、✅T．f依cT‍》　\\}f+ ",
+   "merge": "✅T．f依cT‍》}f+",
+   "strip": "T．f依cT‍》　\\}f+ ",
+   "collapse": "@、✅T．f依cT‍》　\\}f+ "
+  },
+  {
+   "input": "👩 ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "👩 "
+  },
+  {
+   "input": "👩》SS“r👨Z①1👨",
+   "merge": "》SS“r👨Z①1👨",
+   "strip": "SS“r👨Z①1👨",
+   "collapse": "👩》SS“r👨Z①1👨"
+  },
+  {
+   "input": "）|(c`　𝐀✅《a.洛X🅰🅰=(a》🎵",
+   "merge": "(c`　𝐀✅《a.洛X🅰(a》",
+   "strip": "c`　𝐀✅《a.洛X🅰🅰=(a》🎵",
+   "collapse": "）|(c`　𝐀✅《a.洛X🅰🅰=(a》🎵"
+  },
+  {
+   "input": "𝟎&🎵： （①🅰",
+   "merge": "𝟎&（①🅰",
+   "strip": "𝟎&🎵： （①🅰",
+   "collapse": "𝟎&🎵： （①🅰"
+  },
+  {
+   "input": "　！\\❤l.$-‍-；：$》a%》（a",
+   "merge": "❤l.-‍-》a%（a",
+   "strip": "　！\\❤l.$-‍-；：$》a%》（a",
+   "collapse": "　！\\❤l.$-‍-；：$》a%》（a"
+  },
+  {
+   "input": "；\nT<𝐀-\ta{",
+   "merge": "；\nT<𝐀-\ta{",
+   "strip": "\nT<𝐀-\ta{",
+   "collapse": "；\nT<𝐀-\ta{"
+  },
+  {
+   "input": "、①(+/‍/（”《️$\t洛《=【aⓐ{",
+   "merge": "、①(/‍/《️$\t洛《【aⓐ",
+   "strip": "①(+/‍/（”《️$\t洛《=【aⓐ{",
+   "collapse": "、①(+/‍/（”《️$\t洛《=【aⓐ{"
+  },
+  {
+   "input": "ⓐ✅—；（`《9，.cy@✅>\\",
+   "merge": "《9，.cy@",
+   "strip": "9，.cy@✅>\\",
+   "collapse": "ⓐ✅—；（`《9，.cy@✅>\\"
+  },
+  {
+   "input": "️@9`|「r👨c$-.·by&、/-",
+   "merge": "️@9`「r👨c$·by&",
+   "strip": "️@9`|「r👨c$-.·by&、/-",
+   "collapse": "️@9`|「r👨c$-.·by&、/-"
+  },
+  {
+   "input": "‍^🅰i依@0周wi\tY-y”",
+   "merge": "‍^🅰i依@0周wi\tY-y”",
+   "strip": "‍^🅰i依@0周wi\tY-y”",
+   "collapse": "‍^🅰i依@0周wi\tY-y”"
+  },
+  {
+   "input": "”%”🅰&洛[、y\t’（y",
+   "merge": "&洛[、y\t’（y",
+   "strip": "洛[、y\t’（y",
+   "collapse": "”%”🅰&洛[、y\t’（y"
+  },
+  {
+   "input": ">、1",
+   "merge": "、1",
+   "strip": "1",
+   "collapse": ">、1"
+  },
+  {
+   "input": "；洛·‘1依 ⓐ【f]✅t",
+   "merge": "；洛·‘1依 ⓐ【f]✅t",
+   "strip": "洛·‘1依 ⓐ【f]✅t",
+   "collapse": "；洛·‘1依 ⓐ【f]✅t"
+  },
+  {
+   "input": "️👩+<-t0’T‍",
+   "merge": "️👩-t0’T‍",
+   "strip": "️👩+<-t0’T‍",
+   "collapse": "️👩+<-t0’T‍"
+  },
+  {
+   "input": "ⓐ.^🎵）--@==S&r",
+   "merge": "=S&r",
+   "strip": "S&r",
+   "collapse": "ⓐ.^🎵）--@==S&r"
+  },
+  {
+   "input": "[`‘9”o①-‍Y洛",
+   "merge": "‘9”o①-‍Y洛",
+   "strip": "9”o①-‍Y洛",
+   "collapse": "[`‘9”o①-‍Y洛"
+  },
+  {
+   "input": "@’@！」❤ （【f$. a<‍(𝐀",
+   "merge": "【f$. a<‍(𝐀",
+   "strip": " （【f$. a<‍(𝐀",
+   "collapse": "@’@！」❤ （【f$. a<‍(𝐀"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "X",
+   "merge": "X",
+   "strip": "X",
+   "collapse": "X"
+  },
+  {
+   "input": "+·",
+   "merge": "",
+   "strip": "",
+   "collapse": "+·"
+  },
+  {
+   "input": "^；S杰\nra^；f\n“",
+   "merge": "；S杰\nra^；f\n“",
+   "strip": "S杰\nra^；f\n“",
+   "collapse": "^；S杰\nra^；f\n“"
+  },
+  {
+   "input": "‍ 、-，0\\<a^>️]&",
+   "merge": "‍ 、，0\\<a^>️]",
+   "strip": "‍ 、-，0\\<a^>️]&",
+   "collapse": "‍ 、-，0\\<a^>️]&"
+  },
+  {
+   "input": "-)a",
+   "merge": ")a",
+   "strip": "a",
+   "collapse": "-)a"
+  },
+  {
+   "input": "T‍‍·w《i》|ⓐ”； ",
+   "merge": "T‍‍·w《i》",
+   "strip": "T‍‍·w《i》|ⓐ”； ",
+   "collapse": "T‍‍·w《i》|ⓐ”； "
+  },
+  {
+   "input": "👩/>①$？👦依伦|“9#”　/天>]~（)👩",
+   "merge": ">①$👦依伦|“9#/天>",
+   "strip": "①$？👦依伦|“9#”　/天>]~（)👩",
+   "collapse": "👩/>①$？👦依伦|“9#”　/天>]~（)👩"
+  },
+  {
+   "input": "🎵a👨>「Y ‘「`(-%天b依",
+   "merge": "🎵a👨「Y ‘%天b依",
+   "strip": "a👨>「Y ‘「`(-%天b依",
+   "collapse": "🎵a👨>「Y ‘「`(-%天b依"
+  },
+  {
+   "input": "？！𝟎Tⓐ$\n✅&#𝟎}>，杰𝟎",
+   "merge": "！𝟎Tⓐ#𝟎}，杰𝟎",
+   "strip": "𝟎Tⓐ$\n✅&#𝟎}>，杰𝟎",
+   "collapse": "？！𝟎Tⓐ$\n✅&#𝟎}>，杰𝟎"
+  },
+  {
+   "input": ")/.‍l《`「",
+   "merge": ".‍l《",
+   "strip": "‍l《`「",
+   "collapse": ")/.‍l《`「"
+  },
+  {
+   "input": "️(S？️$o",
+   "merge": "️(S？️$o",
+   "strip": "️(S？️$o",
+   "collapse": "️(S？️$o"
+  },
+  {
+   "input": "👧@杰$🅰’👨：%]o{✅️Z　”",
+   "merge": "@杰$]o{✅️Z　”",
+   "strip": "杰$🅰’👨：%]o{✅️Z　”",
+   "collapse": "👧@杰$🅰’👨：%]o{✅️Z　”"
+  },
+  {
+   "input": "𝐀 天t+",
+   "merge": "𝐀 天t+",
+   "strip": "𝐀 天t+",
+   "collapse": "𝐀 天t+"
+  },
+  {
+   "input": "b《👩r‘~杰ⓐ^&·<\\𝟎[👧\\",
+   "merge": "b《👩r‘~杰ⓐ\\𝟎[",
+   "strip": "b《👩r‘~杰ⓐ^&·<\\𝟎[👧\\",
+   "collapse": "b《👩r‘~杰ⓐ^&·<\\𝟎[👧\\"
+  },
+  {
+   "input": "天 `.`&👩【@👧·X—%《+👩》\\·《𝐀",
+   "merge": "天 `·X—《𝐀",
+   "strip": "天 `.`&👩【@👧·X—%《+👩》\\·《𝐀",
+   "collapse": "天 `.`&👩【@👧·X—%《+👩》\\·《𝐀"
+  },
+  {
+   "input": "👦",
+   "merge": "",
+   "strip": "",
+   "collapse": "👦"
+  },
+  {
+   "input": "\t👦`：《ⓐ𝐀、．",
+   "merge": "ⓐ𝐀、",
+   "strip": "\t👦`：《ⓐ𝐀、．",
+   "collapse": "\t👦`：《ⓐ𝐀、．"
+  },
+  {
+   "input": "《）‘❤️．(#`【{<“{+}👧 >",
+   "merge": "❤️．",
+   "strip": "️．(#`【{<“{+}👧 >",
+   "collapse": "《）‘❤️．(#`【{<“{+}👧 >"
+  },
+  {
+   "input": "@周Y+‍}𝐀❤",
+   "merge": "@周Y+‍}𝐀❤",
+   "strip": "周Y+‍}𝐀❤",
+   "collapse": "@周Y+‍}𝐀❤"
+  },
+  {
+   "input": "—Z🅰依、’》#“【🅰it👦`c洛b】",
+   "merge": "—Z🅰依、🅰it👦`c洛b】",
+   "strip": "Z🅰依、’》#“【🅰it👦`c洛b】",
+   "collapse": "—Z🅰依、’》#“【🅰it👦`c洛b】"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "；=杰1.r？@Xao伦o’",
+   "merge": "=杰1.r？@Xao伦o’",
+   "strip": "杰1.r？@Xao伦o’",
+   "collapse": "；=杰1.r？@Xao伦o’"
+  },
+  {
+   "input": "，‍（--[}.XTc^",
+   "merge": "，‍（.XTc^",
+   "strip": "‍（--[}.XTc^",
+   "collapse": "，‍（--[}.XTc^"
+  },
+  {
+   "input": "❤[[]",
+   "merge": "",
+   "strip": "",
+   "collapse": "❤[[]"
+  },
+  {
+   "input": "Yl\\Xla9周",
+   "merge": "Yl\\Xla9周",
+   "strip": "Yl\\Xla9周",
+   "collapse": "Yl\\Xla9周"
+  },
+  {
+   "input": "w 9　Y🅰①依周‘”👧=「",
+   "merge": "w 9　Y🅰①依周‘",
+   "strip": "w 9　Y🅰①依周‘”👧=「",
+   "collapse": "w 9　Y🅰①依周‘”👧=「"
+  },
+  {
+   "input": "9T)：、①>l wyot天】’#「𝟎",
+   "merge": "9T)、①>l wyot天】「𝟎",
+   "strip": "9T)：、①>l wyot天】’#「𝟎",
+   "collapse": "9T)：、①>l wyot天】’#「𝟎"
+  },
+  {
+   "input": "👩，洛]fr‍杰0.~\t．🎵Z#！$ 、",
+   "merge": "，洛]fr‍杰0.🎵Z#",
+   "strip": "洛]fr‍杰0.~\t．🎵Z#！$ 、",
+   "collapse": "👩，洛]fr‍杰0.~\t．🎵Z#！$ 、"
+  },
+  {
+   "input": "❤fb+？𝐀b",
+   "merge": "❤fb+？𝐀b",
+   "strip": "fb+？𝐀b",
+   "collapse": "❤fb+？𝐀b"
+  },
+  {
+   "input": "依#；T{a‍| ①🅰】l𝐀杰",
+   "merge": "依#；T{a‍| ①🅰】l𝐀杰",
+   "strip": "依#；T{a‍| ①🅰】l𝐀杰",
+   "collapse": "依#；T{a‍| ①🅰】l𝐀杰"
+  },
+  {
+   "input": "S",
+   "merge": "S",
+   "strip": "S",
+   "collapse": "S"
+  },
+  {
+   "input": "1。👩",
+   "merge": "1。",
+   "strip": "1。👩",
+   "collapse": "1。👩"
+  },
+  {
+   "input": ".：)𝐀",
+   "merge": ")𝐀",
+   "strip": "𝐀",
+   "collapse": ".：)𝐀"
+  },
+  {
+   "input": "；w👨",
+   "merge": "；w👨",
+   "strip": "w👨",
+   "collapse": "；w👨"
+  },
+  {
+   "input": "👧t「𝟎️~",
+   "merge": "👧t「𝟎️~",
+   "strip": "t「𝟎️~",
+   "collapse": "👧t「𝟎️~"
+  },
+  {
+   "input": "a）．l　c#iTi%r",
+   "merge": "a）．l　c#iTi%r",
+   "strip": "a）．l　c#iTi%r",
+   "collapse": "a）．l　c#iTi%r"
+  },
+  {
+   "input": "‍~洛‘ ^Y伦）洛】",
+   "merge": "‍~洛‘^Y伦）洛】",
+   "strip": "‍~洛‘ ^Y伦）洛】",
+   "collapse": "‍~洛‘ ^Y伦）洛】"
+  },
+  {
+   "input": "：&✅\t \\《‍",
+   "merge": "《‍",
+   "strip": "\t \\《‍",
+   "collapse": "：&✅ \\《‍"
+  },
+  {
+   "input": "》Y👨”wo；@+",
+   "merge": "》Y👨”wo；",
+   "strip": "Y👨”wo；@+",
+   "collapse": "》Y👨”wo；@+"
+  },
+  {
+   "input": "=✅」依《𝐀「；c",
+   "merge": "」依《𝐀「；c",
+   "strip": "依《𝐀「；c",
+   "collapse": "=✅」依《𝐀「；c"
+  },
+  {
+   "input": "%👨？@a； ·𝟎=周. ️f>#",
+   "merge": "@a；·𝟎=周. ️f>",
+   "strip": "a； ·𝟎=周. ️f>#",
+   "collapse": "%👨？@a； ·𝟎=周. ️f>#"
+  },
+  {
+   "input": "👦(0{a《~w",
+   "merge": "(0{a《~w",
+   "strip": "0{a《~w",
+   "collapse": "👦(0{a《~w"
+  },
+  {
+   "input": "y@【杰．[& ·？　？",
+   "merge": "y@【杰．",
+   "strip": "y@【杰．[& ·？　？",
+   "collapse": "y@【杰．[& ·？　？"
+  },
+  {
+   "input": "@$」-c#。‘%①．洛“𝟎X",
+   "merge": "-c#%①．洛“𝟎X",
+   "strip": "c#。‘%①．洛“𝟎X",
+   "collapse": "@$」-c#。‘%①．洛“𝟎X"
+  },
+  {
+   "input": "]𝐀【[{‍#0《‍🎵X@‘X ．‘",
+   "merge": "]𝐀【{‍#0《‍🎵X@‘X ．",
+   "strip": "𝐀【[{‍#0《‍🎵X@‘X ．‘",
+   "collapse": "]𝐀【[{‍#0《‍🎵X@‘X ．‘"
+  },
+  {
+   "input": "‍’=#",
+   "merge": "‍’",
+   "strip": "‍’=#",
+   "collapse": "‍’=#"
+  },
+  {
+   "input": "；—，”[】·i",
+   "merge": "·i",
+   "strip": "i",
+   "collapse": "；—，”[】·i"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "@c「ⓐ（（」yb`洛\ta依f(c-",
+   "merge": "@c「」yb`洛\ta依f(c-",
+   "strip": "c「ⓐ（（」yb`洛\ta依f(c-",
+   "collapse": "@c「ⓐ（（」yb`洛\ta依f(c-"
+  },
+  {
+   "input": "’91i",
+   "merge": "’91i",
+   "strip": "91i",
+   "collapse": "’91i"
+  },
+  {
+   "input": "（$’《>&️伦。~}，、❤)y&伦c‍𝐀l",
+   "merge": "&️伦。)y&伦c‍𝐀l",
+   "strip": "️伦。~}，、❤)y&伦c‍𝐀l",
+   "collapse": "（$’《>&️伦。~}，、❤)y&伦c‍𝐀l"
+  },
+  {
+   "input": "； b。．|",
+   "merge": "； b。",
+   "strip": " b。．|",
+   "collapse": "； b。．|"
+  },
+  {
+   "input": "伦",
+   "merge": "伦",
+   "strip": "伦",
+   "collapse": "伦"
+  },
+  {
+   "input": " w）^rⓐ.❤洛ⓐt️𝐀#\t< 洛　　👩",
+   "merge": " w）^rⓐ❤洛ⓐt️𝐀#< 洛　　👩",
+   "strip": " w）^rⓐ.❤洛ⓐt️𝐀#\t< 洛　　👩",
+   "collapse": " w）^rⓐ.❤洛ⓐt️𝐀#\t< 洛 👩"
+  },
+  {
+   "input": "\n& &」「Yw {【",
+   "merge": "「Yw {",
+   "strip": "\n& &」「Yw {【",
+   "collapse": "\n& &」「Yw {【"
+  },
+  {
+   "input": "‘)&‍‍【",
+   "merge": "&‍‍【",
+   "strip": "‍‍【",
+   "collapse": "‘)&‍‍【"
+  },
+  {
+   "input": "👩%X`Zal」S.9周",
+   "merge": "%X`Zal」S.9周",
+   "strip": "X`Zal」S.9周",
+   "collapse": "👩%X`Zal」S.9周"
+  },
+  {
+   "input": "　.a 。❤1>>|“~👨<️+　y<【",
+   "merge": ".a 。❤1><️+　y<",
+   "strip": "　.a 。❤1>>|“~👨<️+　y<【",
+   "collapse": "　.a 。❤1>>|“~👨<️+　y<【"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "《—❤`y",
+   "merge": "`y",
+   "strip": "y",
+   "collapse": "《—❤`y"
+  },
+  {
+   "input": "0伦-：《%&❤<9=i，)【",
+   "merge": "0伦-<9=i，",
+   "strip": "0伦-：《%&❤<9=i，)【",
+   "collapse": "0伦-：《%&❤<9=i，)【"
+  },
+  {
+   "input": "𝟎)❤@。|𝟎|i XX！‍👧‍ⓐ",
+   "merge": "𝟎)|𝟎|i XX！‍👧‍ⓐ",
+   "strip": "𝟎)❤@。|𝟎|i XX！‍👧‍ⓐ",
+   "collapse": "𝟎)❤@。|𝟎|i XX！‍👧‍ⓐ"
+  },
+  {
+   "input": "‍。。i#{）‍&「；b0(👦wT】【i%👦\\",
+   "merge": "‍。。i#）‍&；b0(👦wT】【i%",
+   "strip": "‍。。i#{）‍&「；b0(👦wT】【i%👦\\",
+   "collapse": "‍。。i#{）‍&「；b0(👦wT】【i%👦\\"
+  },
+  {
+   "input": "[X‍（X.~‍👦=",
+   "merge": "[X‍（X.~‍👦",
+   "strip": "X‍（X.~‍👦=",
+   "collapse": "[X‍（X.~‍👦="
+  },
+  {
+   "input": "a>@90r❤{}r.”伦@{ 天—+🅰a^",
+   "merge": "a>@90r❤}r.”伦@{ 天—🅰a^",
+   "strip": "a>@90r❤{}r.”伦@{ 天—+🅰a^",
+   "collapse": "a>@90r❤{}r.”伦@{ 天—+🅰a^"
+  },
+  {
+   "input": "~》 👨&&；=`>@👧》^)}；𝟎{l”✅",
+   "merge": "；𝟎{l”",
+   "strip": " 👨&&；=`>@👧》^)}；𝟎{l”✅",
+   "collapse": "~》 👨&&；=`>@👧》^)}；𝟎{l”✅"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "=👩a<y.杰洛)",
+   "merge": "👩a<y.杰洛)",
+   "strip": "a<y.杰洛)",
+   "collapse": "=👩a<y.杰洛)"
+  },
+  {
+   "input": "—」‍ T—ay.️洛.》`‍9Y",
+   "merge": "」‍ T—ay.️洛.`‍9Y",
+   "strip": "‍ T—ay.️洛.》`‍9Y",
+   "collapse": "—」‍ T—ay.️洛.》`‍9Y"
+  },
+  {
+   "input": " +|（]l-”",
+   "merge": "]l-",
+   "strip": " +|（]l-”",
+   "collapse": " +|（]l-”"
+  },
+  {
+   "input": "<=a&？🅰{①（",
+   "merge": "=a&{①（",
+   "strip": "a&？🅰{①（",
+   "collapse": "<=a&？🅰{①（"
+  },
+  {
+   "input": "]‍=🅰Y.❤．　X①（①~🅰a\t&；i",
+   "merge": "]‍=🅰Y.．　X①（①~🅰a\t&；i",
+   "strip": "‍=🅰Y.❤．　X①（①~🅰a\t&；i",
+   "collapse": "]‍=🅰Y.❤．　X①（①~🅰a\t&；i"
+  },
+  {
+   "input": "✅",
+   "merge": "",
+   "strip": "",
+   "collapse": "✅"
+  },
+  {
+   "input": "；1[✅‘“𝟎🎵·️i洛l—‍@y",
+   "merge": "；1[“𝟎🎵·️i洛l—‍@y",
+   "strip": "1[✅‘“𝟎🎵·️i洛l—‍@y",
+   "collapse": "；1[✅‘“𝟎🎵·️i洛l—‍@y"
+  },
+  {
+   "input": "✅‍①天-】o．洛[」Z<）)👩",
+   "merge": "✅‍①天-】o．洛[」Z<",
+   "strip": "‍①天-】o．洛[」Z<）)👩",
+   "collapse": "✅‍①天-】o．洛[」Z<）)👩"
+  },
+  {
+   "input": "”wc伦，？、",
+   "merge": "”wc伦，",
+   "strip": "wc伦，？、",
+   "collapse": "”wc伦，？、"
+  },
+  {
+   "input": "）𝟎iS洛T𝐀！=c%？「「️🅰",
+   "merge": "）𝟎iS洛T𝐀！=c%「️🅰",
+   "strip": "𝟎iS洛T𝐀！=c%？「「️🅰",
+   "collapse": "）𝟎iS洛T𝐀！=c%？「「️🅰"
+  },
+  {
+   "input": ".-‘，【bw️T{)」Xrr—",
+   "merge": "【bw️T{」Xrr—",
+   "strip": "bw️T{)」Xrr—",
+   "collapse": ".-‘，【bw️T{)」Xrr—"
+  },
+  {
+   "input": "/o？[",
+   "merge": "/o？",
+   "strip": "o？[",
+   "collapse": "/o？["
+  },
+  {
+   "input": " (X；　",
+   "merge": "(X；",
+   "strip": " (X；　",
+   "collapse": " (X；　"
+  },
+  {
+   "input": "👨o👧}‍《T．ⓐ（‍c杰}✅𝐀",
+   "merge": "👨o👧}‍《T．（‍c杰}✅𝐀",
+   "strip": "o👧}‍《T．ⓐ（‍c杰}✅𝐀",
+   "collapse": "👨o👧}‍《T．ⓐ（‍c杰}✅𝐀"
+  },
+  {
+   "input": "i .$\t9（‍f”✅w👨：‍🎵`@< ‍",
+   "merge": "i .$\t9（‍f”✅w👨：‍🎵< ‍",
+   "strip": "i .$\t9（‍f”✅w👨：‍🎵`@< ‍",
+   "collapse": "i .$\t9（‍f”✅w👨：‍🎵`@< ‍"
+  },
+  {
+   "input": "《#S①【]\t^ |a）天👦",
+   "merge": "#S①【|a）天👦",
+   "strip": "S①【]\t^ |a）天👦",
+   "collapse": "《#S①【]\t^ |a）天👦"
+  },
+  {
+   "input": "i洛—|t%=；！\t&Z. 👩9）c依",
+   "merge": "i洛—|t%&Z.👩9）c依",
+   "strip": "i洛—|t%=；！\t&Z. 👩9）c依",
+   "collapse": "i洛—|t%=；！\t&Z. 👩9）c依"
+  },
+  {
+   "input": "9(️",
+   "merge": "9(️",
+   "strip": "9(️",
+   "collapse": "9(️"
+  },
+  {
+   "input": "？】【y",
+   "merge": "【y",
+   "strip": "y",
+   "collapse": "？】【y"
+  },
+  {
+   "input": "Y❤[‍{/$）X",
+   "merge": "Y❤[‍{）X",
+   "strip": "Y❤[‍{/$）X",
+   "collapse": "Y❤[‍{/$）X"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "‍，𝟎👩&，」",
+   "merge": "‍，𝟎👩",
+   "strip": "‍，𝟎👩&，」",
+   "collapse": "‍，𝟎👩&，」"
+  },
+  {
+   "input": "。",
+   "merge": "",
+   "strip": "",
+   "collapse": "。"
+  },
+  {
+   "input": "？",
+   "merge": "",
+   "strip": "",
+   "collapse": "？"
+  },
+  {
+   "input": "（✅❤}·@🅰𝐀杰🎵aT)’lZ[」【",
+   "merge": "🅰𝐀杰🎵aT)’lZ[",
+   "strip": "𝐀杰🎵aT)’lZ[」【",
+   "collapse": "（✅❤}·@🅰𝐀杰🎵aT)’lZ[」【"
+  },
+  {
+   "input": "👨ⓐ𝟎&‍&^𝟎`【l/}．—伦y",
+   "merge": "ⓐ𝟎&‍&^𝟎`【l/—伦y",
+   "strip": "𝟎&‍&^𝟎`【l/}．—伦y",
+   "collapse": "👨ⓐ𝟎&‍&^𝟎`【l/}．—伦y"
+  },
+  {
+   "input": "+杰t~‍‍a`#i“b𝐀“’",
+   "merge": "+杰t~‍‍a`#i“b𝐀“",
+   "strip": "杰t~‍‍a`#i“b𝐀“’",
+   "collapse": "+杰t~‍‍a`#i“b𝐀“’"
+  },
+  {
+   "input": "b",
+   "merge": "b",
+   "strip": "b",
+   "collapse": "b"
+  },
+  {
+   "input": "依[\n’^/c+？”　~{‍✅X ✅①；Z",
+   "merge": "依[/c+{‍✅X ✅①；Z",
+   "strip": "依[\n’^/c+？”　~{‍✅X ✅①；Z",
+   "collapse": "依[\n’^/c+？”　~{‍✅X ✅①；Z"
+  },
+  {
+   "input": "】9👨{%}①<《^#",
+   "merge": "】9👨}①<",
+   "strip": "9👨{%}①<《^#",
+   "collapse": "】9👨{%}①<《^#"
+  },
+  {
+   "input": "‍✅🅰\t“)🎵： ．`周<^[👨(&^‘}",
+   "merge": "‍✅`周<",
+   "strip": "‍✅🅰\t“)🎵： ．`周<^[👨(&^‘}",
+   "collapse": "‍✅🅰\t“)🎵： ．`周<^[👨(&^‘}"
+  },
+  {
+   "input": "🅰|”>i！。。伦—👧o ",
+   "merge": ">i！。伦—👧o ",
+   "strip": "i！。。伦—👧o ",
+   "collapse": "🅰|”>i！。。伦—👧o "
+  },
+  {
+   "input": "-w+天{‍~T伦‘杰",
+   "merge": "-w+天{‍~T伦‘杰",
+   "strip": "w+天{‍~T伦‘杰",
+   "collapse": "-w+天{‍~T伦‘杰"
+  },
+  {
+   "input": "．o0”0-\n)ⓐ—&🎵",
+   "merge": "．o0”0-",
+   "strip": "o0”0-\n)ⓐ—&🎵",
+   "collapse": "．o0”0-\n)ⓐ—&🎵"
+  },
+  {
+   "input": "，（Z」.w#&",
+   "merge": "（Z」.w#",
+   "strip": "Z」.w#&",
+   "collapse": "，（Z」.w#&"
+  },
+  {
+   "input": "：𝟎✅0依|👧f&.”[👩\tw}i—《=Y9天",
+   "merge": "：𝟎✅0依|👧f&👩\tw}i—=Y9天",
+   "strip": "𝟎✅0依|👧f&.”[👩\tw}i—《=Y9天",
+   "collapse": "：𝟎✅0依|👧f&.”[👩\tw}i—《=Y9天"
+  },
+  {
+   "input": "．\n{️️ⓐ「}>",
+   "merge": "{️️ⓐ",
+   "strip": "\n{️️ⓐ「}>",
+   "collapse": "．\n{️️ⓐ「}>"
+  },
+  {
+   "input": "X．|",
+   "merge": "X．",
+   "strip": "X．|",
+   "collapse": "X．|"
+  },
+  {
+   "input": "l️（\n。【%9‍；",
+   "merge": "l️（%9‍；",
+   "strip": "l️（\n。【%9‍；",
+   "collapse": "l️（\n。【%9‍；"
+  },
+  {
+   "input": "<)~c✅&b👦^+$’’S👨？~)b》‘",
+   "merge": "~c✅&b👦’S👨)b》",
+   "strip": "c✅&b👦^+$’’S👨？~)b》‘",
+   "collapse": "<)~c✅&b👦^+$’’S👨？~)b》‘"
+  },
+  {
+   "input": "❤iTⓐ，-a👩",
+   "merge": "❤iTⓐ-a👩",
+   "strip": "iTⓐ，-a👩",
+   "collapse": "❤iTⓐ，-a👩"
+  },
+  {
+   "input": "(。",
+   "merge": "",
+   "strip": "",
+   "collapse": "(。"
+  },
+  {
+   "input": "✅👨o、[❤$洛@\tfT‍❤\\。}👨",
+   "merge": "👨o、$洛@\tfT‍❤",
+   "strip": "o、[❤$洛@\tfT‍❤\\。}👨",
+   "collapse": "✅👨o、[❤$洛@\tfT‍❤\\。}👨"
+  },
+  {
+   "input": "《-·&依】l",
+   "merge": "&依】l",
+   "strip": "依】l",
+   "collapse": "《-·&依】l"
+  },
+  {
+   "input": "]》a　(Y\\\n",
+   "merge": "》a　(Y\\",
+   "strip": "a　(Y\\\n",
+   "collapse": "]》a　(Y\\\n"
+  },
+  {
+   "input": "ⓐ—yZ洛👨；”Z👨：“·Z．Z】—！？ \\~",
+   "merge": "—yZ洛👨”Z👨·Z．Z】",
+   "strip": "yZ洛👨；”Z👨：“·Z．Z】—！？ \\~",
+   "collapse": "ⓐ—yZ洛👨；”Z👨：“·Z．Z】—！？ \\~"
+  },
+  {
+   "input": "。周👨”👧t👩 {a|}wb&&洛#‘·🎵【",
+   "merge": "。周👨👧t👩{a|}wb&&洛#",
+   "strip": "周👨”👧t👩 {a|}wb&&洛#‘·🎵【",
+   "collapse": "。周👨”👧t👩 {a|}wb&&洛#‘·🎵【"
+  },
+  {
+   "input": "】𝐀️」，‍`a>~&rt",
+   "merge": "】𝐀️」，‍`a>&rt",
+   "strip": "𝐀️」，‍`a>~&rt",
+   "collapse": "】𝐀️」，‍`a>~&rt"
+  },
+  {
+   "input": "‍。洛\t；。YYZ&y‍",
+   "merge": "‍。洛\t；。YYZ&y‍",
+   "strip": "‍。洛\t；。YYZ&y‍",
+   "collapse": "‍。洛\t；。YYZ&y‍"
+  },
+  {
+   "input": "·of周“ ✅\n依《iSS~’依，[‘",
+   "merge": "·of周“✅\n依《iSS~’依，",
+   "strip": "of周“ ✅\n依《iSS~’依，[‘",
+   "collapse": "·of周“ ✅\n依《iSS~’依，[‘"
+  },
+  {
+   "input": "“❤‍^ T",
+   "merge": "❤‍^ T",
+   "strip": "‍^ T",
+   "collapse": "“❤‍^ T"
+  },
+  {
+   "input": "“ⓐ9w",
+   "merge": "ⓐ9w",
+   "strip": "9w",
+   "collapse": "“ⓐ9w"
+  },
+  {
+   "input": "]>”<𝟎yo}❤.",
+   "merge": "<𝟎yo}",
+   "strip": "𝟎yo}❤.",
+   "collapse": "]>”<𝟎yo}❤."
+  },
+  {
+   "input": "+t`’Z)？9（c+( \n",
+   "merge": "+t`’Z)？9（c+",
+   "strip": "t`’Z)？9（c+( \n",
+   "collapse": "+t`’Z)？9（c+( "
+  },
+  {
+   "input": "a「‍^to】‍baX」<^ %X👧",
+   "merge": "a「‍^to】‍baX」%X👧",
+   "strip": "a「‍^to】‍baX」<^ %X👧",
+   "collapse": "a「‍^to】‍baX」<^ %X👧"
+  },
+  {
+   "input": "~a“a>i依-杰】「f ",
+   "merge": "~a“a>i依-杰】「f ",
+   "strip": "a“a>i依-杰】「f ",
+   "collapse": "~a“a>i依-杰】「f "
+  },
+  {
+   "input": "}’\t🎵T}✅「，`0|周🅰✅",
+   "merge": "🎵T}`0|周🅰",
+   "strip": "\t🎵T}✅「，`0|周🅰✅",
+   "collapse": "}’\t🎵T}✅「，`0|周🅰✅"
+  },
+  {
+   "input": "🅰)@【—&lc/i👨`·w\n(👦”",
+   "merge": "&lc/i👨·w\n(",
+   "strip": "lc/i👨`·w\n(👦”",
+   "collapse": "🅰)@【—&lc/i👨`·w\n(👦”"
+  },
+  {
+   "input": "a、．𝐀&”。>】",
+   "merge": "a、．𝐀&",
+   "strip": "a、．𝐀&”。>】",
+   "collapse": "a、．𝐀&”。>】"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "伦o𝟎@)\\",
+   "merge": "伦o𝟎@",
+   "strip": "伦o𝟎@)\\",
+   "collapse": "伦o𝟎@)\\"
+  },
+  {
+   "input": "“ ？、‍}9”1】‍👧； 】",
+   "merge": "、‍}9”1】‍👧",
+   "strip": " ？、‍}9”1】‍👧； 】",
+   "collapse": "“ ？、‍}9”1】‍👧； 】"
+  },
+  {
+   "input": "\n)👨·《：依[`r%𝟎.Y",
+   "merge": "：依[`r%𝟎.Y",
+   "strip": "\n)👨·《：依[`r%𝟎.Y",
+   "collapse": "\n)👨·《：依[`r%𝟎.Y"
+  },
+  {
+   "input": "|杰《‍bt",
+   "merge": "|杰《‍bt",
+   "strip": "杰《‍bt",
+   "collapse": "|杰《‍bt"
+  },
+  {
+   "input": "️。依-a👨；》0&>-1Yc‍",
+   "merge": "️。依-a👨》0&-1Yc‍",
+   "strip": "️。依-a👨；》0&>-1Yc‍",
+   "collapse": "️。依-a👨；》0&>-1Yc‍"
+  },
+  {
+   "input": "{fr‍✅️《lZ·%#@‍</]0/",
+   "merge": "{fr‍✅️《lZ·@‍<]0/",
+   "strip": "fr‍✅️《lZ·%#@‍</]0/",
+   "collapse": "{fr‍✅️《lZ·%#@‍</]0/"
+  },
+  {
+   "input": "&t9—({Z‍f a》w(　 |杰",
+   "merge": "&t9—{Z‍f a》w(|杰",
+   "strip": "t9—({Z‍f a》w(　 |杰",
+   "collapse": "&t9—({Z‍f a》w( |杰"
+  },
+  {
+   "input": "《洛！「X<Zc👩【‍i9&依？a&^𝐀b",
+   "merge": "《洛！「X<Zc👩【‍i9&依？a&^𝐀b",
+   "strip": "洛！「X<Zc👩【‍i9&依？a&^𝐀b",
+   "collapse": "《洛！「X<Zc👩【‍i9&依？a&^𝐀b"
+  },
+  {
+   "input": " `9-🅰\\a’yc」：伦c伦✅，。洛",
+   "merge": "`9-\\a’yc」：伦c伦✅。洛",
+   "strip": " `9-🅰\\a’yc」：伦c伦✅，。洛",
+   "collapse": " `9-🅰\\a’yc」：伦c伦✅，。洛"
+  },
+  {
+   "input": "」rb？",
+   "merge": "」rb？",
+   "strip": "rb？",
+   "collapse": "」rb？"
+  },
+  {
+   "input": "❤】‍-！y️%（&=”👨[：」．👦^；&洛i",
+   "merge": "】‍-！y️%&洛i",
+   "strip": "‍-！y️%（&=”👨[：」．👦^；&洛i",
+   "collapse": "❤】‍-！y️%（&=”👨[：」．👦^；&洛i"
+  },
+  {
+   "input": "rrr伦1👩Z𝟎❤",
+   "merge": "rrr伦1👩Z𝟎❤",
+   "strip": "rrr伦1👩Z𝟎❤",
+   "collapse": "rrr伦1👩Z𝟎❤"
+  },
+  {
+   "input": "to𝟎f；依[ⓐ》[🅰𝟎【　",
+   "merge": "to𝟎f；依[🅰𝟎【",
+   "strip": "to𝟎f；依[ⓐ》[🅰𝟎【　",
+   "collapse": "to𝟎f；依[ⓐ》[🅰𝟎【　"
+  },
+  {
+   "input": "】】）\tY。‍|\n》🅰r·；·ⓐ1杰　✅",
+   "merge": "）\tY。‍|🅰r·ⓐ1杰　✅",
+   "strip": "\tY。‍|\n》🅰r·；·ⓐ1杰　✅",
+   "collapse": "】】）\tY。‍|\n》🅰r·；·ⓐ1杰　✅"
+  },
+  {
+   "input": "l\\ⓐ】ⓐ=%+",
+   "merge": "l\\",
+   "strip": "l\\ⓐ】ⓐ=%+",
+   "collapse": "l\\ⓐ】ⓐ=%+"
+  },
+  {
+   "input": "ⓐT：》【，？y；>👦‍l？}i👩1%👨",
+   "merge": "ⓐT：？y；👦‍l？}i👩1%",
+   "strip": "T：》【，？y；>👦‍l？}i👩1%👨",
+   "collapse": "ⓐT：》【，？y；>👦‍l？}i👩1%👨"
+  },
+  {
+   "input": "l$l👩=&、yt 9】👦`{（w",
+   "merge": "l$l👩、yt 9】（w",
+   "strip": "l$l👩=&、yt 9】👦`{（w",
+   "collapse": "l$l👩=&、yt 9】👦`{（w"
+  },
+  {
+   "input": "✅」、、^S(》",
+   "merge": "^S(",
+   "strip": "S(》",
+   "collapse": "✅」、、^S(》"
+  },
+  {
+   "input": " # .",
+   "merge": "",
+   "strip": " # .",
+   "collapse": " # ."
+  },
+  {
+   "input": "]—’&fo】|；！👨>”🅰’】|&o‍^9",
+   "merge": "&fo】&o‍^9",
+   "strip": "fo】|；！👨>”🅰’】|&o‍^9",
+   "collapse": "]—’&fo】|；！👨>”🅰’】|&o‍^9"
+  },
+  {
+   "input": "=",
+   "merge": "",
+   "strip": "",
+   "collapse": "="
+  },
+  {
+   "input": "i①X\t伦$ |🅰",
+   "merge": "i①X\t伦$",
+   "strip": "i①X\t伦$ |🅰",
+   "collapse": "i①X\t伦$ |🅰"
+  },
+  {
+   "input": "\\𝐀。“# )依#`🎵‍@]+=“【ⓐ}\t",
+   "merge": "\\𝐀。)依#🎵‍@",
+   "strip": "𝐀。“# )依#`🎵‍@]+=“【ⓐ}\t",
+   "collapse": "\\𝐀。“# )依#`🎵‍@]+=“【ⓐ}\t"
+  },
+  {
+   "input": "「1 a‍Y️👦t　t👨；ⓐ\\《",
+   "merge": "「1 a‍Y️👦t　t👨",
+   "strip": "1 a‍Y️👦t　t👨；ⓐ\\《",
+   "collapse": "「1 a‍Y️👦t　t👨；ⓐ\\《"
+  },
+  {
+   "input": "①Z）‍(？SSfi·}&🅰$‍Z】‘",
+   "merge": "①Z）‍(？SSfi·$‍Z】",
+   "strip": "①Z）‍(？SSfi·}&🅰$‍Z】‘",
+   "collapse": "①Z）‍(？SSfi·}&🅰$‍Z】‘"
+  },
+  {
+   "input": "👩依yc`t，#|rr《，X",
+   "merge": "👩依yc`t，|rr《，X",
+   "strip": "依yc`t，#|rr《，X",
+   "collapse": "👩依yc`t，#|rr《，X"
+  },
+  {
+   "input": "伦",
+   "merge": "伦",
+   "strip": "伦",
+   "collapse": "伦"
+  },
+  {
+   "input": "w%o#ao",
+   "merge": "w%o#ao",
+   "strip": "w%o#ao",
+   "collapse": "w%o#ao"
+  },
+  {
+   "input": "Z“‘‍‍>】“t",
+   "merge": "Z“‘‍‍>“t",
+   "strip": "Z“‘‍‍>】“t",
+   "collapse": "Z“‘‍‍>】“t"
+  },
+  {
+   "input": "T‘TX️9🅰f=l． c👨“（👩+．0Y-",
+   "merge": "T‘TX️9🅰f=l． c👨．0Y-",
+   "strip": "T‘TX️9🅰f=l． c👨“（👩+．0Y-",
+   "collapse": "T‘TX️9🅰f=l． c👨“（👩+．0Y-"
+  },
+  {
+   "input": "’{；《",
+   "merge": "",
+   "strip": "",
+   "collapse": "’{；《"
+  },
+  {
+   "input": "。a①‍|”=依+👩👦",
+   "merge": "。a①‍|=依+",
+   "strip": "a①‍|”=依+👩👦",
+   "collapse": "。a①‍|”=依+👩👦"
+  },
+  {
+   "input": "i👨 依#9’𝟎(✅#<-]，b　[：&",
+   "merge": "i👨 依#9’𝟎(，b　[",
+   "strip": "i👨 依#9’𝟎(✅#<-]，b　[：&",
+   "collapse": "i👨 依#9’𝟎(✅#<-]，b　[：&"
+  },
+  {
+   "input": "fi‍&《Z」T𝟎、𝟎-#❤】w‘👨，【-",
+   "merge": "fi‍&《Z」T𝟎、𝟎-】w‘",
+   "strip": "fi‍&《Z」T𝟎、𝟎-#❤】w‘👨，【-",
+   "collapse": "fi‍&《Z」T𝟎、𝟎-#❤】w‘👨，【-"
+  },
+  {
+   "input": "🅰伦&c/ ⓐ",
+   "merge": "🅰伦&c/",
+   "strip": "伦&c/ ⓐ",
+   "collapse": "🅰伦&c/ ⓐ"
+  },
+  {
+   "input": "o~「①ⓐ+ \\✅🅰，",
+   "merge": "o~「①ⓐ",
+   "strip": "o~「①ⓐ+ \\✅🅰，",
+   "collapse": "o~「①ⓐ+ \\✅🅰，"
+  },
+  {
+   "input": "/r@ⓐ🅰✅　wtr/，Y「🅰Z{0👧𝟎",
+   "merge": "/r@✅　wtr/，Y「🅰Z{0👧𝟎",
+   "strip": "r@ⓐ🅰✅　wtr/，Y「🅰Z{0👧𝟎",
+   "collapse": "/r@ⓐ🅰✅　wtr/，Y「🅰Z{0👧𝟎"
+  },
+  {
+   "input": "【{❤.依·X)！‍",
+   "merge": ".依·X)！‍",
+   "strip": "依·X)！‍",
+   "collapse": "【{❤.依·X)！‍"
+  },
+  {
+   "input": "%伦b`\n《‍《/Z！f r—． ^，c—",
+   "merge": "%伦b`《‍《/Z！f r—，c—",
+   "strip": "伦b`\n《‍《/Z！f r—． ^，c—",
+   "collapse": "%伦b`\n《‍《/Z！f r—． ^，c—"
+  },
+  {
+   "input": "’‍周c 》y}w🅰0 杰y天？」‍y{",
+   "merge": "’‍周c 》y}w🅰0 杰y天？」‍y{",
+   "strip": "‍周c 》y}w🅰0 杰y天？」‍y{",
+   "collapse": "’‍周c 》y}w🅰0 杰y天？」‍y{"
+  },
+  {
+   "input": "T洛a[ⓐ\\　‘=9|.-.",
+   "merge": "T洛a[=9|",
+   "strip": "T洛a[ⓐ\\　‘=9|.-.",
+   "collapse": "T洛a[ⓐ\\　‘=9|.-."
+  },
+  {
+   "input": "/=「①①【X \t& 」！🅰.]wlw《",
+   "merge": "「①①【X \t&]wlw《",
+   "strip": "①①【X \t& 」！🅰.]wlw《",
+   "collapse": "/=「①①【X & 」！🅰.]wlw《"
+  },
+  {
+   "input": "❤`　：．^𝐀 周ⓐ🎵<Y)",
+   "merge": "^𝐀 周ⓐ<Y)",
+   "strip": "　：．^𝐀 周ⓐ🎵<Y)",
+   "collapse": "❤`　：．^𝐀 周ⓐ🎵<Y)"
+  },
+  {
+   "input": "。ⓐ①👩✅·o【&、」=@",
+   "merge": "ⓐ①👩·o【",
+   "strip": "①👩✅·o【&、」=@",
+   "collapse": "。ⓐ①👩✅·o【&、」=@"
+  },
+  {
+   "input": "天\t\n》　👨",
+   "merge": "天\t\n》",
+   "strip": "天\t\n》　👨",
+   "collapse": "天 》　👨"
+  },
+  {
+   "input": "天0-&<👧】1：~「．】-}‍",
+   "merge": "天0-】1：}‍",
+   "strip": "天0-&<👧】1：~「．】-}‍",
+   "collapse": "天0-&<👧】1：~「．】-}‍"
+  },
+  {
+   "input": "[#。.)|c1洛《1ⓐ𝟎 ",
+   "merge": "|c1洛《1ⓐ𝟎 ",
+   "strip": "c1洛《1ⓐ𝟎 ",
+   "collapse": "[#。.)|c1洛《1ⓐ𝟎 "
+  },
+  {
+   "input": "？伦‍‍、[-👦S【/.|f\t杰？&杰[𝟎",
+   "merge": "？伦‍‍、👦S【|f\t杰？&杰[𝟎",
+   "strip": "伦‍‍、[-👦S【/.|f\t杰？&杰[𝟎",
+   "collapse": "？伦‍‍、[-👦S【/.|f\t杰？&杰[𝟎"
+  },
+  {
+   "input": "周ⓐ\n\t`」「yY\t①周❤、^？Z",
+   "merge": "周ⓐ「yY\t①周❤？Z",
+   "strip": "周ⓐ\n\t`」「yY\t①周❤、^？Z",
+   "collapse": "周ⓐ `」「yY\t①周❤、^？Z"
+  },
+  {
+   "input": "👧|。a𝐀❤依👧&《%·/。》👨‍.",
+   "merge": "。a𝐀❤依👧👨‍.",
+   "strip": "a𝐀❤依👧&《%·/。》👨‍.",
+   "collapse": "👧|。a𝐀❤依👧&《%·/。》👨‍."
+  },
+  {
+   "input": "~",
+   "merge": "",
+   "strip": "",
+   "collapse": "~"
+  },
+  {
+   "input": ">&🅰’👦\t🎵’”l周👦（@",
+   "merge": "”l周👦",
+   "strip": "\t🎵’”l周👦（@",
+   "collapse": ">&🅰’👦\t🎵’”l周👦（@"
+  },
+  {
+   "input": "（、(·+依",
+   "merge": "+依",
+   "strip": "依",
+   "collapse": "（、(·+依"
+  },
+  {
+   "input": "1：#👦0】co！",
+   "merge": "1：👦0】co！",
+   "strip": "1：#👦0】co！",
+   "collapse": "1：#👦0】co！"
+  },
+  {
+   "input": "”.．&f",
+   "merge": "&f",
+   "strip": "f",
+   "collapse": "”.．&f"
+  },
+  {
+   "input": " 、；依’T杰👧@S‍T\t[「𝟎",
+   "merge": "；依’T杰👧@S‍T\t[「𝟎",
+   "strip": " 、；依’T杰👧@S‍T\t[「𝟎",
+   "collapse": " 、；依’T杰👧@S‍T\t[「𝟎"
+  },
+  {
+   "input": "依‍ 🅰yf=`）)‘~：》”",
+   "merge": "依‍ 🅰yf=",
+   "strip": "依‍ 🅰yf=`）)‘~：》”",
+   "collapse": "依‍ 🅰yf=`）)‘~：》”"
+  },
+  {
+   "input": "𝟎",
+   "merge": "𝟎",
+   "strip": "𝟎",
+   "collapse": "𝟎"
+  },
+  {
+   "input": ">cX】",
+   "merge": ">cX】",
+   "strip": "cX】",
+   "collapse": ">cX】"
+  },
+  {
+   "input": "#Yt=‍>①！！️",
+   "merge": "#Yt=‍>①！！️",
+   "strip": "Yt=‍>①！！️",
+   "collapse": "#Yt=‍>①！！️"
+  },
+  {
+   "input": "》",
+   "merge": "",
+   "strip": "",
+   "collapse": "》"
+  },
+  {
+   "input": "^1洛。【~．@+？",
+   "merge": "^1洛。",
+   "strip": "1洛。【~．@+？",
+   "collapse": "^1洛。【~．@+？"
+  },
+  {
+   "input": "—tX，👧{」}o👩`’=T",
+   "merge": "—tX，}o👩=T",
+   "strip": "tX，👧{」}o👩`’=T",
+   "collapse": "—tX，👧{」}o👩`’=T"
+  },
+  {
+   "input": "𝟎w\\𝐀{？？。",
+   "merge": "𝟎w\\𝐀{",
+   "strip": "𝟎w\\𝐀{？？。",
+   "collapse": "𝟎w\\𝐀{？？。"
+  },
+  {
+   "input": "<(\\？0\\| ",
+   "merge": "？0\\",
+   "strip": "0\\| ",
+   "collapse": "<(\\？0\\| "
+  },
+  {
+   "input": " &Y，@#1」❤&天oⓐ c‍\\y(i【X",
+   "merge": "&Y，#1」&天oⓐ c‍\\y(i【X",
+   "strip": " &Y，@#1」❤&天oⓐ c‍\\y(i【X",
+   "collapse": " &Y，@#1」❤&天oⓐ c‍\\y(i【X"
+  },
+  {
+   "input": "rl　r~周】《(：>y=「1：^‘`（Y(️",
+   "merge": "rl　r~周】>y=「1：（Y(️",
+   "strip": "rl　r~周】《(：>y=「1：^‘`（Y(️",
+   "collapse": "rl　r~周】《(：>y=「1：^‘`（Y(️"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "》ar ~",
+   "merge": "》ar ~",
+   "strip": "ar ~",
+   "collapse": "》ar ~"
+  },
+  {
+   "input": "，-❤；【；\t",
+   "merge": "",
+   "strip": "\t",
+   "collapse": "，-❤；【；\t"
+  },
+  {
+   "input": "$Z</「；👦",
+   "merge": "$Z<",
+   "strip": "Z</「；👦",
+   "collapse": "$Z</「；👦"
+  },
+  {
+   "input": "$y．—[‍0！伦a✅👧杰依\n",
+   "merge": "$y．[‍0！伦a✅👧杰依\n",
+   "strip": "y．—[‍0！伦a✅👧杰依\n",
+   "collapse": "$y．—[‍0！伦a✅👧杰依\n"
+  },
+  {
+   "input": "y」)👦S\n。%\n。\t洛|\\❤“‘",
+   "merge": "y」👦S\n。。\t洛|",
+   "strip": "y」)👦S\n。%\n。\t洛|\\❤“‘",
+   "collapse": "y」)👦S\n。%\n。\t洛|\\❤“‘"
+  },
+  {
+   "input": "^‍依&·「$杰”Y",
+   "merge": "^‍依&$杰”Y",
+   "strip": "‍依&·「$杰”Y",
+   "collapse": "^‍依&·「$杰”Y"
+  },
+  {
+   "input": "a🎵$c)\n 】】、、 >\t9—🅰y",
+   "merge": "a🎵$c)>\t9—🅰y",
+   "strip": "a🎵$c)\n 】】、、 >\t9—🅰y",
+   "collapse": "a🎵$c) 】】、、 >\t9—🅰y"
+  },
+  {
+   "input": "ⓐ洛、}\tfi0T》？—}！？",
+   "merge": "ⓐ洛、}\tfi0T》",
+   "strip": "洛、}\tfi0T》？—}！？",
+   "collapse": "ⓐ洛、}\tfi0T》？—}！？"
+  },
+  {
+   "input": "aⓐ(~\\️—　T天|👨𝐀、？)Z#【~",
+   "merge": "aⓐ\\️—　T天|👨𝐀、)Z#",
+   "strip": "aⓐ(~\\️—　T天|👨𝐀、？)Z#【~",
+   "collapse": "aⓐ(~\\️—　T天|👨𝐀、？)Z#【~"
+  },
+  {
+   "input": "．) ‘」周👩洛“|{wt‍~伦",
+   "merge": "」周👩洛“{wt‍~伦",
+   "strip": " ‘」周👩洛“|{wt‍~伦",
+   "collapse": "．) ‘」周👩洛“|{wt‍~伦"
+  },
+  {
+   "input": "？？i.]周[—",
+   "merge": "？i.]周[",
+   "strip": "i.]周[—",
+   "collapse": "？？i.]周[—"
+  },
+  {
+   "input": "‘‍+[ a&",
+   "merge": "‘‍+[ a&",
+   "strip": "‍+[ a&",
+   "collapse": "‘‍+[ a&"
+  },
+  {
+   "input": "？【（(《；Tb　“？i$X「",
+   "merge": "；Tb　“？i$X「",
+   "strip": "Tb　“？i$X「",
+   "collapse": "？【（(《；Tb　“？i$X「"
+  },
+  {
+   "input": "|T",
+   "merge": "|T",
+   "strip": "T",
+   "collapse": "|T"
+  },
+  {
+   "input": "伦]《👧Z　杰-。[w“：\tY",
+   "merge": "伦]👧Z　杰-[w“：\tY",
+   "strip": "伦]《👧Z　杰-。[w“：\tY",
+   "collapse": "伦]《👧Z　杰-。[w“：\tY"
+  },
+  {
+   "input": "&<",
+   "merge": "",
+   "strip": "",
+   "collapse": "&<"
+  },
+  {
+   "input": "）+？【",
+   "merge": "",
+   "strip": "",
+   "collapse": "）+？【"
+  },
+  {
+   "input": "+.—𝐀‍周",
+   "merge": "—𝐀‍周",
+   "strip": "𝐀‍周",
+   "collapse": "+.—𝐀‍周"
+  },
+  {
+   "input": "^天‍",
+   "merge": "^天‍",
+   "strip": "天‍",
+   "collapse": "^天‍"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "’@",
+   "merge": "",
+   "strip": "",
+   "collapse": "’@"
+  },
+  {
+   "input": "周「\n】%]",
+   "merge": "周「",
+   "strip": "周「\n】%]",
+   "collapse": "周「\n】%]"
+  },
+  {
+   "input": "a👦’f】",
+   "merge": "a👦’f】",
+   "strip": "a👦’f】",
+   "collapse": "a👦’f】"
+  },
+  {
+   "input": "1　c」(<🎵@i~]𝐀|𝟎\n】①f",
+   "merge": "1　c」@i~]𝐀|𝟎\n】①f",
+   "strip": "1　c」(<🎵@i~]𝐀|𝟎\n】①f",
+   "collapse": "1　c」(<🎵@i~]𝐀|𝟎\n】①f"
+  },
+  {
+   "input": "~，aⓐ】． ：w✅(9l 《\t^",
+   "merge": "，aⓐ：w✅(9l 《",
+   "strip": "aⓐ】． ：w✅(9l 《\t^",
+   "collapse": "~，aⓐ】． ：w✅(9l 《\t^"
+  },
+  {
+   "input": "？o伦f\t]c",
+   "merge": "？o伦f\t]c",
+   "strip": "o伦f\t]c",
+   "collapse": "？o伦f\t]c"
+  },
+  {
+   "input": "‍^」❤",
+   "merge": "‍^",
+   "strip": "‍^」❤",
+   "collapse": "‍^」❤"
+  },
+  {
+   "input": "^天-‍.+>X|👩\n@9l】👩c）‘依",
+   "merge": "^天-‍.>X|@9l】👩c）‘依",
+   "strip": "天-‍.+>X|👩\n@9l】👩c）‘依",
+   "collapse": "^天-‍.+>X|👩\n@9l】👩c）‘依"
+  },
+  {
+   "input": "b09𝟎Y9t”❤1，\n🎵+/·",
+   "merge": "b09𝟎Y9t”❤1，",
+   "strip": "b09𝟎Y9t”❤1，\n🎵+/·",
+   "collapse": "b09𝟎Y9t”❤1，\n🎵+/·"
+  },
+  {
+   "input": "　b\n1“）❤/洛X①·",
+   "merge": "　b\n1“/洛X①·",
+   "strip": "　b\n1“）❤/洛X①·",
+   "collapse": "　b\n1“）❤/洛X①·"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "👧洛️&‘l",
+   "merge": "👧洛️&‘l",
+   "strip": "洛️&‘l",
+   "collapse": "👧洛️&‘l"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "&👨",
+   "merge": "",
+   "strip": "",
+   "collapse": "&👨"
+  },
+  {
+   "input": "\n)yZ&&c[$`Z𝟎a）",
+   "merge": ")yZ&&c[`Z𝟎a）",
+   "strip": "\n)yZ&&c[$`Z𝟎a）",
+   "collapse": "\n)yZ&&c[$`Z𝟎a）"
+  },
+  {
+   "input": " /👦c，",
+   "merge": "👦c，",
+   "strip": " /👦c，",
+   "collapse": " /👦c，"
+  },
+  {
+   "input": "：！0a‍Y✅𝟎．？👦👧【9+",
+   "merge": "！0a‍Y✅𝟎．【9+",
+   "strip": "0a‍Y✅𝟎．？👦👧【9+",
+   "collapse": "：！0a‍Y✅𝟎．？👦👧【9+"
+  },
+  {
+   "input": "。Y[|b洛>=；|️&i",
+   "merge": "。Y[|b洛>|️&i",
+   "strip": "Y[|b洛>=；|️&i",
+   "collapse": "。Y[|b洛>=；|️&i"
+  },
+  {
+   "input": "‍𝐀1..👩",
+   "merge": "‍𝐀1.",
+   "strip": "‍𝐀1..👩",
+   "collapse": "‍𝐀1..👩"
+  },
+  {
+   "input": "~+ ‍‍❤杰·洛Y=　👦🅰‍！洛ti&^]f",
+   "merge": "+ ‍‍❤杰·洛Y=🅰‍！洛ti&]f",
+   "strip": " ‍‍❤杰·洛Y=　👦🅰‍！洛ti&^]f",
+   "collapse": "~+ ‍‍❤杰·洛Y=　👦🅰‍！洛ti&^]f"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "`-{|=[·",
+   "merge": "",
+   "strip": "",
+   "collapse": "`-{|=[·"
+  },
+  {
+   "input": "；ⓐ·．/`w)",
+   "merge": "`w)",
+   "strip": "w)",
+   "collapse": "；ⓐ·．/`w)"
+  },
+  {
+   "input": "0=iZ）w\t< 1：」．",
+   "merge": "0=iZ）w\t< 1：",
+   "strip": "0=iZ）w\t< 1：」．",
+   "collapse": "0=iZ）w\t< 1：」．"
+  },
+  {
+   "input": "！1𝐀X伦伦—》🅰❤‍《·",
+   "merge": "！1𝐀X伦伦—❤‍《",
+   "strip": "1𝐀X伦伦—》🅰❤‍《·",
+   "collapse": "！1𝐀X伦伦—》🅰❤‍《·"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "「？！天@^‍ #l)《t`。",
+   "merge": "！天@^‍ #l)《t`",
+   "strip": "天@^‍ #l)《t`。",
+   "collapse": "「？！天@^‍ #l)《t`。"
+  },
+  {
+   "input": "Z依「-&🅰&； ",
+   "merge": "Z依「",
+   "strip": "Z依「-&🅰&； ",
+   "collapse": "Z依「-&🅰&； "
+  },
+  {
+   "input": "9&🎵@a",
+   "merge": "9&@a",
+   "strip": "9&🎵@a",
+   "collapse": "9&🎵@a"
+  },
+  {
+   "input": "T（‍&🅰lo\\",
+   "merge": "T（‍&🅰lo\\",
+   "strip": "T（‍&🅰lo\\",
+   "collapse": "T（‍&🅰lo\\"
+  },
+  {
+   "input": "$oa+r、ⓐ？）<}",
+   "merge": "$oa+r、",
+   "strip": "oa+r、ⓐ？）<}",
+   "collapse": "$oa+r、ⓐ？）<}"
+  },
+  {
+   "input": "-。t‘【👦 ",
+   "merge": "。t‘",
+   "strip": "t‘【👦 ",
+   "collapse": "-。t‘【👦 "
+  },
+  {
+   "input": "🎵天👧‍\ttw、‍@a【\t周f❤伦",
+   "merge": "🎵天👧‍\ttw、‍@a【\t周f❤伦",
+   "strip": "天👧‍\ttw、‍@a【\t周f❤伦",
+   "collapse": "🎵天👧‍\ttw、‍@a【\t周f❤伦"
+  },
+  {
+   "input": "”。（i-.)&𝟎。T",
+   "merge": "（i-&𝟎。T",
+   "strip": "i-.)&𝟎。T",
+   "collapse": "”。（i-.)&𝟎。T"
+  },
+  {
+   "input": "w🅰y%‍洛",
+   "merge": "w🅰y%‍洛",
+   "strip": "w🅰y%‍洛",
+   "collapse": "w🅰y%‍洛"
+  },
+  {
+   "input": "、👧0！　X—w𝐀",
+   "merge": "👧0！　X—w𝐀",
+   "strip": "0！　X—w𝐀",
+   "collapse": "、👧0！　X—w𝐀"
+  },
+  {
+   "input": "ⓐ ’>1i，Z+",
+   "merge": ">1i，Z+",
+   "strip": " ’>1i，Z+",
+   "collapse": "ⓐ ’>1i，Z+"
+  },
+  {
+   "input": "Y\\」%`+·👦<<ⓐ天>𝐀．伦‍𝐀i-",
+   "merge": "Y\\ⓐ天>𝐀．伦‍𝐀i-",
+   "strip": "Y\\」%`+·👦<<ⓐ天>𝐀．伦‍𝐀i-",
+   "collapse": "Y\\」%`+·👦<<ⓐ天>𝐀．伦‍𝐀i-"
+  },
+  {
+   "input": "i}！ o 依b👩’「",
+   "merge": "i}！ o 依b👩",
+   "strip": "i}！ o 依b👩’「",
+   "collapse": "i}！ o 依b👩’「"
+  },
+  {
+   "input": "‍🎵1𝟎‘{c&a。　rr！，>9`·\t‍？ ",
+   "merge": "‍🎵1𝟎‘{c&a。　rr！>9`·\t‍？",
+   "strip": "‍🎵1𝟎‘{c&a。　rr！，>9`·\t‍？ ",
+   "collapse": "‍🎵1𝟎‘{c&a。　rr！，>9`·\t‍？ "
+  },
+  {
+   "input": "+」&&co ·」①<ⓐS 伦`S",
+   "merge": "&co ·」①<ⓐS 伦`S",
+   "strip": "co ·」①<ⓐS 伦`S",
+   "collapse": "+」&&co ·」①<ⓐS 伦`S"
+  },
+  {
+   "input": "y+t👧&‍👦o】①杰”w\\‍l．w‍+👨",
+   "merge": "y+t👧&‍👦o】①杰”w\\‍l．w‍+",
+   "strip": "y+t👧&‍👦o】①杰”w\\‍l．w‍+👨",
+   "collapse": "y+t👧&‍👦o】①杰”w\\‍l．w‍+👨"
+  },
+  {
+   "input": "l ”①️、+🎵①🅰",
+   "merge": "l ”①️、🎵①🅰",
+   "strip": "l ”①️、+🎵①🅰",
+   "collapse": "l ”①️、+🎵①🅰"
+  },
+  {
+   "input": "𝐀\nc）．！)：❤》o%\n~，🅰r‘]？aⓐ",
+   "merge": "𝐀\nc）》o%🅰r‘？aⓐ",
+   "strip": "𝐀\nc）．！)：❤》o%\n~，🅰r‘]？aⓐ",
+   "collapse": "𝐀\nc）．！)：❤》o%\n~，🅰r‘]？aⓐ"
+  },
+  {
+   "input": "#】]　\t>}0🅰\n",
+   "merge": "}0🅰",
+   "strip": "　\t>}0🅰\n",
+   "collapse": "#】] >}0🅰\n"
+  },
+  {
+   "input": "t|“",
+   "merge": "t|",
+   "strip": "t|“",
+   "collapse": "t|“"
+  },
+  {
+   "input": "|洛‍w①",
+   "merge": "|洛‍w①",
+   "strip": "洛‍w①",
+   "collapse": "|洛‍w①"
+  },
+  {
+   "input": "##",
+   "merge": "",
+   "strip": "",
+   "collapse": "##"
+  },
+  {
+   "input": "‍",
+   "merge": "‍",
+   "strip": "‍",
+   "collapse": "‍"
+  },
+  {
+   "input": "👩`🅰 +𝐀<’r？　[·b$、&👩《X周️\\",
+   "merge": "+𝐀<’r？·b$《X周️\\",
+   "strip": " +𝐀<’r？　[·b$、&👩《X周️\\",
+   "collapse": "👩`🅰 +𝐀<’r？　[·b$、&👩《X周️\\"
+  },
+  {
+   "input": "❤ⓐ《✅‍🅰《𝟎a^",
+   "merge": "✅‍🅰《𝟎a^",
+   "strip": "‍🅰《𝟎a^",
+   "collapse": "❤ⓐ《✅‍🅰《𝟎a^"
+  },
+  {
+   "input": "；.|(",
+   "merge": "",
+   "strip": "",
+   "collapse": "；.|("
+  },
+  {
+   "input": "a」9",
+   "merge": "a」9",
+   "strip": "a」9",
+   "collapse": "a」9"
+  },
+  {
+   "input": "t`",
+   "merge": "t`",
+   "strip": "t`",
+   "collapse": "t`"
+  },
+  {
+   "input": "「周👨",
+   "merge": "「周👨",
+   "strip": "周👨",
+   "collapse": "「周👨"
+  },
+  {
+   "input": " |~\n#\n/】依y\n①👩9。{！",
+   "merge": "】依y\n①👩9。",
+   "strip": " |~\n#\n/】依y\n①👩9。{！",
+   "collapse": " |~\n#\n/】依y\n①👩9。{！"
+  },
+  {
+   "input": "」+T❤𝟎Tc天cl👩l）Y「“ ]️】？—\n",
+   "merge": "+T❤𝟎Tc天cl👩l）Y「]️】",
+   "strip": "T❤𝟎Tc天cl👩l）Y「“ ]️】？—\n",
+   "collapse": "」+T❤𝟎Tc天cl👩l）Y「“ ]️】？—\n"
+  },
+  {
+   "input": "i　]👧)“依》lb‍& f=ⓐ；天",
+   "merge": "i　]“依》lb‍& f=；天",
+   "strip": "i　]👧)“依》lb‍& f=ⓐ；天",
+   "collapse": "i　]👧)“依》lb‍& f=ⓐ；天"
+  },
+  {
+   "input": "@”91❤‍Xw&#’‍？’周t",
+   "merge": "”91❤‍Xw&’‍？’周t",
+   "strip": "91❤‍Xw&#’‍？’周t",
+   "collapse": "@”91❤‍Xw&#’‍？’周t"
+  },
+  {
+   "input": "杰",
+   "merge": "杰",
+   "strip": "杰",
+   "collapse": "杰"
+  },
+  {
+   "input": "^“=·”🅰．」<✅",
+   "merge": "",
+   "strip": "",
+   "collapse": "^“=·”🅰．」<✅"
+  },
+  {
+   "input": "}　$【」：‍，]杰 \\𝟎",
+   "merge": "：‍，]杰 \\𝟎",
+   "strip": "　$【」：‍，]杰 \\𝟎",
+   "collapse": "}　$【」：‍，]杰 \\𝟎"
+  },
+  {
+   "input": "洛；🅰^「👦；　　lr~",
+   "merge": "洛；；　　lr~",
+   "strip": "洛；🅰^「👦；　　lr~",
+   "collapse": "洛；🅰^「👦； lr~"
+  },
+  {
+   "input": "iS0、️",
+   "merge": "iS0、️",
+   "strip": "iS0、️",
+   "collapse": "iS0、️"
+  },
+  {
+   "input": "&‍\n👨",
+   "merge": "&‍\n👨",
+   "strip": "‍\n👨",
+   "collapse": "&‍\n👨"
+  },
+  {
+   "input": "👦@@)（：洛✅",
+   "merge": "：洛✅",
+   "strip": "洛✅",
+   "collapse": "👦@@)（：洛✅"
+  },
+  {
+   "input": "{🎵”，周𝟎依—",
+   "merge": "，周𝟎依—",
+   "strip": "周𝟎依—",
+   "collapse": "{🎵”，周𝟎依—"
+  },
+  {
+   "input": "Y伦=&‍%𝐀；🎵&1”伦",
+   "merge": "Y伦=&‍%𝐀；&1”伦",
+   "strip": "Y伦=&‍%𝐀；🎵&1”伦",
+   "collapse": "Y伦=&‍%𝐀；🎵&1”伦"
+  },
+  {
+   "input": "；‘%️^&}．👧🅰）’)r|{ⓐ】(洛Y𝟎",
+   "merge": "%️^)r|(洛Y𝟎",
+   "strip": "️^&}．👧🅰）’)r|{ⓐ】(洛Y𝟎",
+   "collapse": "；‘%️^&}．👧🅰）’)r|{ⓐ】(洛Y𝟎"
+  },
+  {
+   "input": "\n🎵👩",
+   "merge": "",
+   "strip": "\n🎵👩",
+   "collapse": "\n🎵👩"
+  },
+  {
+   "input": "l‍𝐀9·，】S；T依c👩$依{~",
+   "merge": "l‍𝐀9·】S；T依c👩$依{",
+   "strip": "l‍𝐀9·，】S；T依c👩$依{~",
+   "collapse": "l‍𝐀9·，】S；T依c👩$依{~"
+  },
+  {
+   "input": "[🎵{1}—a`#0o）w",
+   "merge": "{1}—a`#0o）w",
+   "strip": "1}—a`#0o）w",
+   "collapse": "[🎵{1}—a`#0o）w"
+  },
+  {
+   "input": "！|a—|》》、f^>👩",
+   "merge": "|a—、f^",
+   "strip": "a—|》》、f^>👩",
+   "collapse": "！|a—|》》、f^>👩"
+  },
+  {
+   "input": ">T》\\>」l.；．<9l]❤𝟎」#ⓐ 洛",
+   "merge": ">T》」l.<9l]❤𝟎」ⓐ 洛",
+   "strip": "T》\\>」l.；．<9l]❤𝟎」#ⓐ 洛",
+   "collapse": ">T》\\>」l.；．<9l]❤𝟎」#ⓐ 洛"
+  },
+  {
+   "input": ".🎵👧；（　-杰#aX=‘ ",
+   "merge": "-杰#aX=",
+   "strip": "　-杰#aX=‘ ",
+   "collapse": ".🎵👧；（　-杰#aX=‘ "
+  },
+  {
+   "input": "；！l.>👨·T；’，[，r—\\",
+   "merge": "！l.·T；，r—",
+   "strip": "l.>👨·T；’，[，r—\\",
+   "collapse": "；！l.>👨·T；’，[，r—\\"
+  },
+  {
+   "input": "周",
+   "merge": "周",
+   "strip": "周",
+   "collapse": "周"
+  },
+  {
+   "input": "f.》~c",
+   "merge": "f.~c",
+   "strip": "f.》~c",
+   "collapse": "f.》~c"
+  },
+  {
+   "input": "a》]👨🎵i。&‘️ (【.{，　",
+   "merge": "a》🎵i。‘️ (",
+   "strip": "a》]👨🎵i。&‘️ (【.{，　",
+   "collapse": "a》]👨🎵i。&‘️ (【.{，　"
+  },
+  {
+   "input": "c「)f^aT‍",
+   "merge": "c「)f^aT‍",
+   "strip": "c「)f^aT‍",
+   "collapse": "c「)f^aT‍"
+  },
+  {
+   "input": "<<1（·S】依.𝟎t>‍　、𝟎洛‍",
+   "merge": "<1（·S】依.𝟎t>‍　、𝟎洛‍",
+   "strip": "1（·S】依.𝟎t>‍　、𝟎洛‍",
+   "collapse": "<<1（·S】依.𝟎t>‍　、𝟎洛‍"
+  },
+  {
+   "input": "-周周[：‍1👦$‍b>i>}．-《[·❤",
+   "merge": "-周周[：‍1👦$‍b>i>",
+   "strip": "周周[：‍1👦$‍b>i>}．-《[·❤",
+   "collapse": "-周周[：‍1👦$‍b>i>}．-《[·❤"
+  },
+  {
+   "input": ".$：\tr👩[“\n”~1伦.",
+   "merge": "：\tr👩~1伦.",
+   "strip": "\tr👩[“\n”~1伦.",
+   "collapse": ".$：\tr👩[“\n”~1伦."
+  },
+  {
+   "input": " b❤）‍i‍、$aaY】」·天ⓐ<a：】",
+   "merge": " b❤）‍i‍、$aaY】·天ⓐ<a：",
+   "strip": " b❤）‍i‍、$aaY】」·天ⓐ<a：】",
+   "collapse": " b❤）‍i‍、$aaY】」·天ⓐ<a：】"
+  },
+  {
+   "input": "𝟎b+。o@ww·、-「$🅰$#”【=杰",
+   "merge": "𝟎b+。o@ww·=杰",
+   "strip": "𝟎b+。o@ww·、-「$🅰$#”【=杰",
+   "collapse": "𝟎b+。o@ww·、-「$🅰$#”【=杰"
+  },
+  {
+   "input": "1.\\S(tb]依%",
+   "merge": "1.\\S(tb]依%",
+   "strip": "1.\\S(tb]依%",
+   "collapse": "1.\\S(tb]依%"
+  },
+  {
+   "input": " ~」’‍=]👨i",
+   "merge": "’‍=👨i",
+   "strip": " ~」’‍=]👨i",
+   "collapse": " ~」’‍=]👨i"
+  },
+  {
+   "input": "‍c．(-洛",
+   "merge": "‍c．-洛",
+   "strip": "‍c．(-洛",
+   "collapse": "‍c．(-洛"
+  },
+  {
+   "input": "",
+   "merge": "",
+   "strip": "",
+   "collapse": ""
+  },
+  {
+   "input": "👨=T【]",
+   "merge": "=T【",
+   "strip": "T【]",
+   "collapse": "👨=T【]"
+  },
+  {
+   "input": "`杰{「{f‍　洛yy\\)①👧‍",
+   "merge": "`杰{{f‍　洛yy\\)①👧‍",
+   "strip": "杰{「{f‍　洛yy\\)①👧‍",
+   "collapse": "`杰{「{f‍　洛yy\\)①👧‍"
+  },
+  {
+   "input": "𝐀，/+",
+   "merge": "𝐀，",
+   "strip": "𝐀，/+",
+   "collapse": "𝐀，/+"
+  },
+  {
+   "input": "天o》‍XS%。&》《~ar^🎵；」",
+   "merge": "天o》‍XS%~ar^",
+   "strip": "天o》‍XS%。&》《~ar^🎵；」",
+   "collapse": "天o》‍XS%。&》《~ar^🎵；」"
+  },
+  {
+   "input": "  @~【a”ta—👨》伦𝐀？　=𝐀伦&",
+   "merge": "【a”ta—》伦𝐀？=𝐀伦&",
+   "strip": "  @~【a”ta—👨》伦𝐀？　=𝐀伦&",
+   "collapse": " @~【a”ta—👨》伦𝐀？　=𝐀伦&"
+  },
+  {
+   "input": "‍天-Z’\t|❤",
+   "merge": "‍天-Z’",
+   "strip": "‍天-Z’\t|❤",
+   "collapse": "‍天-Z’\t|❤"
+  },
+  {
+   "input": "天aⓐy=",
+   "merge": "天aⓐy=",
+   "strip": "天aⓐy=",
+   "collapse": "天aⓐy="
+  },
+  {
+   "input": "❤\\|𝐀杰》👨伦$’bf/%{·𝐀",
+   "merge": "|𝐀杰》👨伦$’bf/·𝐀",
+   "strip": "𝐀杰》👨伦$’bf/%{·𝐀",
+   "collapse": "❤\\|𝐀杰》👨伦$’bf/%{·𝐀"
+  },
+  {
+   "input": "\t—（o)】",
+   "merge": "（o)",
+   "strip": "\t—（o)】",
+   "collapse": "\t—（o)】"
+  },
+  {
+   "input": "’❤》‍👩/杰",
+   "merge": "》‍👩/杰",
+   "strip": "‍👩/杰",
+   "collapse": "’❤》‍👩/杰"
+  },
+  {
+   "input": "}」0+}<%/t 𝐀%\n【/\\a👨i",
+   "merge": "」0+/t 𝐀%\\a👨i",
+   "strip": "0+}<%/t 𝐀%\n【/\\a👨i",
+   "collapse": "}」0+}<%/t 𝐀%\n【/\\a👨i"
+  },
+  {
+   "input": "杰a𝐀\tX🅰伦i-：️👨‍🎵~【",
+   "merge": "杰a𝐀\tX🅰伦i-：️👨‍🎵",
+   "strip": "杰a𝐀\tX🅰伦i-：️👨‍🎵~【",
+   "collapse": "杰a𝐀\tX🅰伦i-：️👨‍🎵~【"
+  },
+  {
+   "input": "：+{’\\洛伦❤❤？]、天$ }{",
+   "merge": "\\洛伦❤、天$",
+   "strip": "洛伦❤❤？]、天$ }{",
+   "collapse": "：+{’\\洛伦❤❤？]、天$ }{"
+  },
+  {
+   "input": "✅《>l/·=’（‍",
+   "merge": ">l/（‍",
+   "strip": "l/·=’（‍",
+   "collapse": "✅《>l/·=’（‍"
+  },
+  {
+   "input": "；‍&9^—X杰❤ⓐ《‍》+<{\\🎵S1",
+   "merge": "；‍&9^—X杰❤《‍》🎵S1",
+   "strip": "‍&9^—X杰❤ⓐ《‍》+<{\\🎵S1",
+   "collapse": "；‍&9^—X杰❤ⓐ《‍》+<{\\🎵S1"
+  },
+  {
+   "input": "—👨”t=\\、（👦《洛{🅰t👨👨",
+   "merge": "”t=《洛{🅰t👨",
+   "strip": "t=\\、（👦《洛{🅰t👨👨",
+   "collapse": "—👨”t=\\、（👦《洛{🅰t👨👨"
+  },
+  {
+   "input": " b‍%」️>👧【❤r@Z1|《T伦‘",
+   "merge": " b‍%」️>❤r@Z1|《T伦‘",
+   "strip": " b‍%」️>👧【❤r@Z1|《T伦‘",
+   "collapse": " b‍%」️>👧【❤r@Z1|《T伦‘"
+  },
+  {
+   "input": "？~👨」]@~」【|‍天👨>周‘r@<‍】》👩",
+   "merge": "|‍天👨>周‘r@<‍】",
+   "strip": "‍天👨>周‘r@<‍】》👩",
+   "collapse": "？~👨」]@~」【|‍天👨>周‘r@<‍】》👩"
+  },
+  {
+   "input": "𝐀（　🎵 𝟎-Y",
+   "merge": "𝐀（🎵 𝟎-Y",
+   "strip": "𝐀（　🎵 𝟎-Y",
+   "collapse": "𝐀（　🎵 𝟎-Y"
+  },
+  {
+   "input": "#o🎵)0》.🅰👨✅》0/#(】",
+   "merge": "#o🎵)0》》0/",
+   "strip": "o🎵)0》.🅰👨✅》0/#(】",
+   "collapse": "#o🎵)0》.🅰👨✅》0/#(】"
+  },
+  {
+   "input": "；S~！fSw  X「~【lr「‍/i",
+   "merge": "；S~！fSw  X「【lr「‍/i",
+   "strip": "S~！fSw  X「~【lr「‍/i",
+   "collapse": "；S~！fSw X「~【lr「‍/i"
+  },
+  {
+   "input": "{？a]“",
+   "merge": "？a]",
+   "strip": "a]“",
+   "collapse": "{？a]“"
+  },
+  {
+   "input": "`👦\t",
+   "merge": "",
+   "strip": "\t",
+   "collapse": "`👦\t"
+  },
+  {
+   "input": "^-a\t✅洛． 1𝐀f“👧",
+   "merge": "-a\t✅洛． 1𝐀f“",
+   "strip": "a\t✅洛． 1𝐀f“👧",
+   "collapse": "^-a\t✅洛． 1𝐀f“👧"
+  },
+  {
+   "input": "@杰S[-9`9&Y、\t—’",
+   "merge": "@杰S[-9`9&Y、",
+   "strip": "杰S[-9`9&Y、\t—’",
+   "collapse": "@杰S[-9`9&Y、\t—’"
+  },
+  {
+   "input": " t",
+   "merge": " t",
+   "strip": " t",
+   "collapse": " t"
+  },
+  {
+   "input": "’(”#(%👦？>",
+   "merge": "",
+   "strip": "",
+   "collapse": "’(”#(%👦？>"
+  },
+  {
+   "input": "　\n",
+   "merge": "",
+   "strip": "　\n",
+   "collapse": " "
+  },
+  {
+   "input": "}$？；=❤伦~\nZi·>「^．9y((",
+   "merge": "❤伦~\nZi·．9y(",
+   "strip": "伦~\nZi·>「^．9y((",
+   "collapse": "}$？；=❤伦~\nZi·>「^．9y(("
+  },
+  {
+   "input": "）（ ",
+   "merge": "",
+   "strip": " ",
+   "collapse": "）（ "
+  },
+  {
+   "input": "9\n！]X}👦b&—",
+   "merge": "9\n！]X}👦b&",
+   "strip": "9\n！]X}👦b&—",
+   "collapse": "9\n！]X}👦b&—"
+  },
+  {
+   "input": "$w—（a（”’【-1&`周Tf",
+   "merge": "$w—（a（-1&`周Tf",
+   "strip": "w—（a（”’【-1&`周Tf",
+   "collapse": "$w—（a（”’【-1&`周Tf"
+  },
+  {
+   "input": "‍」，】",
+   "merge": "‍」",
+   "strip": "‍」，】",
+   "collapse": "‍」，】"
+  },
+  {
+   "input": "X。X<》👦ⓐ<^T❤l·️=·’w依】【洛T",
+   "merge": "X。X<^T❤l·️=’w依】【洛T",
+   "strip": "X。X<》👦ⓐ<^T❤l·️=·’w依】【洛T",
+   "collapse": "X。X<》👦ⓐ<^T❤l·️=·’w依】【洛T"
+  },
+  {
+   "input": "👩·】杰]\tX𝟎’X9👧—，r‘《&9",
+   "merge": "】杰]\tX𝟎’X9👧，r‘&9",
+   "strip": "杰]\tX𝟎’X9👧—，r‘《&9",
+   "collapse": "👩·】杰]\tX𝟎’X9👧—，r‘《&9"
+  }
+ ]
+}

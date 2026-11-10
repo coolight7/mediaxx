@@ -268,3 +268,137 @@ std::string mediaxx::stringxx::autoTryConvertToUtf8(std::string_view str) {
     }
     return std::string{str};
 }
+
+std::u16string mediaxx::stringxx::utf8ToUtf16(std::string_view str) {
+    std::u16string result{};
+    result.reserve(str.size());
+    const auto* data = reinterpret_cast<const unsigned char*>(str.data());
+    const auto  size = str.size();
+    size_t      i    = 0;
+    while (i < size) {
+        const unsigned char first = data[i];
+        if (first < 0x80) {
+            result.push_back(static_cast<char16_t>(first));
+            ++i;
+            continue;
+        }
+        // 各长度序列的后续字节数
+        int      extra     = 0;
+        char32_t codePoint = 0;
+        char32_t minValue  = 0;
+        if ((first & 0xE0) == 0xC0) {
+            extra     = 1;
+            codePoint = first & 0x1F;
+            minValue  = 0x80;
+        } else if ((first & 0xF0) == 0xE0) {
+            extra     = 2;
+            codePoint = first & 0x0F;
+            minValue  = 0x800;
+        } else if ((first & 0xF8) == 0xF0) {
+            extra     = 3;
+            codePoint = first & 0x07;
+            minValue  = 0x10000;
+        } else {
+            result.push_back(0xFFFD);
+            ++i;
+            continue;
+        }
+        if (i + extra >= size) {
+            result.push_back(0xFFFD);
+            break;
+        }
+        bool isOk = true;
+        for (int k = 1; k <= extra; ++k) {
+            const unsigned char next = data[i + k];
+            if ((next & 0xC0) != 0x80) {
+                isOk = false;
+                break;
+            }
+            codePoint = (codePoint << 6) | (next & 0x3F);
+        }
+        if (false == isOk || codePoint < minValue || codePoint > 0x10FFFF
+            || (codePoint >= 0xD800 && codePoint <= 0xDFFF)) {
+            // 非法序列或非最短编码：只吃掉一个字节，后面的继续按正常流程解
+            result.push_back(0xFFFD);
+            ++i;
+            continue;
+        }
+        i += static_cast<size_t>(extra) + 1;
+        if (codePoint <= 0xFFFF) {
+            result.push_back(static_cast<char16_t>(codePoint));
+        } else {
+            const char32_t value = codePoint - 0x10000;
+            result.push_back(static_cast<char16_t>(0xD800 + (value >> 10)));
+            result.push_back(static_cast<char16_t>(0xDC00 + (value & 0x3FF)));
+        }
+    }
+    return result;
+}
+
+std::string mediaxx::stringxx::utf16ToUtf8(std::u16string_view str) {
+    std::string result{};
+    result.reserve(str.size());
+    for (size_t i = 0; i < str.size(); ++i) {
+        char32_t codePoint = str[i];
+        if (codePoint >= 0xD800 && codePoint <= 0xDBFF && i + 1 < str.size()) {
+            const char16_t next = str[i + 1];
+            if (next >= 0xDC00 && next <= 0xDFFF) {
+                codePoint = 0x10000 + ((codePoint - 0xD800) << 10) + (next - 0xDC00);
+                ++i;
+            } else {
+                codePoint = 0xFFFD;
+            }
+        } else if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
+            codePoint = 0xFFFD;
+        }
+        if (codePoint < 0x80) {
+            result.push_back(static_cast<char>(codePoint));
+        } else if (codePoint < 0x800) {
+            result.push_back(static_cast<char>(0xC0 | (codePoint >> 6)));
+            result.push_back(static_cast<char>(0x80 | (codePoint & 0x3F)));
+        } else if (codePoint < 0x10000) {
+            result.push_back(static_cast<char>(0xE0 | (codePoint >> 12)));
+            result.push_back(static_cast<char>(0x80 | ((codePoint >> 6) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | (codePoint & 0x3F)));
+        } else {
+            result.push_back(static_cast<char>(0xF0 | (codePoint >> 18)));
+            result.push_back(static_cast<char>(0x80 | ((codePoint >> 12) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | ((codePoint >> 6) & 0x3F)));
+            result.push_back(static_cast<char>(0x80 | (codePoint & 0x3F)));
+        }
+    }
+    return result;
+}
+
+std::string mediaxx::stringxx::base64Encode(const void* data, size_t size) {
+    static constexpr char kTable[]
+        = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    const auto* bytes = static_cast<const unsigned char*>(data);
+    std::string result{};
+    result.reserve((size + 2) / 3 * 4);
+    size_t i = 0;
+    for (; i + 2 < size; i += 3) {
+        const uint32_t value = (static_cast<uint32_t>(bytes[i]) << 16)
+                               | (static_cast<uint32_t>(bytes[i + 1]) << 8)
+                               | static_cast<uint32_t>(bytes[i + 2]);
+        result.push_back(kTable[(value >> 18) & 0x3F]);
+        result.push_back(kTable[(value >> 12) & 0x3F]);
+        result.push_back(kTable[(value >> 6) & 0x3F]);
+        result.push_back(kTable[value & 0x3F]);
+    }
+    const size_t remain = size - i;
+    if (1 == remain) {
+        const uint32_t value = static_cast<uint32_t>(bytes[i]) << 16;
+        result.push_back(kTable[(value >> 18) & 0x3F]);
+        result.push_back(kTable[(value >> 12) & 0x3F]);
+        result.append("==");
+    } else if (2 == remain) {
+        const uint32_t value
+            = (static_cast<uint32_t>(bytes[i]) << 16) | (static_cast<uint32_t>(bytes[i + 1]) << 8);
+        result.push_back(kTable[(value >> 18) & 0x3F]);
+        result.push_back(kTable[(value >> 12) & 0x3F]);
+        result.push_back(kTable[(value >> 6) & 0x3F]);
+        result.push_back('=');
+    }
+    return result;
+}

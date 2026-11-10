@@ -583,6 +583,17 @@ namespace mediaxx {
             return std::string_view{str};
         }
 
+        /// UTF-8 转 UTF-16（Dart 的字符串是 UTF-16 码元序列，算法移植按码元处理）
+        /// * 非法字节按 U+FFFD 处理（解码失败不抛异常）
+        [[nodiscard]] std::u16string utf8ToUtf16(std::string_view str);
+
+        /// UTF-16 转 UTF-8
+        /// * 孤立代理按 U+FFFD 输出：UTF-8 表示不了孤立代理，Dart 的 utf8 编码也是同样的处理
+        [[nodiscard]] std::string utf16ToUtf8(std::u16string_view str);
+
+        /// 二进制转 base64（把整型/浮点数组放进 JSON 时用，便于跨语言读出）
+        [[nodiscard]] std::string base64Encode(const void* data, size_t size);
+
         inline std::string_view stringCopyMalloc(
             const std::string_view data1,
             const std::string_view data2 = "",
