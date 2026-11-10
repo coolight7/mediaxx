@@ -10,6 +10,8 @@
   小写转换改为查 BMP 表
 * 数据表生成：字符照原样写（空格、零宽字符不再转成 `\uXXXX`），只保留双引号、反斜杠、
   控制字符与非 BMP 字符的转义
+* 数据表拆成 `media_name_tables.h`（声明）与 `media_name_tables.cpp`（数据）：
+  数据有 3000 多行，不再放在头文件里
 * 新增与 Dart 实现的一致性用例（`src/test/data/analyse/`，`test()` 开头运行）
 
 ## 0.0.1

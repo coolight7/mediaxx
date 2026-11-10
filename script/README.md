@@ -4,13 +4,20 @@
 
 ## `gen_media_name_tables.dart`
 
-把 `data/media_name/*.json` 生成 C++ 数据表 `src/lib/analyse/media_name_tables.h`
-（智能识别要用的大小写折叠表、符号区间、码元折叠表、别名表与无效词表）。生成物已经提交，
-平时不用跑。
+把 `data/media_name/*.json` 生成两个文件（智能识别要的大小写折叠表、符号区间、码元折叠表、
+别名表与无效词表）：
+
+| 文件 | 内容 |
+|---|---|
+| `src/lib/analyse/media_name_tables.h` | 结构体与 `extern` 声明，带每张表的元素个数 |
+| `src/lib/analyse/media_name_tables.cpp` | 数据本身 |
+
+头文件里只放声明：数据有 3000 多行，写在头文件里会让每个包含它的编译单元都重新编一遍。
+生成物已经提交，平时不用跑。
 
 ```sh
 dart run script/gen_media_name_tables.dart           # 重新生成
-dart run script/gen_media_name_tables.dart --check    # 只校验：与磁盘上的文件不一致时退出码 1
+dart run script/gen_media_name_tables.dart --check    # 只校验：两个文件中有一个与数据不一致时退出码 1
 ```
 
 生成规则：

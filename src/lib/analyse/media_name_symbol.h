@@ -15,7 +15,8 @@ namespace mediaxx {
     ///
     /// Dart 那边这套逻辑是为了替换 `\p{P}\p{S}`、`\s` 这两类 Unicode 属性正则：
     /// 每个码点先用同一个正则引擎分类一次，之后走查表 + 线性扫描。这里把分类结果换成
-    /// 编译期表（由 musicxx 的生成脚本用 Dart 正则逐码点跑出来，见 media_name_tables.h），
+    /// 数据表（由 musicxx 的生成脚本用 Dart 正则逐码点跑出来，见 media_name_tables.h 与
+    /// media_name_tables.cpp），
     /// 行为与 Dart 完全一致，运行时不再碰正则。
     ///
     /// 输入输出都是 UTF-16 码元序列：Dart 的 String 就是码元序列，下标、子串、长度的语义

@@ -133,7 +133,8 @@ namespace mediaxx {
     /// 歌名 / 歌手智能识别（对应 Dart 的 `MediaInfoAnalyseBase_c` 与它的两个子类）
     ///
     /// 两个子类只有两处不同：无效标签表 / 弱标签表的内容，以及"临时串怎么拼回歌名"
-    /// （`onAddTempStr`）。数据表全部来自 media_name_tables.h（由 script/data/media_name 生成）。
+    /// （`onAddTempStr`）。数据表在 media_name_tables.cpp，声明在同名的 .h 里，
+    /// 它们都由 script/data/media_name 生成。
     class MediaNameAnalyseBase_c {
     public:
 
