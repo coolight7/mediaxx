@@ -1,3 +1,14 @@
+## 0.0.3
+
+* 工具函数改为使用公共基础库：日志、字符串 / UTF-8 / 编码转换、UTF-16 互转、base64 来自
+  `cxx_utilxx_base`（`utilxx_base`），不再在本仓库各存一份；`mediaxx::stringxx` 保留原名字，
+  调用点不变，`string_util.cpp` 删除
+* 构建接入 `cxx_utilxx_base` / `cxx_utilxx`（`src/third_party/` 子模块）：
+  fmt / simdjson / uchardet / iconv / html2md 改由本工程一起构建（iconv 换成 `libiconv-native`，
+  不再下载 autotools 源码），Boost 用 `MEDIAXX_BOOST_INCLUDE` 指定的头文件，OpenSSL 用系统或
+  `MEDIAXX_OPENSSL_ROOT`
+* 调试构建的日志接到 `cxx_utilxx_base` 的日志分发器（仍输出到 stderr）；发布构建的日志宏仍是空语句
+
 ## 0.0.2
 
 * 数据表改由本仓库维护：原始数据在 `script/data/media_name/*.json`，`script/gen_media_name_tables.dart` 生成 C++ 表

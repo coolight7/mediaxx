@@ -1,0 +1,63 @@
+# Boost CMake 配置 (由 mediaxx 的 src/CMakeLists.txt 生成, 不要手改)
+#
+# 为什么自己生成: cxx_utilxx_base / cxx_utilxx 用 find_package(Boost CONFIG) 取 Boost,
+# 但两者只用到**头文件**(Asio 的 standalone 用法), 不链接任何 Boost 编译库;
+# 因此不需要 b2 生成的那套完整配置, 只要把头文件根目录交出去即可, 这样依赖来源就
+# 完全落在 `MEDIAXX_BOOST_INCLUDE` 指向的 Boost 头文件树上。
+#
+# 生成时替换: @BOOST_INCLUDE_DIR@ = Boost 头文件根 (该目录下应有 boost/ 子目录)
+#             @BOOST_VERSION@     = Boost 版本号 (从 boost/version.hpp 读出的值)
+
+set(Boost_FOUND TRUE)
+set(Boost_VERSION @BOOST_VERSION@)
+set(Boost_VERSION_STRING "@BOOST_VERSION@")
+
+set(Boost_INCLUDE_DIR "@BOOST_INCLUDE_DIR@")
+set(Boost_INCLUDE_DIRS "@BOOST_INCLUDE_DIR@")
+
+if (NOT TARGET Boost::headers)
+  add_library(Boost::headers INTERFACE IMPORTED)
+  set_target_properties(Boost::headers PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIR}"
+    INTERFACE_COMPILE_DEFINITIONS "BOOST_ALL_NO_LIB=1"
+  )
+endif ()
+
+# 只含头文件的 Boost 习惯用名 (旧代码 / 文档里常见 Boost::boost)
+if (NOT TARGET Boost::boost)
+  add_library(Boost::boost INTERFACE IMPORTED)
+  set_target_properties(Boost::boost PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIR}"
+    INTERFACE_COMPILE_DEFINITIONS "BOOST_ALL_NO_LIB=1"
+  )
+endif ()
+
+# b2 安装的 boost_headers 组件名 (部分配置用 find_package(boost_headers))
+if (NOT TARGET boost_headers)
+  add_library(boost_headers INTERFACE IMPORTED)
+  set_target_properties(boost_headers PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${Boost_INCLUDE_DIR}"
+    INTERFACE_COMPILE_DEFINITIONS "BOOST_ALL_NO_LIB=1"
+  )
+endif ()
+
+set(Boost_boost_FOUND TRUE)
+set(Boost_headers_FOUND TRUE)
+
+# 说明: 本文件直接交给 find_package(Boost CONFIG), 没有经过 configure_package_config_file,
+# 因此不能用 check_required_components (该宏由 @PACKAGE_INIT@ 提供); 组件只做存在性判断。
+if (Boost_FIND_COMPONENTS)
+  foreach (_boost_comp ${Boost_FIND_COMPONENTS})
+    if (_boost_comp STREQUAL "headers" OR _boost_comp STREQUAL "boost")
+      set(Boost_${_boost_comp}_FOUND TRUE)
+    else ()
+      set(Boost_${_boost_comp}_FOUND FALSE)
+    endif ()
+  endforeach ()
+  unset(_boost_comp)
+endif ()
+
+if (NOT EXISTS "${Boost_INCLUDE_DIR}/boost/version.hpp")
+  set(Boost_FOUND FALSE)
+  message(FATAL_ERROR "[Boost 配置] ${Boost_INCLUDE_DIR} 下没有 boost/version.hpp; 请检查 MEDIAXX_BOOST_INCLUDE")
+endif ()

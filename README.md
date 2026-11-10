@@ -22,12 +22,17 @@
 - c++代码开发初始化：
   - 建议在 linux 开发测试 c++ 代码，需要下载或编译 ffmpeg 的动态库 `libavcodec.so/libavdevice.so/libavfilter.so/libavutil.so/libswresample.so/libswscale.so` 复制到 `src/third_party/ffmpeg/libs-linux`中，并复制系统库 `libva-drm.so.2/libva-x11.so.2/libva.so.2/libvdpau.so.1` 到`src/third_party/ffmpeg/libs-linux`，编译 libmediaxx 时需要用到，详见 [CMakeLists.txt](src/CMakeLists.txt)
   - 拉取依赖库源码：`git submodule update --init` 可以拉取依赖库到 `src/third_party/` 中
-  - 另外还需要手动下载 iconv，同样解压到 `src/third_party/`:
-```sh
-cd src/third_party
-wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.18.tar.gz && tar -zxvf libiconv-1.18.tar.gz && mv libiconv-1.18 libiconv && rm libiconv-1.18.tar.gz
-```
-  - 接着在项目根目录执行 `./script/debug_build.sh` 或 `./script/release_build.sh` 即可编译 c++ 代码，debug 编译脚本在编译完成后会运行 test
+    （`fmt`、`simdjson`、`uchardet`、`libiconv-native`、`html2md`，以及本项目自用的
+    `cxx_utilxx_base` 与 `cxx_utilxx`：前者提供日志 / 字符串与编码 / JSON，后者提供网络与散列，
+    与 `musicxx_extern_plugin` 里是同一套代码）
+  - Boost 头文件：两个依赖库只用头文件（不链接 Boost 编译库），解包后放到
+    `src/third_party/boost/include`（该目录不进仓库），或配置时用
+    `-DMEDIAXX_BOOST_INCLUDE=<含 boost/ 的目录>` 指定，也可以把它写进环境变量
+    `MEDIAXX_BOOST_INCLUDE` 由 `script/debug_build.sh` 传下去
+  - iconv 由子模块 `libiconv-native` 提供（带 CMake 包与 `Iconv::iconv`），不再手工下载 libiconv 源码
+  - `cxx_utilxx` 需要 OpenSSL：系统有开发包就直接用；没有时用
+    `-DMEDIAXX_OPENSSL_ROOT=<安装树>` 指定（有静态库时优先静态链接，产物不额外带 libssl/libcrypto）
+  - 接着在项目根目录执行 `./script/debug_build.sh` 即可编译 c++ 代码，debug 编译脚本在编译完成后会运行 test
 - 当修改导出的头文件(src/mediaxx.h)[src/mediaxx.h]内的函数声明后，需要执行 `dart run ffigen --config ffigen.yaml` 更新生成的dart代码
 
 ## 与 Dart 实现的对应关系

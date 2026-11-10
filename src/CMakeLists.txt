@@ -114,10 +114,89 @@ if (DEFINED LUMENXX_BUILD_TYPE)
   add_definitions(-DLUMENXX_BUILD_TYPE=${LUMENXX_BUILD_TYPE})
 endif()
 
-include(ExternalProject)
+# ===== 依赖库: cxx_utilxx_base / cxx_utilxx =====
+# 布局与 musicxx_extern_plugin 一致: 源码来自 src/third_party 下的 git 子模块。
+# 但这里用 FetchContent + add_subdirectory, 不用那套 ExternalProject 超级构建:
+# mediaxx 的 CMake 会被 Flutter 平台构建和 libmpv-*-build 仓库直接调用,
+# 必须在本工程里产出 mediaxx 目标 (父工程要拿 $<TARGET_FILE:mediaxx>)。
 include(FetchContent)
 
-# simdjson
+# 依赖产物 (生成的 Boost 配置、包声明) 统一放这里, 不污染源码树
+set(_mediaxx_dep_prefix "${CMAKE_BINARY_DIR}/mediaxx-deps")
+
+# ---- Boost (仅头文件) ----
+# cxx_utilxx_base / cxx_utilxx 用 find_package(Boost CONFIG) 且只取头文件根
+# (源码写 <asio/...> 时靠 <头文件根>/boost/ 命中 Boost.Asio), 不链接 Boost 编译库。
+# 头文件来源: -DMEDIAXX_BOOST_INCLUDE=<含 boost/ 的目录> → src/third_party/boost/include
+#            → .native/boost/boost_*
+set(MEDIAXX_BOOST_INCLUDE "" CACHE PATH "含 boost/ 子目录的 Boost 头文件根 (只用头文件)")
+if (NOT MEDIAXX_BOOST_INCLUDE)
+  set(_mediaxx_boost_candidates "${CMAKE_CURRENT_SOURCE_DIR}/third_party/boost/include")
+  file(GLOB _mediaxx_boost_cached "${CMAKE_CURRENT_SOURCE_DIR}/../.native/boost/boost_*")
+  list(APPEND _mediaxx_boost_candidates ${_mediaxx_boost_cached})
+  foreach (_cand ${_mediaxx_boost_candidates})
+    if (EXISTS "${_cand}/boost/version.hpp")
+      set(MEDIAXX_BOOST_INCLUDE "${_cand}")
+      break()
+    endif ()
+  endforeach ()
+  unset(_mediaxx_boost_candidates)
+  unset(_mediaxx_boost_cached)
+endif ()
+if (NOT MEDIAXX_BOOST_INCLUDE OR NOT EXISTS "${MEDIAXX_BOOST_INCLUDE}/boost/version.hpp")
+  message(FATAL_ERROR
+    "[mediaxx] 缺少 Boost 头文件 (依赖库只用头文件, 不链接 Boost 编译库)\n"
+    "  解包后指定: -DMEDIAXX_BOOST_INCLUDE=<含 boost/ 的目录>\n"
+    "  或放到 src/third_party/boost/include (该目录不进仓库)")
+endif ()
+file(TO_CMAKE_PATH "${MEDIAXX_BOOST_INCLUDE}" MEDIAXX_BOOST_INCLUDE)
+message("[mediaxx] Boost 头文件: ${MEDIAXX_BOOST_INCLUDE}")
+
+# 版本号直接从 boost/version.hpp 读 (BOOST_VERSION 形如 109200 = 1.92.0), 作为唯一版本来源
+file(STRINGS "${MEDIAXX_BOOST_INCLUDE}/boost/version.hpp" _mediaxx_boost_ver_line
+     REGEX "^#define BOOST_VERSION ")
+string(REGEX MATCH "[0-9]+" _mediaxx_boost_code "${_mediaxx_boost_ver_line}")
+if (NOT _mediaxx_boost_code)
+  message(FATAL_ERROR
+    "[mediaxx] 无法从 ${MEDIAXX_BOOST_INCLUDE}/boost/version.hpp 读出 BOOST_VERSION")
+endif ()
+math(EXPR _mediaxx_boost_major "${_mediaxx_boost_code} / 100000")
+math(EXPR _mediaxx_boost_minor "(${_mediaxx_boost_code} / 100) % 1000")
+math(EXPR _mediaxx_boost_patch "${_mediaxx_boost_code} % 100")
+set(MEDIAXX_BOOST_VERSION "${_mediaxx_boost_major}.${_mediaxx_boost_minor}.${_mediaxx_boost_patch}")
+unset(_mediaxx_boost_ver_line)
+unset(_mediaxx_boost_code)
+unset(_mediaxx_boost_major)
+unset(_mediaxx_boost_minor)
+unset(_mediaxx_boost_patch)
+
+# 生成 BoostConfig.cmake: b2 那套完整配置用不上 (只要头文件根), 而且预生成的配置会把
+# 绝对路径烘焙进导出目标; 依赖库的 find_package(Boost CONFIG) 从这里取
+set(BOOST_INCLUDE_DIR "${MEDIAXX_BOOST_INCLUDE}")
+set(BOOST_VERSION "${MEDIAXX_BOOST_VERSION}")
+set(_mediaxx_boost_cfg_dir
+    "${_mediaxx_dep_prefix}/boost/lib/cmake/Boost-${MEDIAXX_BOOST_VERSION}")
+file(MAKE_DIRECTORY "${_mediaxx_boost_cfg_dir}")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/BoostConfig.cmake.in"
+               "${_mediaxx_boost_cfg_dir}/BoostConfig.cmake" @ONLY)
+list(PREPEND CMAKE_PREFIX_PATH "${_mediaxx_dep_prefix}/boost")
+
+# ---- OpenSSL (cxx_utilxx 的客户端 TLS 与散列) ----
+# 平台没自带时用 -DMEDIAXX_OPENSSL_ROOT=<安装树> 指定; 有静态库时优先静态
+# (产物不额外带 libssl/libcrypto, 与 musicxx_extern_plugin 的做法一致)
+set(MEDIAXX_OPENSSL_ROOT "" CACHE PATH "OpenSSL 安装树 (含 include/ 与 lib/), 为空时用系统 OpenSSL")
+if (MEDIAXX_OPENSSL_ROOT)
+  file(TO_CMAKE_PATH "${MEDIAXX_OPENSSL_ROOT}" MEDIAXX_OPENSSL_ROOT)
+  set(OPENSSL_ROOT_DIR "${MEDIAXX_OPENSSL_ROOT}" CACHE PATH "OpenSSL 安装树" FORCE)
+  set(OPENSSL_USE_STATIC_LIBS ON CACHE BOOL "OpenSSL 静态库优先" FORCE)
+endif ()
+
+# ---- fmt / simdjson / uchardet / iconv / html2md ----
+# cxx_utilxx_base 用 find_package 取这四个依赖。源码树里没有安装好的 config,
+# 所以下面按 find_package 的搜索规则各写一个最小 config (声明包可用并校验目标),
+# 再把对应目录加进 CMAKE_PREFIX_PATH —— 不依赖 CMake 3.24 的 OVERRIDE_FIND_PACKAGE
+# (Android 侧 Gradle 自带的 CMake 版本偏旧)。
+# iconv 用 libiconv-native (提供 CMake 包与 Iconv::iconv), 不再下载 autotools 源码。
 FetchContent_Declare(
   simdjson
   SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/simdjson/"
@@ -129,7 +208,6 @@ block()
   FetchContent_MakeAvailable(simdjson)
 endblock()
 
-# fmt
 FetchContent_Declare(
   fmt
   SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/"
@@ -145,58 +223,108 @@ block()
   FetchContent_MakeAvailable(fmt)
 endblock()
 
-if (DEFINED LUMENXX_BUILD_TYPE)
-  # iconv
-  set(LIBICONV_VERSION 1.18)
-  set(LIBICONV_URL "https://ftp.gnu.org/gnu/libiconv/libiconv-${LIBICONV_VERSION}.tar.gz")
-  set(LIBICONV_PREFIX ${CMAKE_BINARY_DIR}/libiconv-src)
-  set(LIBICONV_SOURCE_DIR ${LIBICONV_PREFIX}/src/iconv_repo)
-  set(LIBICONV_BINARY_DIR ${CMAKE_BINARY_DIR}/libiconv-build)
-  set(LIBICONV_INSTALL_DIR ${CMAKE_BINARY_DIR}/libiconv-install)
-  ExternalProject_Add(
-    iconv_repo
-    URL ${LIBICONV_URL}
-    PREFIX ${LIBICONV_PREFIX} 
-    SOURCE_DIR ${LIBICONV_SOURCE_DIR}
-    BINARY_DIR ${LIBICONV_BINARY_DIR} 
-    INSTALL_DIR ${LIBICONV_INSTALL_DIR} 
-    CONFIGURE_COMMAND 
-        cd ${LIBICONV_SOURCE_DIR} && ./configure
-        --prefix=${LIBICONV_INSTALL_DIR} 
-        --host=${CMAKE_C_COMPILER_TARGET}
-        --enable-static=yes
-        --enable-shared=no
-        --enable-pic
-        --disable-rpath
-        --disable-nls
-        --disable-libiconv-close
-        CC=${CMAKE_C_COMPILER}
-        CXX=${CMAKE_CXX_COMPILER}
-        AR=${CMAKE_AR}
-        RANLIB=${CMAKE_RANLIB}
-        "CFLAGS=${CMAKE_C_FLAGS} -DANDROID_PLATFORM=${ANDROID_PLATFORM} -DANDROID_ABI=${ANDROID_ABI} -DANDROID_NDK=${ANDROID_NDK} -DANDROID_STL=${ANDROID_STL}"
-    BUILD_COMMAND 
-      cd ${LIBICONV_SOURCE_DIR} && make -j${CMAKE_BUILD_PARALLEL_LEVEL}
-    INSTALL_COMMAND 
-      cd ${LIBICONV_SOURCE_DIR} && make install
-    UPDATE_COMMAND ""
-    TEST_COMMAND ""
-  )
+FetchContent_Declare(
+  uchardet
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/uchardet/"
+  EXCLUDE_FROM_ALL
+)
+block()
+  set(CHECK_SSE2            ON)
+  set(BUILD_BINARY          OFF)
+  set(BUILD_SHARED_LIBS     OFF)
+  set(BUILD_STATIC_LIBS     ON )
+  FetchContent_MakeAvailable(uchardet)
+endblock()
 
-  # uchardet
-  FetchContent_Declare(
-    uchardet
-    SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/uchardet/"
-    EXCLUDE_FROM_ALL
-  )
-  block()
-    set(CHECK_SSE2            ON)
-    set(BUILD_BINARY          OFF)
-    set(BUILD_SHARED_LIBS     OFF)
-    set(BUILD_STATIC_LIBS     ON )
-    FetchContent_MakeAvailable(uchardet)
-  endblock()
+FetchContent_Declare(
+  iconv
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libiconv-native/"
+)
+block()
+  set(ICONV_ENABLE_EXTRA    OFF)
+  set(ICONV_EMBED_MODE      OFF)
+  set(BUILD_SHARED_LIBS     OFF)
+  FetchContent_MakeAvailable(iconv)
+endblock()
+
+FetchContent_Declare(
+  html2md
+  SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/html2md/"
+  EXCLUDE_FROM_ALL
+)
+block()
+  set(BUILD_EXE               OFF)
+  set(BUILD_DOC               OFF)
+  set(BUILD_TEST              OFF)
+  set(PYTHON_BINDINGS         OFF)
+  set(BUILD_SHARED_LIBS       OFF)
+  FetchContent_MakeAvailable(html2md)
+endblock()
+
+# 源码树里的目标名与安装后 config 的名字不一样, 补别名对齐依赖库的写法
+if (NOT TARGET uchardet::libuchardet AND TARGET libuchardet)
+  add_library(uchardet::libuchardet ALIAS libuchardet)
 endif ()
+if (NOT TARGET Iconv::iconv AND TARGET iconv)
+  add_library(Iconv::iconv ALIAS iconv)
+endif ()
+if (NOT TARGET Iconv::charset AND TARGET charset)
+  add_library(Iconv::charset ALIAS charset)
+endif ()
+
+# 每个依赖写一个最小 config, 放在 <构建目录>/mediaxx-deps/<包名>/lib/cmake/<包名>/
+function(_mediaxx_write_dep_config pkg target)
+  # 目录名带 pkg/ 前缀: 不能和依赖库自己的构建目录 (${_mediaxx_dep_prefix}/${pkg}) 重合,
+  # 否则会先命中它们为自己安装树生成的 config (那份要配 Targets 文件, 构建目录里没有)
+  set(_dir "${_mediaxx_dep_prefix}/pkg/${pkg}/lib/cmake/${pkg}")
+  file(MAKE_DIRECTORY "${_dir}")
+  file(WRITE "${_dir}/${pkg}Config.cmake"
+"# 由 mediaxx/src/CMakeLists.txt 生成: 源码树里已建好目标, 这里只声明包可用\n"
+"if (NOT TARGET ${target})\n"
+"  message(FATAL_ERROR \"[mediaxx] 依赖 ${pkg} 的目标 ${target} 不存在 (FetchContent 没有生效?)\")\n"
+"endif ()\n"
+"set(${pkg}_FOUND TRUE)\n")
+endfunction()
+
+_mediaxx_write_dep_config(fmt      "fmt::fmt")
+_mediaxx_write_dep_config(simdjson "simdjson::simdjson")
+_mediaxx_write_dep_config(uchardet "uchardet::libuchardet")
+_mediaxx_write_dep_config(iconv    "Iconv::iconv")
+_mediaxx_write_dep_config(html2md  "html2md")
+# cxx_utilxx 用 find_package(cxx_utilxx_base) 找依赖库本体; 这里是同一个工程的
+# add_subdirectory, 目标已经存在, 缺的只是一个能命中的包声明
+_mediaxx_write_dep_config(cxx_utilxx_base "cxx_utilxx_base_static")
+list(PREPEND CMAKE_PREFIX_PATH
+  "${_mediaxx_dep_prefix}/pkg/fmt"
+  "${_mediaxx_dep_prefix}/pkg/simdjson"
+  "${_mediaxx_dep_prefix}/pkg/uchardet"
+  "${_mediaxx_dep_prefix}/pkg/iconv"
+  "${_mediaxx_dep_prefix}/pkg/html2md"
+  "${_mediaxx_dep_prefix}/pkg/cxx_utilxx_base"
+)
+
+# ---- 依赖库本体 ----
+# 依赖库的源码需要异常与 RTTI, 而 mediaxx 自己的目标要 -fno-exceptions/-fno-rtti:
+# 配置 flags 按目录作用域生效, 进依赖段前临时去掉这两项, 出依赖段后恢复
+# (mediaxx 自己的目标在恢复之后创建, 仍是不带异常与 RTTI 的写法)。
+foreach (_cfg "" _DEBUG _RELEASE _PROFILE _RELWITHDEBINFO _MINSIZEREL)
+  set(_mediaxx_saved_flags_${_cfg} "${CMAKE_CXX_FLAGS${_cfg}}")
+  string(REPLACE "-fno-exceptions" "" _mediaxx_flags "${CMAKE_CXX_FLAGS${_cfg}}")
+  string(REPLACE "-fno-rtti"       "" _mediaxx_flags "${_mediaxx_flags}")
+  set(CMAKE_CXX_FLAGS${_cfg} "${_mediaxx_flags}")
+endforeach ()
+
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third_party/cxx_utilxx_base"
+                 "${_mediaxx_dep_prefix}/cxx_utilxx_base")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third_party/cxx_utilxx"
+                 "${_mediaxx_dep_prefix}/cxx_utilxx")
+
+foreach (_cfg "" _DEBUG _RELEASE _PROFILE _RELWITHDEBINFO _MINSIZEREL)
+  set(CMAKE_CXX_FLAGS${_cfg} "${_mediaxx_saved_flags_${_cfg}}")
+  unset(_mediaxx_saved_flags_${_cfg})
+endforeach ()
+unset(_mediaxx_flags)
+unset(_cfg)
 
 # - .vscode/c_cpp_properties.json 默认取 android
 # - 两种模式，动态链接 ffmpeg 和 静态链接 ffmpeg
@@ -344,10 +472,8 @@ endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
-include_directories(${simdjson_SOURCE_DIR}/include/)
-include_directories(${fmt_SOURCE_DIR}/include/)
-include_directories(${UCHARDET_INSTALL_DIR}/include/)
-include_directories(${LIBICONV_INSTALL_DIR}/include/)
+# 依赖库 (fmt / simdjson / uchardet / iconv / cxx_utilxx_base / cxx_utilxx) 的 include
+# 目录由它们自己的目标接口传递, 这里只列本工程的目录
 include_directories(${vulkan_INCLUDE_DIR})
 include_directories(${third_party_DIR})
 include_directories(${ffmpeg_mpv_INCLUDE_DIR})
@@ -366,31 +492,20 @@ add_library(mediaxx SHARED
   ${mediaxx_EXPORT_DEF}
 )
 
-if (DEFINED LUMENXX_BUILD_TYPE)
-  add_dependencies(mediaxx iconv_repo)
-  target_link_directories(mediaxx PUBLIC 
-    ${UCHARDET_INSTALL_DIR}/lib
-    ${LIBICONV_INSTALL_DIR}/lib
-  )
-endif ()
-
 target_link_directories(mediaxx PUBLIC 
   ${ffmpeg_mpv_BINARY_DIR}
-  ${simdjson_INSTALL_DIR}
-  ${fmt_INSTALL_DIR}
 )
 
-set(UCHARDET_LIB_TARGET uchardet)
-if (TARGET libuchardet)
-  set(UCHARDET_LIB_TARGET libuchardet)
-endif()
-
+# 基础工具库 (日志 / 字符串与编码 / JSON / 取消令牌) 与网络散列库。
+# 它们的依赖 (fmt / simdjson / uchardet / iconv / Boost / OpenSSL / html2md)
+# 都是 PUBLIC 传递; fmt 与 simdjson 再显式列一次, 因为 mediaxx 自己的代码
+# 直接 include 它们的头 (media_info / chorus_analyse 用 simdjson 拼 JSON)。
 target_link_libraries(mediaxx PUBLIC
   ${ffmpeg_mpv_LIBRARIES}
-  iconv
+  cxx_utilxx_base_static
+  cxx_utilxx_static
   fmt::fmt
-  simdjson
-  ${UCHARDET_LIB_TARGET}
+  simdjson::simdjson
 )
 
 target_compile_options(mediaxx PRIVATE 

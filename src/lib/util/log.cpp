@@ -1,124 +1,40 @@
-#include "log.h"
-#include "fmt/format.h"
-#include <ctime>
+#include "util/log.h"
+#include <memory>
 
-using namespace mediaxx;
+// 调试构建: 把 cxx_utilxx_base 的日志输出接到 stderr (与之前直接写 stderr 的表观一致)。
+// 发布/性能构建里 XX_LOG* 是空宏, 不会有日志进来, sink 也不注册。
+#ifdef LUMENXX_BUILD_TYPE
 
-#if IS_LINUX_D
-#include <csignal>
-#include <execinfo.h>
+namespace {
 
-static std::string _exe_path{};
+    /// 日志输出: onLog 在后台线程里串行调用, 这里直接写 stderr
+    class StderrLogSink final : public utilxx_base::ThreadedLogSink {
+    public:
 
-void mediaxx::logxx::printStack() {
-
-#define innerPrintToConsoleAndFile_d(str, ...) printf(str, ##__VA_ARGS__);
-
-    {
-        char*  buffer[64];
-        char** strings = nullptr;
-
-        auto size = backtrace((void**)buffer, 64);
-
-        innerPrintToConsoleAndFile_d("======= Dump stack start =======\n");
-        {
-            strings = backtrace_symbols((void**)buffer, size);
-            if (strings == nullptr) {
-                innerPrintToConsoleAndFile_d("backtrace_symbols return nullptr");
-            }
+        ~StderrLogSink() override {
+            // 必须在本类析构里停线程: 基类析构时虚表已切到基类,
+            // 线程再调 onLog 就是纯虚调用 (进程退出瞬间最容易触发)
+            shutdownThread();
         }
-        for (int i = 0; i < size; i++) {
-            if (nullptr == strings[i]) {
-                innerPrintToConsoleAndFile_d("[%02d] %p\n", i, buffer[i]);
-            } else {
-                innerPrintToConsoleAndFile_d("[%02d] %s\n", i, strings[i]);
-            }
-            if (buffer[i] != NULL) {
-                char addr2line_cmd[256];
-                sprintf(addr2line_cmd, "addr2line -f -e %s %p", _exe_path.c_str(), buffer[i]);
-                FILE* addr2line_fp = popen(addr2line_cmd, "r");
-                if (addr2line_fp != NULL) {
-                    char line[256]{};
-                    while (fgets(line, sizeof(line), addr2line_fp) != NULL) {
-                        innerPrintToConsoleAndFile_d("%s", line);
-                    }
-                    pclose(addr2line_fp);
-                }
-            } else {
-                innerPrintToConsoleAndFile_d("(unknown)\n");
-            }
+
+    protected:
+
+        void onLog(const utilxx_base::LogEntry& entry) override {
+            std::cerr << entry.message << std::endl;
         }
-        innerPrintToConsoleAndFile_d("======= Dump stack end =======\n");
-        free(strings);
-    }
-#undef innerPrintToConsoleAndFile_d
-}
+    };
 
-void signal_handler(int signo) {
-    const std::string filename = fmt::format("crash-{}.log", std::time(nullptr));
+    /// 启动时把 sink 注册进全局分发器; 分发器只持 weak_ptr, 退出时不需要反注册
+    struct SinkInstaller {
+        std::shared_ptr<StderrLogSink> sink = std::make_shared<StderrLogSink>();
 
-#define innerPrintToConsoleAndFile_d(fp, str, ...) \
-    printf(str, ##__VA_ARGS__);                    \
-    fprintf(fp, str, ##__VA_ARGS__);
-
-    {
-        char*  buffer[64];
-        char** strings = nullptr;
-
-        auto size = backtrace((void**)buffer, 64);
-
-        FILE* fp = fopen(filename.c_str(), "w");
-        if (fp != NULL) {
-            innerPrintToConsoleAndFile_d(fp, "\n======= xx catch signal %d =======\n", signo);
-            innerPrintToConsoleAndFile_d(fp, "======= Dump stack start =======\n");
-            {
-                strings = backtrace_symbols((void**)buffer, size);
-                if (strings == nullptr) {
-                    innerPrintToConsoleAndFile_d(fp, "backtrace_symbols return nullptr");
-                }
-            }
-            for (int i = 0; i < size; i++) {
-                if (nullptr == strings[i]) {
-                    innerPrintToConsoleAndFile_d(fp, "[%02d] %p\n", i, buffer[i]);
-                } else {
-                    innerPrintToConsoleAndFile_d(fp, "[%02d] %s\n", i, strings[i]);
-                }
-                if (buffer[i] != NULL) {
-                    char addr2line_cmd[256];
-                    sprintf(addr2line_cmd, "addr2line -f -e %s %p", _exe_path.c_str(), buffer[i]);
-                    FILE* addr2line_fp = popen(addr2line_cmd, "r");
-                    if (addr2line_fp != NULL) {
-                        char line[256]{};
-                        while (fgets(line, sizeof(line), addr2line_fp) != NULL) {
-                            innerPrintToConsoleAndFile_d(fp, "%s", line);
-                        }
-                        pclose(addr2line_fp);
-                    }
-                } else {
-                    innerPrintToConsoleAndFile_d(fp, "(unknown)\n");
-                }
-            }
-            innerPrintToConsoleAndFile_d(fp, "======= Dump stack end =======\n");
-            fclose(fp);
-            free(strings);
+        SinkInstaller() {
+            utilxx_base::LogDispatcher::instance().addSink(sink);
         }
-    }
-    printf("\n# See file: %s\n", filename.c_str());
-    signal(signo, SIG_DFL);
-    raise(signo);
-#undef innerPrintToConsoleAndFile_d
-}
+    };
 
-void mediaxx::logxx::signalError(std::string_view exepath) {
-    _exe_path = exepath;
-    printf("# Signal error handler: %s\n", exepath.data());
-    signal(SIGSEGV, signal_handler);
-}
+    SinkInstaller g_sinkInstaller;
 
-#else
+} // namespace
 
-void mediaxx::logxx::printStack() {}
-
-void mediaxx::logxx::signalError(std::string_view exepath) {}
-
-#endif
+#endif // LUMENXX_BUILD_TYPE

@@ -12,3 +12,15 @@
 [submodule "src/third_party/uchardet"]
 	path = src/third_party/uchardet
 	url = https://gitlab.freedesktop.org/uchardet/uchardet
+[submodule "src/third_party/cxx_utilxx_base"]
+	path = src/third_party/cxx_utilxx_base
+	url = https://github.com/coolight7/cxx_utilxx_base
+[submodule "src/third_party/cxx_utilxx"]
+	path = src/third_party/cxx_utilxx
+	url = https://github.com/coolight7/cxx_utilxx
+[submodule "src/third_party/libiconv-native"]
+	path = src/third_party/libiconv-native
+	url = https://github.com/coolight7/libiconv-native
+[submodule "src/third_party/html2md"]
+	path = src/third_party/html2md
+	url = https://github.com/coolight7/html2md
