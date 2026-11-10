@@ -6,6 +6,10 @@
 * 新增歌名/歌手智能识别：`mediaxx_analyse_media_name`、`mediaxx_slice_song_artist`、
   `mediaxx_create_lyric_search_str`、`mediaxx_get_avail_song_info`、`mediaxx_check_avail_lyric_line`、
   `mediaxx_get_artist_aliases`
+* 智能识别的查表与切分改用 `string_view`：别名表 / 无效词表能直接用视图查找，不需要为每次查找构造临时串；
+  小写转换改为查 BMP 表
+* 数据表生成：字符照原样写（空格、零宽字符不再转成 `\uXXXX`），只保留双引号、反斜杠、
+  控制字符与非 BMP 字符的转义
 * 新增与 Dart 实现的一致性用例（`src/test/data/analyse/`，`test()` 开头运行）
 
 ## 0.0.1

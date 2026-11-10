@@ -123,65 +123,8 @@ List<String> _strings(Map<String, Object?> data, String key) {
 }
 
 // ===================================================================
-// 字面量：能看清的字符直接写，看不见的写成转义
+// 字面量：字符照原样写，只有写不成或会破坏源码的才转义
 // ===================================================================
-
-/// 可以直接写进 C++ 源码的码点区间（能看清的字母、文字与标点）
-///
-/// 不在这些区间里的（空白、格式字符、组合附加符号、表情符号、非 BMP 字符……）
-/// 一律写成 `\uXXXX` / `\UXXXXXXXX`，免得源文件里出现看不见、宽度不一致的字符。
-const List<List<int>> _readableRanges = <List<int>>[
-  <int>[0x0021, 0x007E], // ASCII 可见字符（空格另外转义）
-  <int>[0x00A1, 0x00AC], // Latin-1 标点与字母（跳过软连字符 U+00AD）
-  <int>[0x00AE, 0x00FF], // Latin-1 字母与符号
-  <int>[0x0100, 0x02FF], // 拉丁扩展、国际音标、修饰字母
-  <int>[0x0370, 0x03FF], // 希腊字母
-  <int>[0x0400, 0x04FF], // 西里尔字母
-  <int>[0x0531, 0x058F], // 亚美尼亚字母
-  <int>[0x05D0, 0x05EA], // 希伯来字母
-  <int>[0x0620, 0x064A], // 阿拉伯字母（跳过读音符号）
-  <int>[0x0660, 0x06FF], // 阿拉伯数字与补充字母
-  <int>[0x0900, 0x0DFF], // 印度诸文字
-  <int>[0x0E00, 0x0E7F], // 泰文
-  <int>[0x1100, 0x11FF], // 谚文字母
-  <int>[0x1E00, 0x1EFF], // 拉丁扩展附加
-  <int>[0x2010, 0x2027], // 破折号、引号、省略号
-  <int>[0x2030, 0x205E], // 千分号、角分号等可见标点
-  <int>[0x20A0, 0x20BF], // 货币符号
-  <int>[0x2100, 0x214F], // 字母式符号（™、№）
-  <int>[0x2190, 0x21FF], // 箭头
-  <int>[0x2460, 0x24FF], // 带圈字符
-  <int>[0x2500, 0x257F], // 制表符号
-  <int>[0x25A0, 0x27BF], // 几何图形、杂项符号、装饰符号
-  <int>[0x2E80, 0x2EFF], // CJK 部首
-  <int>[0x3001, 0x303F], // CJK 标点（U+3000 全角空格另外转义）
-  <int>[0x3040, 0x30FF], // 平假名、片假名
-  <int>[0x3100, 0x318F], // 注音字母、谚文兼容字母
-  <int>[0x31F0, 0x31FF], // 片假名扩展
-  <int>[0x3400, 0x4DBF], // CJK 扩展 A
-  <int>[0x4E00, 0x9FFF], // CJK 基本区
-  <int>[0xAC00, 0xD7AF], // 谚文音节
-  <int>[0xF900, 0xFAFF], // CJK 兼容表意文字
-  <int>[0xFE50, 0xFE6F], // 小写变体
-  <int>[0xFF01, 0xFFEF], // 全角与半角形式
-];
-
-bool _isReadable(int codePoint) {
-  int low = 0;
-  int high = _readableRanges.length - 1;
-  while (low <= high) {
-    final int middle = (low + high) >> 1;
-    final List<int> range = _readableRanges[middle];
-    if (codePoint < range[0]) {
-      high = middle - 1;
-    } else if (codePoint > range[1]) {
-      low = middle + 1;
-    } else {
-      return true;
-    }
-  }
-  return false;
-}
 
 /// 被转义的码点及次数，生成结束时打印出来供检查
 final Map<int, int> _escaped = <int, int>{};
@@ -213,6 +156,12 @@ String _cppString(String text) {
 }
 
 /// 单个码点的写法
+///
+/// 生成的头文件只给程序读、人不改，所以字符一律照原样写（空格、零宽字符都照写），
+/// 只有这几种情况写成转义：
+/// - 双引号与反斜杠是 C++ 字面量的语法字符；
+/// - 控制字符直接写会破坏源码（换行、制表符等）；
+/// - 非 BMP 字符写成 `\UXXXXXXXX`：不同编译器对 `u"..."` 里直接写这类字符的接受程度不一致。
 String _literalUnit(int codePoint) {
   if (0x22 == codePoint) {
     return r'\"';
@@ -220,25 +169,52 @@ String _literalUnit(int codePoint) {
   if (0x5C == codePoint) {
     return r'\\';
   }
-  if (_isReadable(codePoint)) {
-    return String.fromCharCode(codePoint);
+  if (codePoint < 0x20 || 0x7F == codePoint) {
+    _escaped[codePoint] = (_escaped[codePoint] ?? 0) + 1;
+    return '\\u${codePoint.toRadixString(16).toUpperCase().padLeft(4, '0')}';
   }
-  _escaped[codePoint] = (_escaped[codePoint] ?? 0) + 1;
   if (codePoint > 0xFFFF) {
+    _escaped[codePoint] = (_escaped[codePoint] ?? 0) + 1;
     return '\\U${codePoint.toRadixString(16).toUpperCase().padLeft(8, '0')}';
   }
-  return '\\u${codePoint.toRadixString(16).toUpperCase().padLeft(4, '0')}';
+  return String.fromCharCode(codePoint);
 }
 
-/// 注释里显示一个码点（看不见的照旧写成转义）
+/// 注释里显示一个码点
+///
+/// 注释是给人看的，看不见的字符直接写会让这一行读不出来，所以写成 `U+XXXX`；
+/// 能看清的字符（含各类文字与标点）照原样写。
 String _depictUnit(int codePoint) {
-  if (0x20 == codePoint) {
-    return r'\u0020';
-  }
-  if (codePoint > 0xFFFF || false == _isReadable(codePoint)) {
+  if (_isInvisible(codePoint)) {
     return 'U+${codePoint.toRadixString(16).toUpperCase().padLeft(4, '0')}';
   }
   return String.fromCharCode(codePoint);
+}
+
+/// 注释里不适合直接显示的码点：控制字符、空白、零宽与双向控制字符、孤立代理、非 BMP 字符
+bool _isInvisible(int codePoint) {
+  if (codePoint < 0x20 || 0x7F == codePoint) {
+    return true; // 控制字符
+  }
+  if (codePoint >= 0xD800 && codePoint <= 0xDFFF) {
+    return true; // 孤立代理码元（kCodeUnitShift 的键里有）：写成字符会被换成 U+FFFD
+  }
+  if (0x20 == codePoint || 0xA0 == codePoint) {
+    return true; // 空格与不换行空格
+  }
+  if (codePoint >= 0x2000 && codePoint <= 0x200F) {
+    return true; // 各种宽度的空格与零宽字符
+  }
+  if (codePoint >= 0x2028 && codePoint <= 0x202F) {
+    return true; // 行分隔符与双向控制字符
+  }
+  if (codePoint >= 0x205F && codePoint <= 0x206F) {
+    return true; // 数学空格与看不见的运算符
+  }
+  if (0x3000 == codePoint || 0xFEFF == codePoint) {
+    return true; // 全角空格与 BOM
+  }
+  return codePoint > 0xFFFF;
 }
 
 String _hex(int value, int width) =>
@@ -266,6 +242,8 @@ String _buildHeader(
 //   * kUnavailWord / kUnavailTagWord* / kNotAvail*：无效词与可用性判断用到的词表。
 //
 // 数据来源与重新生成的步骤见 script/README.md。
+//
+// 字符串里的字符照原样写（空格也照写），只有双引号、反斜杠、控制字符与非 BMP 字符写成转义。
 //
 // 排版由生成器决定，整个文件不参与 clang-format（结尾不写 `on`，否则 clang-format 会把
 // 最后一行误报成未格式化）。
