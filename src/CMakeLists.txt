@@ -3,6 +3,9 @@
 # the plugin to fail to compile for some customers of the plugin.
 cmake_minimum_required(VERSION 3.10)
 cmake_policy(SET CMP0097 NEW)
+# 依赖库在子目录里创建目标，mediaxx 需要给它们补链接项（静态 OpenSSL 的依赖），
+# CMP0079 NEW 才允许在父目录对其它目录创建的目标调用 target_link_libraries
+cmake_policy(SET CMP0079 NEW)
 
 project(mediaxx_library VERSION 0.0.1 LANGUAGES C CXX)
 
@@ -230,7 +233,11 @@ FetchContent_Declare(
 )
 block()
   set(CHECK_SSE2            ON)
-  set(BUILD_BINARY          OFF)
+  # uchardet 里写的是 cmake_minimum_required(VERSION 3.5)，CMP0077 还是 OLD：
+  # option() 会丢掉同名的普通变量、改用默认值(ON)，于是它会去建 uchardet 命令行程序，
+  # 这个名字又会和 pkg-config 里裸写的 -luchardet 撞上（CMake 优先当成目标）。
+  # 用 CACHE 形式才能真正关掉。
+  set(BUILD_BINARY          OFF CACHE BOOL "" FORCE)
   set(BUILD_SHARED_LIBS     OFF)
   set(BUILD_STATIC_LIBS     ON )
   FetchContent_MakeAvailable(uchardet)
@@ -239,6 +246,12 @@ endblock()
 FetchContent_Declare(
   iconv
   SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libiconv-native/"
+  # 只用它建出来的目标，不要把它的 install() 规则带进来：libiconv-native 会装
+  # libiconv.a / libcharset.a 到 CMAKE_INSTALL_PREFIX，覆盖宿主工程装在同一个前缀
+  # 里的 GNU libiconv。它的 libiconv.a 要同时链 libcharset.a 才能解析
+  # locale_charset，覆盖之后别的包写 -liconv 就链不过（ffmpeg 的 pkg-config
+  # 链接测试就是这么失败的）。
+  EXCLUDE_FROM_ALL
 )
 block()
   set(ICONV_ENABLE_EXTRA    OFF)
@@ -260,6 +273,17 @@ block()
   set(BUILD_SHARED_LIBS       OFF)
   FetchContent_MakeAvailable(html2md)
 endblock()
+
+# cxx_utilxx 里写的是 #include "html2md/html2md.h"，那是 html2md 安装后的布局
+# (<prefix>/include/html2md/html2md.h)。这里用源码 add_subdirectory 引入，
+# 构建树的头文件根是 third_party/html2md/include，少了 html2md/ 这一层，
+# 所以在构建目录里拼一个同构目录再挂到目标上。
+set(_mediaxx_html2md_shim "${_mediaxx_dep_prefix}/html2md-include")
+file(MAKE_DIRECTORY "${_mediaxx_html2md_shim}/html2md")
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/third_party/html2md/include/"
+     DESTINATION "${_mediaxx_html2md_shim}/html2md")
+target_include_directories(html2md INTERFACE
+  "$<BUILD_INTERFACE:${_mediaxx_html2md_shim}>")
 
 # 源码树里的目标名与安装后 config 的名字不一样, 补别名对齐依赖库的写法
 if (NOT TARGET uchardet::libuchardet AND TARGET libuchardet)
@@ -314,10 +338,46 @@ foreach (_cfg "" _DEBUG _RELEASE _PROFILE _RELWITHDEBINFO _MINSIZEREL)
   set(CMAKE_CXX_FLAGS${_cfg} "${_mediaxx_flags}")
 endforeach ()
 
+
+# 依赖库 (cxx_utilxx) 用 ${XX_INSTALL_DIR}/lib 作为链接目录、${XX_INSTALL_DIR}/include
+# 作为系统头目录，这个变量本来由主工程传下来。mediaxx 自己就是主工程，不设置时它会拼出
+# /lib、/include，链接器就会去宿主机目录里找 -lc++/-lm，把宿主机的目标文件链进来
+# （ld.lld 报 "unknown file type: xxx.cpp.o"）。这里指向本工程的安装前缀。
+if (NOT DEFINED XX_INSTALL_DIR)
+  set(XX_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
+endif ()
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third_party/cxx_utilxx_base"
                  "${_mediaxx_dep_prefix}/cxx_utilxx_base")
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/third_party/cxx_utilxx"
                  "${_mediaxx_dep_prefix}/cxx_utilxx")
+
+# Windows 下 export.h 只有两个宏可选：CXX_UTILXX*_EXPORTS(dllexport) /
+# CXX_UTILXX*_STATIC(空)，都没定义时退化成 dllimport。依赖库的 obj 目标
+# (GCC/Clang 路径下 shared 与 static 共用一份对象) 自己不带这两个宏，
+# 编译 regex.cpp 里类的静态成员定义会直接报错
+# "definition of dllimport static field not allowed"。mediaxx 用的是静态库，
+# 这里按静态语义给对象库补上宏。
+if (XX_IS_MSVC_D)
+elseif (TARGET cxx_utilxx_base_obj)
+  target_compile_definitions(cxx_utilxx_base_obj PRIVATE CXX_UTILXX_BASE_STATIC=1)
+endif ()
+if (XX_IS_MSVC_D)
+elseif (TARGET cxx_utilxx_obj)
+  target_compile_definitions(cxx_utilxx_obj PRIVATE CXX_UTILXX_STATIC=1)
+endif ()
+
+# OpenSSL 用的是静态库 (libssl.a / libcrypto.a)，CMake 的 OpenSSL::SSL / OpenSSL::Crypto
+# 导入目标不会带上它自己的依赖，cxx_utilxx 单独成库时就会缺符号：
+# zlib (inflate/deflate)、brotli (Brotli*)、Windows 证书库 (CertOpenSystemStoreW 等)。
+# 这里把这几项补给依赖库目标，Windows 静态链接 OpenSSL 时才链得上。
+if (IS_WIN_D AND TARGET cxx_utilxx_shared AND TARGET cxx_utilxx_static)
+  set(_mediaxx_openssl_extra_libs z zstd brotlienc brotlidec brotlicommon ws2_32 gdi32 crypt32 advapi32)
+  foreach (_t cxx_utilxx_shared cxx_utilxx_static)
+    target_link_libraries(${_t} PUBLIC ${_mediaxx_openssl_extra_libs})
+  endforeach ()
+  unset(_mediaxx_openssl_extra_libs)
+  unset(_t)
+endif ()
 
 foreach (_cfg "" _DEBUG _RELEASE _PROFILE _RELWITHDEBINFO _MINSIZEREL)
   set(CMAKE_CXX_FLAGS${_cfg} "${_mediaxx_saved_flags_${_cfg}}")
@@ -395,6 +455,23 @@ if (STATIC_LINK_FFMPEG)
     ${SWRESAMPLE_LIBRARY_DIRS}
     ${SWSCALE_LIBRARY_DIRS}
   )
+  # FindPkgConfig 在设置了 CMAKE_SYSROOT 时会把 -L 路径里的 sysroot 前缀去掉，
+  # 于是 <sysroot>/lib 变成 /lib。原样交给 target_link_directories 的话，链接器会先在
+  # 宿主机的 /lib 里找 -lm/-lstdc++ 这些库，把宿主机的目标文件链进来
+  # （ld.lld 报 "unknown file type: xxx.cpp.o"）。这里把 sysroot 前缀补回来。
+  if (CMAKE_SYSROOT)
+    set(_mediaxx_link_dirs "")
+    foreach (_d ${ffmpeg_mpv_BINARY_DIR})
+      if (NOT _d MATCHES "^${CMAKE_SYSROOT}")
+        set(_d "${CMAKE_SYSROOT}${_d}")
+      endif ()
+      list(APPEND _mediaxx_link_dirs "${_d}")
+    endforeach ()
+    set(ffmpeg_mpv_BINARY_DIR "${_mediaxx_link_dirs}")
+    unset(_mediaxx_link_dirs)
+    unset(_d)
+  endif ()
+
   set(ffmpeg_mpv_LIBRARIES 
     ${LIBMPV_LIBRARIES}
     avcodec
@@ -507,6 +584,12 @@ target_link_libraries(mediaxx PUBLIC
   fmt::fmt
   simdjson::simdjson
 )
+
+if (IS_WIN_D)
+  # libmpv 的 win32 计时器用 timeBeginPeriod/timeEndPeriod (winmm)，静态链接时
+  # 由使用方补上；mpv 的 pkg-config 里有 -lwinmm，但 CMake 组装链接项时可能丢掉
+  target_link_libraries(mediaxx PRIVATE winmm)
+endif ()
 
 target_compile_options(mediaxx PRIVATE 
     ${ffmpeg_mpv_CFLAGS}

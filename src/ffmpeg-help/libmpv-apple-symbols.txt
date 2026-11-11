@@ -12,6 +12,14 @@
 -undefined _mediaxx_get_available_video_filter_list
 -undefined _mediaxx_get_audio_visualization
 -undefined _mediaxx_convert_char_encoding
+-undefined _mediaxx_analyse_audio_chorus
+-undefined _mediaxx_analyse_audio_chorus_structure
+-undefined _mediaxx_analyse_media_name
+-undefined _mediaxx_slice_song_artist
+-undefined _mediaxx_create_lyric_search_str
+-undefined _mediaxx_get_avail_song_info
+-undefined _mediaxx_check_avail_lyric_line
+-undefined _mediaxx_get_artist_aliases
 
 -undefined _mpv_abort_async_command
 -undefined _mpv_client_api_version
