@@ -6,7 +6,7 @@
 //   副歌分析、歌名识别这类热路径不再格式化字符串;
 // - 保留 mediaxx 专用的 XX_LOGE_AV (ffmpeg 错误串) 与 mediaxx::util 命名空间。
 #include "fmt/format.h"
-#include "util/utilxx.h"
+#include "util/av_util.h"
 #include "utilxx_base/log.h"
 #include <iostream>
 #include <string_view>

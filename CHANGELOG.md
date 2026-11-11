@@ -3,7 +3,9 @@
 * 工具函数改为使用公共基础库：日志、字符串 / UTF-8 / 编码转换、UTF-16 互转、base64 来自
   `cxx_utilxx_base`（`utilxx_base`），不再在本仓库各存一份；`string_util.cpp` 删除
 * `util` 目录里的命名空间统一成 `mediaxx::util`（原先是 `mediaxx::utilxx` / `mediaxx::stringxx` /
-  `mediaxx::logxx` 三个），调用点跟着改名；函数名与头文件路径不变
+  `mediaxx::logxx` 三个），调用点跟着改名，函数名不变
+* `util/utilxx.h` 改名 `util/av_util.h`（ffmpeg 错误码 / 时间戳转字符串），只包了头文件、
+  没有任何实现的 `util/utilxx.cpp` 删除
 * 构建接入 `cxx_utilxx_base` / `cxx_utilxx`（`src/third_party/` 子模块）：
   fmt / simdjson / uchardet / iconv / html2md 改由本工程一起构建（iconv 换成 `libiconv-native`，
   不再下载 autotools 源码），Boost 用 `MEDIAXX_BOOST_INCLUDE` 指定的头文件，OpenSSL 用系统或

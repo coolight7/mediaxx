@@ -4,7 +4,7 @@ extern "C" {
 }
 
 #include "util/log.h"
-#include "util/utilxx.h"
+#include "util/av_util.h"
 #include <jni.h>
 
 extern "C" JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {

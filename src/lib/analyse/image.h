@@ -22,7 +22,7 @@ extern "C" {
 #include "simdjson.h"
 #include "util/log.h"
 #include "util/string_util.h"
-#include "util/utilxx.h"
+#include "util/av_util.h"
 
 namespace mediaxx {
     // 常见图片格式的文件签名

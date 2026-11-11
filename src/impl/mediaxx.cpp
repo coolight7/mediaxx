@@ -10,7 +10,7 @@
 #include "simdjson.h"
 #include "util/log.h"
 #include "util/string_util.h"
-#include "util/utilxx.h"
+#include "util/av_util.h"
 #include <cstdlib>
 #include <iostream>
 #include <string>

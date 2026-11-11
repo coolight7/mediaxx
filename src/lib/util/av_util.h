@@ -1,5 +1,9 @@
 #pragma once
 
+// ffmpeg 的错误码 / 时间戳转字符串
+// - ffmpeg 自己的 av_err2str / av_ts2str 是宏, 里面用了复合字面量 (C 的写法),
+//   C++ 下不能直接用, 所以这里先 #undef 再给同名函数
+// - 返回 std::string, 直接拿去拼日志, 不用管缓冲区
 extern "C" {
 #include "libavutil/error.h"
 #include "libavutil/timestamp.h"
