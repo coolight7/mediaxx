@@ -65,7 +65,7 @@ void test() {
             file.read(buf.data(), size);
 
             std::cout << "预期字符编码: " << item.second << std::endl;
-            auto [isSucc, result] = mediaxx::stringxx::autoConvertToUtf8(buf, encoding);
+            auto [isSucc, result] = mediaxx::util::autoConvertToUtf8(buf, encoding);
             if (isSucc) {
                 std::cout << item.first << " - " << encoding << std::endl
                           << result.value_or("[crude]") << std::endl
@@ -80,7 +80,7 @@ void test() {
 
         {
             auto [isSucc, result]
-                = mediaxx::stringxx::autoConvertToUtf8("Hello \xB0\xA1\xC4\xE3", encoding);
+                = mediaxx::util::autoConvertToUtf8("Hello \xB0\xA1\xC4\xE3", encoding);
             if (isSucc) {
                 std::cout << "GBK: - " << encoding << std::endl
                           << result.value_or("[crude]") << std::endl;
@@ -90,7 +90,7 @@ void test() {
             }
         }
         {
-            auto [isSucc, result] = mediaxx::stringxx::autoConvertToUtf8("Hello 世界", encoding);
+            auto [isSucc, result] = mediaxx::util::autoConvertToUtf8("Hello 世界", encoding);
             if (isSucc) {
                 std::cout << "UTF8: - " << encoding << std::endl
                           << result.value_or("[crude]") << std::endl;
@@ -108,12 +108,12 @@ void test() {
     }
 
     {
-        assert(mediaxx::stringxx::utf8IsAvail("\0") == false);
-        assert(mediaxx::stringxx::utf8IsAvail("1"));
-        assert(mediaxx::stringxx::utf8IsAvail("ww 测试 cc"));
-        assert(mediaxx::stringxx::utf8IsAvail("ww 测试 cc �") == false);
+        assert(mediaxx::util::utf8IsAvail("\0") == false);
+        assert(mediaxx::util::utf8IsAvail("1"));
+        assert(mediaxx::util::utf8IsAvail("ww 测试 cc"));
+        assert(mediaxx::util::utf8IsAvail("ww 测试 cc �") == false);
         assert(
-            mediaxx::stringxx::utf8IsAvail(std::string_view{
+            mediaxx::util::utf8IsAvail(std::string_view{
                 std::vector<char>{-49, -7, -43, -59}
                 .data(),
                 4
@@ -121,13 +121,13 @@ void test() {
             == false
         );
         // 多字节后续字节格式错误，后续字节固定为 10xxxxxx
-        assert(mediaxx::stringxx::utf8IsAvail("12 \xE4\x28\x01 fd") == false);
+        assert(mediaxx::util::utf8IsAvail("12 \xE4\x28\x01 fd") == false);
         // 非最短编码检查
-        assert(mediaxx::stringxx::utf8IsAvail("12 \xE0\x80\xAF fd") == false);
-        assert(mediaxx::stringxx::utf8IsAvail("12 \xC0\x80 fd") == false);
+        assert(mediaxx::util::utf8IsAvail("12 \xE0\x80\xAF fd") == false);
+        assert(mediaxx::util::utf8IsAvail("12 \xC0\x80 fd") == false);
         // 5、6字节编码无效
-        assert(mediaxx::stringxx::utf8IsAvail("12 \xF8\xF7 fd") == false);
-        assert(mediaxx::stringxx::utf8IsAvail("12 \xFC\xFD fd") == false);
+        assert(mediaxx::util::utf8IsAvail("12 \xF8\xF7 fd") == false);
+        assert(mediaxx::util::utf8IsAvail("12 \xFC\xFD fd") == false);
     }
 
     mediaxx_set_log_level(AV_LOG_TRACE);
@@ -467,7 +467,7 @@ void test() {
 
 int main(int argn, char** argv) {
 #if IS_LINUX_D
-    mediaxx::logxx::signalError(argv[0]);
+    mediaxx::util::signalError(argv[0]);
 #endif
     std::cout << "======= Test Start =======" << std::endl;
     test();

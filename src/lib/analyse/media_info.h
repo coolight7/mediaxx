@@ -102,7 +102,7 @@ namespace mediaxx {
                 item.setLog(fmt::format(
                     "无法打开文件: {}, 错误: {}",
                     item.filepath,
-                    utilxx::av_err2str(ret)
+                    util::av_err2str(ret)
                 ));
                 return false;
             }
@@ -111,7 +111,7 @@ namespace mediaxx {
             ret = avformat_find_stream_info(item.fmtCtx, nullptr);
             if (ret < 0) {
                 item.setLog(
-                    fmt::format("无法获取流信息: {} | {}", item.filepath, utilxx::av_err2str(ret))
+                    fmt::format("无法获取流信息: {} | {}", item.filepath, util::av_err2str(ret))
                 );
                 return false;
             }
@@ -176,9 +176,9 @@ namespace mediaxx {
                             auto value = std::string_view{tag->value};
                             XX_LOGW("tags =============== {} {}", key, value);
                             auto [keyAvail, convertKey]
-                                = mediaxx::stringxx::autoConvertToUtf8(key, true);
+                                = mediaxx::util::autoConvertToUtf8(key, true);
                             auto [valueAvail, convertValue]
-                                = mediaxx::stringxx::autoConvertToUtf8(value, true);
+                                = mediaxx::util::autoConvertToUtf8(value, true);
                             if (false == keyAvail || false == valueAvail) {
                                 // 存在不可用，抛弃这个 kv
                                 continue;
@@ -276,9 +276,9 @@ namespace mediaxx {
                                 auto value = std::string_view{tag->value};
                                 // 与 format 级 tag
                                 auto [keyAvail, convertKey]
-                                    = mediaxx::stringxx::autoConvertToUtf8(key, true);
+                                    = mediaxx::util::autoConvertToUtf8(key, true);
                                 auto [valueAvail, convertValue]
-                                    = mediaxx::stringxx::autoConvertToUtf8(value, true);
+                                    = mediaxx::util::autoConvertToUtf8(value, true);
                                 if (false == keyAvail || false == valueAvail) {
                                     // 存在不可用，抛弃这个 kv
                                     continue;
@@ -524,7 +524,7 @@ namespace mediaxx {
                 auto ret = avcodec_open2(encodeCtx, encoder, NULL);
                 if (ret != 0) {
                     item.setLog(
-                        fmt::format("无法打开JPEG编码器: {}/{}", ret, utilxx::av_err2str(ret))
+                        fmt::format("无法打开JPEG编码器: {}/{}", ret, util::av_err2str(ret))
                     );
                     result = false;
                     break;
@@ -542,7 +542,7 @@ namespace mediaxx {
                 ret = avcodec_send_frame(encodeCtx, frame);
                 if (ret != 0) {
                     item.setLog(
-                        fmt::format("发送帧到编码器失败: {}/{}", ret, utilxx::av_err2str(ret))
+                        fmt::format("发送帧到编码器失败: {}/{}", ret, util::av_err2str(ret))
                     );
                     result = false;
                     break;
@@ -552,7 +552,7 @@ namespace mediaxx {
                 ret = avcodec_receive_packet(encodeCtx, pkt);
                 if (ret != 0) {
                     item.setLog(
-                        fmt::format("从编码器接收包失败: {}/{}", ret, utilxx::av_err2str(ret))
+                        fmt::format("从编码器接收包失败: {}/{}", ret, util::av_err2str(ret))
                     );
                     result = false;
                     break;
@@ -803,7 +803,7 @@ namespace mediaxx {
                 // 复制流参数到解码器上下文
                 int ret = avcodec_parameters_to_context(decCtx, stream->codecpar);
                 if (ret < 0) {
-                    item.setLog(fmt::format("复制流参数失败: {}/{}", ret, utilxx::av_err2str(ret)));
+                    item.setLog(fmt::format("复制流参数失败: {}/{}", ret, util::av_err2str(ret)));
                     result = false;
                     break;
                 }
@@ -817,7 +817,7 @@ namespace mediaxx {
                 // 打开解码器
                 ret = avcodec_open2(decCtx, decoder, nullptr);
                 if (ret != 0) {
-                    item.setLog(fmt::format("无法打开解码器: {}/{}", ret, utilxx::av_err2str(ret)));
+                    item.setLog(fmt::format("无法打开解码器: {}/{}", ret, util::av_err2str(ret)));
                     retryByCodecId = true;
                     result         = false;
                     break;
@@ -835,7 +835,7 @@ namespace mediaxx {
                 ret = avcodec_send_packet(decCtx, pkt);
                 if (ret != 0) {
                     item.setLog(
-                        fmt::format("发送数据包到解码器失败: {}/{}", ret, utilxx::av_err2str(ret))
+                        fmt::format("发送数据包到解码器失败: {}/{}", ret, util::av_err2str(ret))
                     );
                     retryByCodecId = true;
                     result         = false;
@@ -845,7 +845,7 @@ namespace mediaxx {
                 // 接收解码后的帧（封面通常只有一帧）
                 ret = avcodec_receive_frame(decCtx, frame);
                 if (ret != 0) {
-                    item.setLog(fmt::format("接收解码帧失败: {}/{}", ret, utilxx::av_err2str(ret)));
+                    item.setLog(fmt::format("接收解码帧失败: {}/{}", ret, util::av_err2str(ret)));
                     retryByCodecId = true;
                     result         = false;
                     break;

@@ -44,7 +44,7 @@ namespace mediaxx {
                         );
                         result.append_comma();
 
-                        result.append_key_value<"name">(stringxx::toStringNotNull(codec->name));
+                        result.append_key_value<"name">(util::toStringNotNull(codec->name));
                         result.append_comma();
 
                         if (nullptr != codec->long_name) {

@@ -22,7 +22,7 @@ namespace {
 
     /// JSON 输出里的一个字符串字段（UTF-16 结果按 UTF-8 输出）
     void appendStringValue(simdjson::builder::string_builder& sb, std::u16string_view value) {
-        sb.escape_and_append_with_quotes(stringxx::utf16ToUtf8(value));
+        sb.escape_and_append_with_quotes(util::utf16ToUtf8(value));
     }
 
     /// 输出字符串数组字段：`"key":["a","b"]`
@@ -51,7 +51,7 @@ namespace {
         if (nullptr == json) {
             return result;
         }
-        const auto text = stringxx::strTrim(std::string_view{json});
+        const auto text = util::strTrim(std::string_view{json});
         if (text.empty() || text == "null") {
             return result;
         }
@@ -67,7 +67,7 @@ namespace {
         for (const auto& item : array) {
             std::string_view value{};
             if (item.get_string().get(value) == simdjson::SUCCESS) {
-                result.emplace_back(stringxx::utf8ToUtf16(value));
+                result.emplace_back(util::utf8ToUtf16(value));
             }
         }
         return result;
@@ -130,7 +130,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_media_info_malloc(
         auto jsonsb    = mediaxx::MediaInfoReader_c::instance.getInfoMap(item);
         auto pOutput   = std::string_view{pictureOutputPath};
         auto p96Output = std::string_view{picture96OutputPath};
-        *outResult     = mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
+        *outResult     = mediaxx::util::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
 
         if (false == pOutput.empty()) {
             // 读取图片
@@ -195,14 +195,14 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color(
     if (nullptr != data) {
         auto result = mediaxx::analyzePictureColorFromData(data, dataSize, logItem);
         if (nullptr != result) {
-            *outResult = mediaxx::stringxx::stringCopyMalloc(result->toJson().view().value_unsafe())
+            *outResult = mediaxx::util::stringCopyMalloc(result->toJson().view().value_unsafe())
                              .data();
             return 1;
         }
     } else if (nullptr != filepath) {
         auto result = mediaxx::analysePictureColorFromPath(filepath, logItem);
         if (nullptr != result) {
-            *outResult = mediaxx::stringxx::stringCopyMalloc(result->toJson().view().value_unsafe())
+            *outResult = mediaxx::util::stringCopyMalloc(result->toJson().view().value_unsafe())
                              .data();
             return 1;
         }
@@ -233,7 +233,7 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_picture_color_from_decoded_data(
             4
         );
         if (nullptr != result) {
-            *outResult = mediaxx::stringxx::stringCopyMalloc(result->toJson().view().value_unsafe())
+            *outResult = mediaxx::util::stringCopyMalloc(result->toJson().view().value_unsafe())
                              .data();
             return 1;
         }
@@ -295,7 +295,7 @@ FFI_PLUGIN_EXPORT int
         return 0;
     }
     auto [isSucc, result]
-        = mediaxx::stringxx::autoConvertToUtf8(std::string_view{str, dataSize}, true);
+        = mediaxx::util::autoConvertToUtf8(std::string_view{str, dataSize}, true);
     if (isSucc) {
         if (false == result.has_value()) {
             auto resultPtr = (char*)mediaxx_malloc(dataSize + 1);
@@ -316,17 +316,17 @@ FFI_PLUGIN_EXPORT int
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_hwcodec_list() {
     auto jsonsb = mediaxx::CodecInfo_c::findAvailCodec();
-    return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
+    return mediaxx::util::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
 }
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_audio_filter_list() {
     auto jsonsb = mediaxx::FilterInfo_c::findAvailFilter(AVMEDIA_TYPE_AUDIO);
-    return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
+    return mediaxx::util::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
 }
 
 FFI_PLUGIN_EXPORT const char* mediaxx_get_available_video_filter_list() {
     auto jsonsb = mediaxx::FilterInfo_c::findAvailFilter(AVMEDIA_TYPE_VIDEO);
-    return mediaxx::stringxx::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
+    return mediaxx::util::stringCopyMalloc(jsonsb.view().value_unsafe()).data();
 }
 
 FFI_PLUGIN_EXPORT int mediaxx_analyse_audio_chorus(
@@ -367,7 +367,7 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_audio_chorus(
     );
     simdjson::builder::string_builder sb{};
     result.toJson(sb);
-    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    *outResult = mediaxx::util::stringCopyMalloc(sb.view().value_unsafe()).data();
     return 1;
 }
 
@@ -413,7 +413,7 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_audio_chorus_structure(
     }
     simdjson::builder::string_builder sb{};
     structure->toJson(sb);
-    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    *outResult = mediaxx::util::stringCopyMalloc(sb.view().value_unsafe()).data();
     return 1;
 }
 
@@ -428,7 +428,7 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_media_name(
     *outResult            = nullptr;
     const auto artistlist = parseArtistList(artistListJson);
     const auto result     = mediaxx::MediaInfoNameAnalyse_c::instance().getNameArtist(
-        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(name)),
+        mediaxx::util::utf8ToUtf16(mediaxx::util::toStringNotNull(name)),
         artistlist
     );
 
@@ -440,7 +440,7 @@ FFI_PLUGIN_EXPORT int mediaxx_analyse_media_name(
     sb.append_comma();
     appendStringArray(sb, "artists", result.second);
     sb.end_object();
-    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    *outResult = mediaxx::util::stringCopyMalloc(sb.view().value_unsafe()).data();
     return 1;
 }
 
@@ -456,7 +456,7 @@ FFI_PLUGIN_EXPORT int mediaxx_slice_song_artist(
     *outResult = nullptr;
     std::u16string crude{};
     const auto     list = mediaxx::MediaNameAnalyseBase_c::sliceSongArtist(
-        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(artist)),
+        mediaxx::util::utf8ToUtf16(mediaxx::util::toStringNotNull(artist)),
         append,
         0 != weakArtist,
         crude
@@ -470,7 +470,7 @@ FFI_PLUGIN_EXPORT int mediaxx_slice_song_artist(
     sb.append_colon();
     appendStringValue(sb, crude);
     sb.end_object();
-    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    *outResult = mediaxx::util::stringCopyMalloc(sb.view().value_unsafe()).data();
     return 1;
 }
 
@@ -485,8 +485,8 @@ FFI_PLUGIN_EXPORT int mediaxx_create_lyric_search_str(
     assert(nullptr != outLog);
     *outResult        = nullptr;
     const auto result = mediaxx::LyricSearchStrAnalyse_c::instance().createLyricSearchStr(
-        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(name)),
-        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(artist)),
+        mediaxx::util::utf8ToUtf16(mediaxx::util::toStringNotNull(name)),
+        mediaxx::util::utf8ToUtf16(mediaxx::util::toStringNotNull(artist)),
         0 != weakArtist
     );
 
@@ -496,7 +496,7 @@ FFI_PLUGIN_EXPORT int mediaxx_create_lyric_search_str(
     sb.append_colon();
     appendStringValue(sb, result);
     sb.end_object();
-    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    *outResult = mediaxx::util::stringCopyMalloc(sb.view().value_unsafe()).data();
     return 1;
 }
 
@@ -511,11 +511,11 @@ FFI_PLUGIN_EXPORT int mediaxx_get_avail_song_info(
     *outResult = nullptr;
     std::optional<std::u16string> nameValue{};
     if (nullptr != name) {
-        nameValue = mediaxx::stringxx::utf8ToUtf16(name);
+        nameValue = mediaxx::util::utf8ToUtf16(name);
     }
     std::optional<std::u16string> notAvailValue{};
     if (nullptr != notAvailResult) {
-        notAvailValue = mediaxx::stringxx::utf8ToUtf16(notAvailResult);
+        notAvailValue = mediaxx::util::utf8ToUtf16(notAvailResult);
     }
     const auto value = mediaxx::MediaNameAnalyseBase_c::getAvailSongInfo(nameValue, notAvailValue);
 
@@ -529,7 +529,7 @@ FFI_PLUGIN_EXPORT int mediaxx_get_avail_song_info(
         sb.append_null();
     }
     sb.end_object();
-    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    *outResult = mediaxx::util::stringCopyMalloc(sb.view().value_unsafe()).data();
     return 1;
 }
 
@@ -537,7 +537,7 @@ FFI_PLUGIN_EXPORT int mediaxx_check_avail_lyric_line(const char* line) {
     if (nullptr == line) {
         return 0;
     }
-    return mediaxx::MediaNameAnalyseBase_c::checkAvailLyricLine(mediaxx::stringxx::utf8ToUtf16(line)
+    return mediaxx::MediaNameAnalyseBase_c::checkAvailLyricLine(mediaxx::util::utf8ToUtf16(line)
            )
                ? 1
                : 0;
@@ -549,13 +549,13 @@ FFI_PLUGIN_EXPORT int
     assert(nullptr != outLog);
     *outResult      = nullptr;
     const auto list = mediaxx::MediaNameAnalyseBase_c::artistAliases(
-        mediaxx::stringxx::utf8ToUtf16(mediaxx::stringxx::toStringNotNull(artist))
+        mediaxx::util::utf8ToUtf16(mediaxx::util::toStringNotNull(artist))
     );
 
     simdjson::builder::string_builder sb{};
     sb.start_object();
     appendStringArray(sb, "aliases", list);
     sb.end_object();
-    *outResult = mediaxx::stringxx::stringCopyMalloc(sb.view().value_unsafe()).data();
+    *outResult = mediaxx::util::stringCopyMalloc(sb.view().value_unsafe()).data();
     return 1;
 }

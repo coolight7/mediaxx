@@ -115,7 +115,7 @@ namespace mediaxx {
                 }
                 isFirstItem = false;
 
-                const auto name = stringxx::toStringNotNull(filter->name);
+                const auto name = util::toStringNotNull(filter->name);
 
                 result.start_object();
 

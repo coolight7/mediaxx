@@ -953,22 +953,22 @@ namespace {
         for (const auto& item : arrayOf((*document)["cases"])) {
             ++count;
             const std::string    input = stringOf(item["input"]);
-            const std::u16string value = mediaxx::stringxx::utf8ToUtf16(input);
+            const std::u16string value = mediaxx::util::utf8ToUtf16(input);
             const std::string    label = "符号「" + input + "」";
             expectString(
                 label + " merge",
-                mediaxx::stringxx::utf16ToUtf8(mediaxx::MediaNameSymbol_c::mergeSymbols(value)),
+                mediaxx::util::utf16ToUtf8(mediaxx::MediaNameSymbol_c::mergeSymbols(value)),
                 stringOf(item["merge"])
             );
             expectString(
                 label + " strip",
-                mediaxx::stringxx::utf16ToUtf8(mediaxx::MediaNameSymbol_c::stripLeadingSymbols(value
+                mediaxx::util::utf16ToUtf8(mediaxx::MediaNameSymbol_c::stripLeadingSymbols(value
                 )),
                 stringOf(item["strip"])
             );
             expectString(
                 label + " collapse",
-                mediaxx::stringxx::utf16ToUtf8(mediaxx::MediaNameSymbol_c::collapseSpaces(value)),
+                mediaxx::util::utf16ToUtf8(mediaxx::MediaNameSymbol_c::collapseSpaces(value)),
                 stringOf(item["collapse"])
             );
         }
@@ -984,14 +984,14 @@ void runAnalyseTests() {
     // 编码转换与 base64 自检（后面所有比对都依赖它们）
     {
         const std::string    utf8  = "洛天依 🎵 test";
-        const std::u16string utf16 = mediaxx::stringxx::utf8ToUtf16(utf8);
-        expectString("utf8→utf16→utf8", mediaxx::stringxx::utf16ToUtf8(utf16), utf8);
+        const std::u16string utf16 = mediaxx::util::utf8ToUtf16(utf8);
+        expectString("utf8→utf16→utf8", mediaxx::util::utf16ToUtf8(utf16), utf8);
         // 3 个汉字 + 空格 + 1 个非 BMP 字符（2 个码元）+ 空格 + 4 个字母
         expectInt("utf16 码元数", static_cast<long long>(utf16.size()), 11);
         const uint8_t bytes[]  = {1, 2, 3, 4};
         const uint8_t bytes2[] = {1, 2, 3};
-        expectString("base64", mediaxx::stringxx::base64Encode(bytes, 4), "AQIDBA==");
-        expectString("base64 补一个 =", mediaxx::stringxx::base64Encode(bytes2, 3), "AQID");
+        expectString("base64", mediaxx::util::base64Encode(bytes, 4), "AQIDBA==");
+        expectString("base64 补一个 =", mediaxx::util::base64Encode(bytes2, 3), "AQID");
     }
 
     runBandRanges();

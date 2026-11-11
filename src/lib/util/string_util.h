@@ -2,8 +2,8 @@
 
 // 通用字符串工具 (字符分类/大小写、不区分大小写的容器、UTF-8 长度与修复、
 // 字符集转换、UTF-16 互转、base64、分割与去空白) 全部来自 cxx_utilxx_base;
-// 这里只留 mediaxx 自己的三个函数, 并把 utilxx_base 的名字带进 mediaxx::stringxx,
-// 这样原有调用点 (mediaxx::stringxx::xxx) 一行都不用改。
+// 这里只留 mediaxx 自己的三个函数, 并把 utilxx_base 的名字带进 mediaxx::util,
+// 这样原有调用点 (mediaxx::util::xxx) 一行都不用改。
 #include "log.h"
 #include <mediaxx.h>
 #include <cstring>
@@ -15,7 +15,7 @@
 
 namespace mediaxx {
 
-    namespace stringxx {
+    namespace util {
 
         /// 通用部分来自 cxx_utilxx_base (utilxx_base 命名空间)
         using namespace ::utilxx_base;
@@ -97,5 +97,5 @@ namespace mediaxx {
             return std::string_view{result, len};
         }
 
-    }; // namespace stringxx
+    }; // namespace util
 }; // namespace mediaxx

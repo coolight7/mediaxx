@@ -64,7 +64,7 @@ namespace mediaxx {
             sb.escape_and_append_with_quotes("base64");
             sb.append_colon();
             sb.escape_and_append_with_quotes(
-                stringxx::base64Encode(data.data(), data.size() * sizeof(float))
+                util::base64Encode(data.data(), data.size() * sizeof(float))
             );
             sb.end_object();
         }
@@ -82,7 +82,7 @@ namespace mediaxx {
             sb.escape_and_append_with_quotes("base64");
             sb.append_colon();
             sb.escape_and_append_with_quotes(
-                stringxx::base64Encode(data.data(), data.size() * sizeof(int32_t))
+                util::base64Encode(data.data(), data.size() * sizeof(int32_t))
             );
             sb.end_object();
         }
@@ -122,7 +122,7 @@ namespace mediaxx {
 
     bool AudioChorusConfig_c::fromJson(std::string_view json, AudioChorusConfig_c& out) {
         out                           = AudioChorusConfig_c{};
-        const std::string_view trimed = stringxx::strTrim(json);
+        const std::string_view trimed = util::strTrim(json);
         if (trimed.empty() || trimed == "null") {
             return true;
         }

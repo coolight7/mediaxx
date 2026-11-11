@@ -59,10 +59,10 @@ namespace mediaxx {
             ++logNum;
             auto temp = *log;
             if (nullptr == temp) {
-                *log = stringxx::stringCopyMalloc(data).data();
+                *log = util::stringCopyMalloc(data).data();
             } else {
                 // 已经有内容，附加
-                *log = stringxx::stringCopyMalloc(*log, "\n\n", data).data();
+                *log = util::stringCopyMalloc(*log, "\n\n", data).data();
             }
             mediaxx_free(temp);
         }
@@ -521,7 +521,7 @@ namespace mediaxx {
             SET_LOG(
                 logItem,
                 "avformat_find_stream_info: 无法获取流信息 | {}",
-                utilxx::av_err2str(ret)
+                util::av_err2str(ret)
             );
             avformat_close_input(&formatCtx);
             return nullptr;
@@ -562,7 +562,7 @@ namespace mediaxx {
             SET_LOG(
                 logItem,
                 "avcodec_parameters_to_context: 解码器参数复制到上下文失败 | {}",
-                utilxx::av_err2str(ret)
+                util::av_err2str(ret)
             );
             avcodec_free_context(&codecCtx);
             avformat_close_input(&formatCtx);
@@ -571,7 +571,7 @@ namespace mediaxx {
 
         ret = avcodec_open2(codecCtx, codec, nullptr);
         if (ret < 0) {
-            SET_LOG(logItem, "avcodec_open2: 打开解码器失败 | {}", utilxx::av_err2str(ret));
+            SET_LOG(logItem, "avcodec_open2: 打开解码器失败 | {}", util::av_err2str(ret));
             avcodec_free_context(&codecCtx);
             avformat_close_input(&formatCtx);
             return nullptr;
@@ -591,7 +591,7 @@ namespace mediaxx {
                     SET_LOG(
                         logItem,
                         "avcodec_send_packet: 发送数据包失败 | {}",
-                        utilxx::av_err2str(ret)
+                        util::av_err2str(ret)
                     );
                     break;
                 }
@@ -740,7 +740,7 @@ namespace mediaxx {
         formatCtx->pb = avioCtx;
         int ret       = avformat_open_input(&formatCtx, NULL, NULL, NULL);
         if (ret != 0) {
-            SET_LOG(logItem, "avformat_open_input: 无法打开数据 | {}", utilxx::av_err2str(ret));
+            SET_LOG(logItem, "avformat_open_input: 无法打开数据 | {}", util::av_err2str(ret));
             avformat_free_context(formatCtx);
             // buffer 可能已被 libavformat 替换，释放当前持有的 buffer
             av_freep(&avioCtx->buffer);
@@ -760,7 +760,7 @@ namespace mediaxx {
         AVFormatContext* formatCtx = nullptr;
         auto             ret       = avformat_open_input(&formatCtx, picturePath, nullptr, nullptr);
         if (ret != 0) {
-            SET_LOG(logItem, "avformat_open_input: 无法打开文件 | {}", utilxx::av_err2str(ret));
+            SET_LOG(logItem, "avformat_open_input: 无法打开文件 | {}", util::av_err2str(ret));
             return nullptr;
         }
         return analysePictureColor(formatCtx, logItem);
