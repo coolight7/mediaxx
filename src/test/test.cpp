@@ -1,3 +1,7 @@
+#include <thread>
+#include <vector>
+#include <cassert>
+#include <filesystem>
 extern "C" {
 #include "libavcodec/codec.h"
 }
@@ -465,12 +469,189 @@ void test() {
     }
 }
 
+
+void test_fftools() {
+    std::cout << "\n======= Testing FFTools (ffmpeg & ffprobe) =======" << std::endl;
+
+    // 1. ffmpeg -version 测试标准输出捕获
+    {
+        const std::string args = "[\"ffmpeg\", \"-version\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "mediaxx_execute_ffmpeg -version ret: " << ret << std::endl;
+        assert(ret == 0);
+        assert(out_stdout != nullptr);
+        assert(std::string(out_stdout).find("ffmpeg version") != std::string::npos);
+        std::cout << "ffmpeg stdout preview: " << std::string(out_stdout).substr(0, 50) << "..." << std::endl;
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 2. ffprobe -version 测试标准输出捕获
+    {
+        const std::string args = "[\"ffprobe\", \"-version\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffprobe(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "mediaxx_execute_ffprobe -version ret: " << ret << std::endl;
+        assert(ret == 0);
+        assert(out_stdout != nullptr);
+        assert(std::string(out_stdout).find("ffprobe version") != std::string::npos);
+        std::cout << "ffprobe stdout preview: " << std::string(out_stdout).substr(0, 50) << "..." << std::endl;
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 3. 测试自动补全程序名（首项直接以 - 开头）
+    {
+        const std::string args = "[\"-version\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "mediaxx_execute_ffmpeg without progname ret: " << ret << std::endl;
+        assert(ret == 0);
+        assert(out_stdout != nullptr && std::string(out_stdout).find("ffmpeg version") != std::string::npos);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+
+        out_stdout = nullptr;
+        out_stderr = nullptr;
+        ret = mediaxx_execute_ffprobe(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "mediaxx_execute_ffprobe without progname ret: " << ret << std::endl;
+        assert(ret == 0);
+        assert(out_stdout != nullptr && std::string(out_stdout).find("ffprobe version") != std::string::npos);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 4. 重复调用测试：多次使用 ffmpeg 进行图片提取和处理
+    const std::string inputFile = "./temp/Gold Town_M2U.mp3";
+    for (int i = 0; i < 3; ++i) {
+        std::string outFile = "/tmp/mediaxx_test_out_" + std::to_string(i) + ".jpg";
+        std::string args = "[\"ffmpeg\", \"-y\", \"-i\", \"" + inputFile + "\", \"-map\", \"0:v\", \"-c:v\", \"copy\", \"" + outFile + "\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "Repeated ffmpeg extract cover #" << i << " ret: " << ret << std::endl;
+        assert(ret == 0);
+        assert(std::filesystem::exists(outFile));
+        assert(std::filesystem::file_size(outFile) > 0);
+        std::filesystem::remove(outFile);
+        assert(out_stderr != nullptr);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 5. 重复调用测试：使用 ffprobe 输出 JSON 到 stdout，验证捕获的内容为合法 JSON
+    for (int i = 0; i < 3; ++i) {
+        std::string args = "[\"ffprobe\", \"-v\", \"quiet\", \"-print_format\", \"json\", \"-show_format\", \"-show_streams\", \"-i\", \"" + inputFile + "\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffprobe(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "Repeated ffprobe #" << i << " ret: " << ret << std::endl;
+        assert(ret == 0);
+        assert(out_stdout != nullptr);
+        simdjson::dom::parser p;
+        simdjson::dom::element doc;
+        simdjson::padded_string padded(out_stdout, strlen(out_stdout));
+        assert(p.parse(padded).get(doc) == simdjson::SUCCESS);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 6. 异常参数与不存在文件测试：确保返回非0退出码并捕获错误日志
+    {
+        // 非法 JSON
+        const char* badJson = "{invalid json}";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(badJson, strlen(badJson), &out_stdout, &out_stderr, nullptr);
+        std::cout << "ffmpeg invalid json ret: " << ret << std::endl;
+        assert(ret != 0);
+        assert(out_stderr != nullptr);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+
+        // 不存在文件
+        std::string nonExistArgs = "[\"ffmpeg\", \"-i\", \"/tmp/non_existent_file_xyz_12345.mp4\", \"/tmp/should_fail.wav\"]";
+        out_stdout = nullptr;
+        out_stderr = nullptr;
+        ret = mediaxx_execute_ffmpeg(nonExistArgs.data(), nonExistArgs.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "ffmpeg non-existent file ret (should be non-zero): " << ret << std::endl;
+        assert(ret != 0);
+        assert(out_stderr != nullptr);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+
+        std::string nonExistProbe = "[\"ffprobe\", \"-i\", \"/tmp/non_existent_file_xyz_12345.mp4\"]";
+        out_stdout = nullptr;
+        out_stderr = nullptr;
+        ret = mediaxx_execute_ffprobe(nonExistProbe.data(), nonExistProbe.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "ffprobe non-existent file ret (should be non-zero): " << ret << std::endl;
+        assert(ret != 0);
+        assert(out_stderr != nullptr);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 7. 多线程并发调用测试
+    {
+        std::cout << "Starting multi-threaded concurrency test..." << std::endl;
+        const int numThreads = 6;
+        std::vector<std::thread> threads;
+        std::vector<int> results(numThreads, -1);
+
+        for (int i = 0; i < numThreads; ++i) {
+            threads.emplace_back([i, &results, &inputFile]() {
+                if (i % 2 == 0) {
+                    std::string outPath = "/tmp/mediaxx_thread_" + std::to_string(i) + ".jpg";
+                    std::string args = "[\"ffmpeg\", \"-y\", \"-i\", \"" + inputFile + "\", \"-map\", \"0:v\", \"-c:v\", \"copy\", \"" + outPath + "\"]";
+                    const char* out_stdout = nullptr;
+                    const char* out_stderr = nullptr;
+                    results[i] = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+                    if (std::filesystem::exists(outPath)) {
+                        assert(std::filesystem::file_size(outPath) > 0);
+                        std::filesystem::remove(outPath);
+                    }
+                    mediaxx_free(out_stdout);
+                    mediaxx_free(out_stderr);
+                } else {
+                    std::string args = "[\"ffprobe\", \"-v\", \"quiet\", \"-print_format\", \"json\", \"-show_format\", \"-i\", \"" + inputFile + "\"]";
+                    const char* out_stdout = nullptr;
+                    const char* out_stderr = nullptr;
+                    results[i] = mediaxx_execute_ffprobe(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+                    assert(out_stdout != nullptr);
+                    simdjson::dom::parser p;
+                    simdjson::dom::element doc;
+                    simdjson::padded_string padded(out_stdout, strlen(out_stdout));
+                    assert(p.parse(padded).get(doc) == simdjson::SUCCESS);
+                    mediaxx_free(out_stdout);
+                    mediaxx_free(out_stderr);
+                }
+            });
+        }
+
+        for (auto& t : threads) {
+            t.join();
+        }
+        for (int i = 0; i < numThreads; ++i) {
+            std::cout << "Thread #" << i << " finished with ret: " << results[i] << std::endl;
+            assert(results[i] == 0);
+        }
+        std::cout << "Multi-threaded concurrency test PASSED!" << std::endl;
+    }
+
+    std::cout << "======= FFTools Tests PASSED! =======\n" << std::endl;
+}
+
 int main(int argn, char** argv) {
 #if IS_LINUX_D
     mediaxx::util::signalError(argv[0]);
 #endif
     std::cout << "======= Test Start =======" << std::endl;
     test();
+    test_fftools();
     std::cout << "======= Test Done =======" << std::endl;
     std::cout << ">>>";
     // int num = 0;

@@ -20,6 +20,8 @@ _mediaxx_create_lyric_search_str
 _mediaxx_get_avail_song_info
 _mediaxx_check_avail_lyric_line
 _mediaxx_get_artist_aliases
+_mediaxx_execute_ffmpeg
+_mediaxx_execute_ffprobe
 _mpv_abort_async_command
 _mpv_client_api_version
 _mpv_client_id

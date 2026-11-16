@@ -22,6 +22,8 @@
     mediaxx_get_avail_song_info;
     mediaxx_check_avail_lyric_line;
     mediaxx_get_artist_aliases;
+    mediaxx_execute_ffmpeg;
+    mediaxx_execute_ffprobe;
     JNI_OnLoad;
     Java_run_bool_mediaxxandroidhelper_MediaxxAndroidHelper_setApplicationContextNative;
     av_jni_set_java_vm;

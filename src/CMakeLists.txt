@@ -549,6 +549,11 @@ endif ()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/fftools/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/fftools/compat/stdbit/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/fftools/graph/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/fftools/resources/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib/fftools/textformat/)
 # 依赖库 (fmt / simdjson / uchardet / iconv / cxx_utilxx_base / cxx_utilxx) 的 include
 # 目录由它们自己的目标接口传递, 这里只列本工程的目录
 include_directories(${vulkan_INCLUDE_DIR})
@@ -557,6 +562,10 @@ include_directories(${ffmpeg_mpv_INCLUDE_DIR})
 
 aux_source_directory("./lib/util" DIR_UTIL)
 aux_source_directory("./lib/analyse" DIR_ANALYSE)
+aux_source_directory("./lib/fftools" DIR_FFTOOLS)
+aux_source_directory("./lib/fftools/graph" DIR_FFTOOLS_GRAPH)
+aux_source_directory("./lib/fftools/resources" DIR_FFTOOLS_RESOURCES)
+aux_source_directory("./lib/fftools/textformat" DIR_FFTOOLS_TEXTFORMAT)
 aux_source_directory("./impl" DIR_IMPL)
 aux_source_directory("./impl/android" DIR_IMPL_ANDROID)
 
@@ -565,6 +574,10 @@ add_library(mediaxx SHARED
   ${DIR_IMPL_ANDROID}
   ${DIR_UTIL}
   ${DIR_ANALYSE}
+  ${DIR_FFTOOLS}
+  ${DIR_FFTOOLS_GRAPH}
+  ${DIR_FFTOOLS_RESOURCES}
+  ${DIR_FFTOOLS_TEXTFORMAT}
 
   ${mediaxx_EXPORT_DEF}
 )

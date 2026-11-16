@@ -2,6 +2,7 @@
 
 script_dir=$(dirname "$0")
 root_dir=$script_dir/../
+cd "$root_dir" || exit 1
 src_dir=$root_dir/src
 build_dir=$root_dir/build/debug
 
@@ -19,7 +20,7 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-cmake --build "$build_dir" --config debug
+cmake --build "$build_dir" --config debug -j$(nproc)
 
 if [[ $? -ne 0 ]]; then
     echo "cmake build failed!"

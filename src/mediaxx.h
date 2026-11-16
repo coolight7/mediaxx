@@ -296,6 +296,70 @@ FFI_PLUGIN_EXPORT int mediaxx_check_avail_lyric_line(const char* line);
 FFI_PLUGIN_EXPORT int
     mediaxx_get_artist_aliases(const char* artist, const char** outResult, const char** outLog);
 
+#if defined(stdout)
+#pragma push_macro("stdout")
+#undef stdout
+#define MEDIAXX_RESTORE_STDOUT_MACRO
+#endif
+
+#if defined(stderr)
+#pragma push_macro("stderr")
+#undef stderr
+#define MEDIAXX_RESTORE_STDERR_MACRO
+#endif
+
+/// # 执行 ffmpeg 命令行功能
+///
+/// 等同于调用 ffmpeg 命令。支持多线程并发安全调用与可重复调用。
+///
+/// ## Args:
+/// - [args] 参数数组的 JSON 序列化字符串，如 `["-version"]` 或 `["ffmpeg", "-i", "in.mp3", "out.wav"]`
+/// - [argsSize] args 字符串的长度
+/// - [stdout] 输出标准输出内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
+/// - [stderr] 输出标准错误内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
+/// - [outLog] 保留供未来使用自定义日志出参；可传 NULL
+///
+/// ## Return:
+/// - 退出码（0 表示成功，非 0 表示失败）
+FFI_PLUGIN_EXPORT int mediaxx_execute_ffmpeg(
+    const char* args,
+    size_t argsSize,
+    const char** stdout,
+    const char** stderr,
+    const char** outLog
+);
+
+/// # 执行 ffprobe 命令行功能
+///
+/// 等同于调用 ffprobe 命令。支持多线程并发安全调用与可重复调用。
+///
+/// ## Args:
+/// - [args] 参数数组的 JSON 序列化字符串，如 `["-version"]` 或 `["ffprobe", "-show_format", "in.mp3"]`
+/// - [argsSize] args 字符串的长度
+/// - [stdout] 输出标准输出内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
+/// - [stderr] 输出标准错误内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
+/// - [outLog] 保留供未来使用自定义日志出参；可传 NULL
+///
+/// ## Return:
+/// - 退出码（0 表示成功，非 0 表示失败）
+FFI_PLUGIN_EXPORT int mediaxx_execute_ffprobe(
+    const char* args,
+    size_t argsSize,
+    const char** stdout,
+    const char** stderr,
+    const char** outLog
+);
+
+#if defined(MEDIAXX_RESTORE_STDOUT_MACRO)
+#pragma pop_macro("stdout")
+#undef MEDIAXX_RESTORE_STDOUT_MACRO
+#endif
+
+#if defined(MEDIAXX_RESTORE_STDERR_MACRO)
+#pragma pop_macro("stderr")
+#undef MEDIAXX_RESTORE_STDERR_MACRO
+#endif
+
 #if __cplusplus
 }
 #endif

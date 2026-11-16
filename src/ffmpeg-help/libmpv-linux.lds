@@ -22,6 +22,8 @@
     mediaxx_get_avail_song_info;
     mediaxx_check_avail_lyric_line;
     mediaxx_get_artist_aliases;
+    mediaxx_execute_ffmpeg;
+    mediaxx_execute_ffprobe;
     mpv_abort_async_command;
     mpv_client_api_version;
     mpv_client_id;

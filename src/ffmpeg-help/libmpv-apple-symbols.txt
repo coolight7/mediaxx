@@ -20,6 +20,8 @@
 -undefined _mediaxx_get_avail_song_info
 -undefined _mediaxx_check_avail_lyric_line
 -undefined _mediaxx_get_artist_aliases
+-undefined _mediaxx_execute_ffmpeg
+-undefined _mediaxx_execute_ffprobe
 
 -undefined _mpv_abort_async_command
 -undefined _mpv_client_api_version
