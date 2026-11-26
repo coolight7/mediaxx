@@ -83,9 +83,22 @@ void uninit_opts(void)
     av_dict_free(&codec_opts);
 }
 
+/* mediaxx: 见 cmdutils.h 里的说明。非 NULL 时，"打印到标准输出"的内容都写到这里 */
+static FILE *s_fftools_stdout = NULL;
+
+FILE *fftools_stdout_get(void)
+{
+    return s_fftools_stdout ? s_fftools_stdout : stdout;
+}
+
+void fftools_stdout_set(FILE *file)
+{
+    s_fftools_stdout = file;
+}
+
 void log_callback_help(void *ptr, int level, const char *fmt, va_list vl)
 {
-    vfprintf(stdout, fmt, vl);
+    vfprintf(fftools_stdout_get(), fmt, vl);
 }
 
 void init_dynload(void)

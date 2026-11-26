@@ -23,6 +23,7 @@
 #define FFTOOLS_CMDUTILS_H
 
 #include <stdint.h>
+#include <stdio.h>
 #include <time.h>
 #include <setjmp.h>
 
@@ -41,6 +42,16 @@ extern volatile int fftools_exit_jmp_active;
 extern volatile int fftools_exit_code;
 
 void fftools_exit(int ret);
+
+/**
+ * mediaxx: "打印到标准输出"时用的流。
+ *
+ * 默认就是进程的 stdout；libmediaxx 在进程内调用 ffmpeg/ffprobe 时会先把它换成
+ * 临时文件，调用结束再换回来。不能改成用 dup2 重定向 fd 1：Windows 上那样会关掉
+ * 宿主进程原来的 stdout 句柄，宿主（比如 Dart VM）之后再写就会失败。
+ */
+FILE *fftools_stdout_get(void);
+void fftools_stdout_set(FILE *file);
 
 #ifdef exit
 #undef exit

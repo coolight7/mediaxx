@@ -9,31 +9,22 @@ extern "C" {
 }
 
 #include <mutex>
+#include <thread>
 #include <vector>
 #include <string>
 #include <string_view>
+#include <cstdarg>
 #include <cstring>
 #include <cstdio>
-#include <filesystem>
-#include <random>
-
-#if defined(_WIN32)
-#include <io.h>
-#define mediaxx_dup _dup
-#define mediaxx_dup2 _dup2
-#define mediaxx_close _close
-#define mediaxx_fileno _fileno
-#else
-#include <unistd.h>
-#define mediaxx_dup dup
-#define mediaxx_dup2 dup2
-#define mediaxx_close close
-#define mediaxx_fileno fileno
-#endif
 
 extern "C" {
 int ffmpeg_exec(int argc, char **argv);
 int ffprobe_exec(int argc, char **argv);
+
+// 定义在 lib/fftools/cmdutils.c：fftools 里"打印到标准输出"的内容都写到这里。
+// 为空表示直接用进程的 stdout，进程内调用时由 StdoutCapture 换成临时文件。
+FILE* fftools_stdout_get(void);
+void  fftools_stdout_set(FILE* file);
 }
 
 // 统一保护 ffmpeg 和 ffprobe 调用的递归互斥锁，确保多线程并发调用的线程安全
@@ -41,145 +32,129 @@ static std::recursive_mutex s_fftools_mutex;
 
 namespace {
 
-/// 标准输出与标准错误重定向捕获类
-class StdStreamCapture {
+/// 收集一次调用期间 libav 写到 stderr 的日志，结束再还原全局日志状态。
+///
+/// 做法是临时装一个 av_log 回调把日志收进内存，不去重定向进程的 fd 2：
+/// Windows 上 dup2 会关掉宿主进程原来的 stderr 句柄，宿主（比如 Dart VM）之后再写
+/// 就会报"句柄无效"。顺带解决 fftools 的两个坑：
+/// - `-v` / `-loglevel` 改的是全局日志级别，ffmpeg 和 ffprobe 都不还原，
+///   下一次调用不带参数时会继续沿用（上一次用了 `-v error`，之后就再也没有日志）
+/// - `-version` / `-h` / `-buildconf` 这类打印完就退出的选项会把日志回调换成
+///   `log_callback_help`，ffmpeg 侧同样不还原，之后所有调用的日志都会混进 stdout
+///
+/// 别的线程（比如同时在跑的 mpv）的日志照旧走默认回调，不会被收进来。
+class LogCapture {
 public:
-    StdStreamCapture(bool capture_out, bool capture_err)
-        : m_capture_out(capture_out), m_capture_err(capture_err) {
-        ::fflush(stdout);
-        ::fflush(stderr);
+    LogCapture()
+        : m_owner(std::this_thread::get_id())
+        , m_saved_level(av_log_get_level()) {
+        s_self = this;
+        av_log_set_callback(captureLogCallback);
+    }
 
-        if (m_capture_out) {
-            m_saved_out = mediaxx_dup(mediaxx_fileno(stdout));
-            m_file_out = tmpfile();
-            if (!m_file_out) {
-                m_path_out = std::filesystem::temp_directory_path() /
-                    ("mediaxx_stdout_" + std::to_string(std::random_device{}()) + ".tmp");
-                m_file_out = fopen(m_path_out.string().c_str(), "w+b");
-            }
-            if (m_file_out) {
-                mediaxx_dup2(mediaxx_fileno(m_file_out), mediaxx_fileno(stdout));
+    ~LogCapture() {
+        s_self = nullptr;
+        av_log_set_callback(av_log_default_callback);
+        av_log_set_level(m_saved_level);
+    }
+
+    LogCapture(const LogCapture&) = delete;
+    LogCapture& operator=(const LogCapture&) = delete;
+
+    const std::string& getStderr() const {
+        return m_text;
+    }
+
+private:
+    static void captureLogCallback(void* ptr, int level, const char* fmt, va_list vl) {
+        LogCapture* self = s_self;
+        // 不是本次调用线程的日志（比如 mpv 在别的线程打的）按原来的方式输出
+        if (nullptr == self || std::this_thread::get_id() != self->m_owner) {
+            av_log_default_callback(ptr, level, fmt, vl);
+            return;
+        }
+        // 默认回调里也是这么过滤的，这里保持一致
+        if (level > av_log_get_level()) {
+            return;
+        }
+        char stackBuffer[1024];
+        va_list copy;
+        va_copy(copy, vl);
+        const int len = vsnprintf(stackBuffer, sizeof(stackBuffer), fmt, vl);
+        if (len > 0) {
+            if (static_cast<size_t>(len) < sizeof(stackBuffer)) {
+                self->m_text.append(stackBuffer, static_cast<size_t>(len));
+            } else {
+                std::string big(static_cast<size_t>(len) + 1, '\0');
+                vsnprintf(&big[0], big.size(), fmt, copy);
+                self->m_text.append(big.data(), static_cast<size_t>(len));
             }
         }
+        va_end(copy);
+    }
 
-        if (m_capture_err) {
-            m_saved_err = mediaxx_dup(mediaxx_fileno(stderr));
-            m_file_err = tmpfile();
-            if (!m_file_err) {
-                m_path_err = std::filesystem::temp_directory_path() /
-                    ("mediaxx_stderr_" + std::to_string(std::random_device{}()) + ".tmp");
-                m_file_err = fopen(m_path_err.string().c_str(), "w+b");
-            }
-            if (m_file_err) {
-                mediaxx_dup2(mediaxx_fileno(m_file_err), mediaxx_fileno(stderr));
-            }
+    static LogCapture* s_self;
+
+    std::thread::id m_owner;
+    int             m_saved_level;
+    std::string     m_text;
+};
+
+LogCapture* LogCapture::s_self = nullptr;
+
+/// 收集一次调用期间写到标准输出的内容（`-version`、`-h`、ffprobe 的 json 等）。
+///
+/// 只把 fftools 里打印到 stdout 的那几处（cmdutils.c 的 log_callback_help、
+/// textformat/tw_stdout.c 里的 writer）用的流换成临时文件，不动进程的 fd 1。
+/// 注意 pipe 输出（输出目标写 `-`）走的是 avio 的 fd 1，不在这里收集。
+class StdoutCapture {
+public:
+    StdoutCapture() {
+        m_file = tmpfile();
+        if (nullptr != m_file) {
+            fftools_stdout_set(m_file);
         }
     }
 
-    ~StdStreamCapture() {
+    ~StdoutCapture() {
         stop();
     }
+
+    StdoutCapture(const StdoutCapture&) = delete;
+    StdoutCapture& operator=(const StdoutCapture&) = delete;
 
     void stop() {
         if (m_stopped) {
             return;
         }
         m_stopped = true;
-
-        ::fflush(stdout);
-        ::fflush(stderr);
-
-        if (m_saved_out >= 0) {
-            mediaxx_dup2(m_saved_out, mediaxx_fileno(stdout));
-            mediaxx_close(m_saved_out);
-            m_saved_out = -1;
+        if (nullptr == m_file) {
+            return;
         }
-        if (m_saved_err >= 0) {
-            mediaxx_dup2(m_saved_err, mediaxx_fileno(stderr));
-            mediaxx_close(m_saved_err);
-            m_saved_err = -1;
+        // 先把流换回来，再读临时文件
+        fftools_stdout_set(nullptr);
+        ::fflush(m_file);
+        long size = -1;
+        if (fseek(m_file, 0, SEEK_END) == 0) {
+            size = ftell(m_file);
         }
-
-        if (m_file_out) {
-            fseek(m_file_out, 0, SEEK_END);
-            long len = ftell(m_file_out);
-            if (len > 0) {
-                fseek(m_file_out, 0, SEEK_SET);
-                m_out_str.resize(len);
-                size_t read_bytes = fread(&m_out_str[0], 1, len, m_file_out);
-                (void)read_bytes;
-            }
-            fclose(m_file_out);
-            m_file_out = nullptr;
-            if (!m_path_out.empty()) {
-                std::error_code ec;
-                std::filesystem::remove(m_path_out, ec);
-            }
+        if (size > 0 && fseek(m_file, 0, SEEK_SET) == 0) {
+            m_text.resize(static_cast<size_t>(size));
+            const size_t readBytes = fread(&m_text[0], 1, m_text.size(), m_file);
+            m_text.resize(readBytes);
         }
-
-        if (m_file_err) {
-            fseek(m_file_err, 0, SEEK_END);
-            long len = ftell(m_file_err);
-            if (len > 0) {
-                fseek(m_file_err, 0, SEEK_SET);
-                m_err_str.resize(len);
-                size_t read_bytes = fread(&m_err_str[0], 1, len, m_file_err);
-                (void)read_bytes;
-            }
-            fclose(m_file_err);
-            m_file_err = nullptr;
-            if (!m_path_err.empty()) {
-                std::error_code ec;
-                std::filesystem::remove(m_path_err, ec);
-            }
-        }
+        fclose(m_file);
+        m_file = nullptr;
     }
 
-    const std::string& getStdout() const { return m_out_str; }
-    const std::string& getStderr() const { return m_err_str; }
+    const std::string& getStdout() const {
+        return m_text;
+    }
 
 private:
-    bool m_capture_out = false;
-    bool m_capture_err = false;
-    bool m_stopped = false;
-    int m_saved_out = -1;
-    int m_saved_err = -1;
-    FILE* m_file_out = nullptr;
-    FILE* m_file_err = nullptr;
-    std::filesystem::path m_path_out;
-    std::filesystem::path m_path_err;
-    std::string m_out_str;
-    std::string m_err_str;
-};
-
-/// 保证一次调用在结束时把 libav 的全局日志状态还原，不影响后面的调用。
-///
-/// fftools 会改动 libav 的进程级日志设置，而且只还原一部分：
-/// - `-v` / `-loglevel` 改的是全局日志级别，ffmpeg 和 ffprobe 都不还原，
-///   下一次调用不带参数时就会继续沿用（上一次用了 `-v error`，之后就再也没有日志）
-/// - `-version` / `-h` / `-buildconf` 这类打印完就退出的选项会把日志回调换成
-///   `log_callback_help`，它把日志写到 stdout 而且不看级别，ffmpeg 侧同样不还原，
-///   之后所有调用的日志都会混进 stdout
-///
-/// 构造时先把回调换回默认回调（写 stderr、按级别过滤），让每次调用都从干净状态开始；
-/// 析构时再换一次，并把进入前的日志级别还原。
-class LogStateGuard {
-public:
-    LogStateGuard()
-        : m_saved_level(av_log_get_level()) {
-        av_log_set_callback(av_log_default_callback);
-    }
-
-    ~LogStateGuard() {
-        av_log_set_callback(av_log_default_callback);
-        av_log_set_level(m_saved_level);
-    }
-
-    LogStateGuard(const LogStateGuard&) = delete;
-    LogStateGuard& operator=(const LogStateGuard&) = delete;
-
-private:
-    int m_saved_level;
+    FILE*       m_file = nullptr;
+    bool        m_stopped = false;
+    std::string m_text;
 };
 
 static int execute_tool(
@@ -294,18 +269,18 @@ static int execute_tool(
 
     std::lock_guard<std::recursive_mutex> lock(s_fftools_mutex);
 
-    // 日志状态是进程级的，必须在锁里保存/还原，避免并发调用互相覆盖
-    LogStateGuard log_state_guard;
+    // 日志和标准输出都是靠"换流"收集的，必须在锁里做，避免并发调用互相覆盖
+    LogCapture    log_capture;
+    StdoutCapture stdout_capture;
 
-    StdStreamCapture capture(true, true);
     int ret = is_ffmpeg ? ffmpeg_exec(argc, argv.data()) : ffprobe_exec(argc, argv.data());
-    capture.stop();
+    stdout_capture.stop();
 
     if (out_stdout != nullptr) {
-        *out_stdout = mediaxx::util::stringCopyMalloc(capture.getStdout()).data();
+        *out_stdout = mediaxx::util::stringCopyMalloc(stdout_capture.getStdout()).data();
     }
     if (out_stderr != nullptr) {
-        *out_stderr = mediaxx::util::stringCopyMalloc(capture.getStderr()).data();
+        *out_stderr = mediaxx::util::stringCopyMalloc(log_capture.getStderr()).data();
     }
     if (outLog != nullptr) {
         *outLog = nullptr;

@@ -25,6 +25,9 @@
 #include "avtextwriters.h"
 #include "libavutil/opt.h"
 
+/* mediaxx: 定义在 cmdutils.c；进程内调用时标准输出会被换成临时文件 */
+FILE *fftools_stdout_get(void);
+
 /* STDOUT Writer */
 
 # define WRITER_NAME "stdoutwriter"
@@ -45,17 +48,17 @@ static const AVClass stdoutwriter_class = {
 
 static inline void stdout_w8(AVTextWriterContext *wctx, int b)
 {
-    printf("%c", b);
+    fputc(b, fftools_stdout_get());
 }
 
 static inline void stdout_put_str(AVTextWriterContext *wctx, const char *str)
 {
-    printf("%s", str);
+    fputs(str, fftools_stdout_get());
 }
 
 static inline void stdout_vprintf(AVTextWriterContext *wctx, const char *fmt, va_list vl)
 {
-    vprintf(fmt, vl);
+    vfprintf(fftools_stdout_get(), fmt, vl);
 }
 
 
