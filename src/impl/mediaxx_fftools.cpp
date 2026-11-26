@@ -2,6 +2,12 @@
 #include "simdjson.h"
 #include "util/string_util.h"
 
+// 这份 ffmpeg 头文件没有自带 C++ 链接声明，必须包在 extern "C" 里，
+// 否则引用的 av_log_* 会带 C++ 修饰名，链接时找不到符号
+extern "C" {
+#include "libavutil/log.h"
+}
+
 #include <mutex>
 #include <vector>
 #include <string>
@@ -146,6 +152,36 @@ private:
     std::string m_err_str;
 };
 
+/// 保证一次调用在结束时把 libav 的全局日志状态还原，不影响后面的调用。
+///
+/// fftools 会改动 libav 的进程级日志设置，而且只还原一部分：
+/// - `-v` / `-loglevel` 改的是全局日志级别，ffmpeg 和 ffprobe 都不还原，
+///   下一次调用不带参数时就会继续沿用（上一次用了 `-v error`，之后就再也没有日志）
+/// - `-version` / `-h` / `-buildconf` 这类打印完就退出的选项会把日志回调换成
+///   `log_callback_help`，它把日志写到 stdout 而且不看级别，ffmpeg 侧同样不还原，
+///   之后所有调用的日志都会混进 stdout
+///
+/// 构造时先把回调换回默认回调（写 stderr、按级别过滤），让每次调用都从干净状态开始；
+/// 析构时再换一次，并把进入前的日志级别还原。
+class LogStateGuard {
+public:
+    LogStateGuard()
+        : m_saved_level(av_log_get_level()) {
+        av_log_set_callback(av_log_default_callback);
+    }
+
+    ~LogStateGuard() {
+        av_log_set_callback(av_log_default_callback);
+        av_log_set_level(m_saved_level);
+    }
+
+    LogStateGuard(const LogStateGuard&) = delete;
+    LogStateGuard& operator=(const LogStateGuard&) = delete;
+
+private:
+    int m_saved_level;
+};
+
 static int execute_tool(
     bool is_ffmpeg,
     const char* args,
@@ -257,6 +293,9 @@ static int execute_tool(
     int argc = static_cast<int>(arg_list.size());
 
     std::lock_guard<std::recursive_mutex> lock(s_fftools_mutex);
+
+    // 日志状态是进程级的，必须在锁里保存/还原，避免并发调用互相覆盖
+    LogStateGuard log_state_guard;
 
     StdStreamCapture capture(true, true);
     int ret = is_ffmpeg ? ffmpeg_exec(argc, argv.data()) : ffprobe_exec(argc, argv.data());

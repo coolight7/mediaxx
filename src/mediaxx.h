@@ -319,6 +319,11 @@ FFI_PLUGIN_EXPORT int
 /// - [stderr] 输出标准错误内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
 /// - [outLog] 保留供未来使用自定义日志出参；可传 NULL
 ///
+/// ## 日志状态:
+/// 调用结束会把 libav 的日志回调恢复成默认回调，并还原进入前的日志级别：
+/// - `-v` / `-loglevel` 只对当次调用生效
+/// - `-version` / `-h` 这类打印后就退出的选项不会影响后续调用的 stdout
+///
 /// ## Return:
 /// - 退出码（0 表示成功，非 0 表示失败）
 FFI_PLUGIN_EXPORT int mediaxx_execute_ffmpeg(
@@ -339,6 +344,11 @@ FFI_PLUGIN_EXPORT int mediaxx_execute_ffmpeg(
 /// - [stdout] 输出标准输出内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
 /// - [stderr] 输出标准错误内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
 /// - [outLog] 保留供未来使用自定义日志出参；可传 NULL
+///
+/// ## 日志状态:
+/// 调用结束会把 libav 的日志回调恢复成默认回调，并还原进入前的日志级别：
+/// - `-v` / `-loglevel` 只对当次调用生效
+/// - `-version` / `-h` 这类打印后就退出的选项不会影响后续调用的 stdout
 ///
 /// ## Return:
 /// - 退出码（0 表示成功，非 0 表示失败）

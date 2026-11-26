@@ -4,6 +4,7 @@
 #include <filesystem>
 extern "C" {
 #include "libavcodec/codec.h"
+#include "libavutil/log.h"
 }
 
 #include "analyse/audio_visualization.h"
@@ -640,6 +641,66 @@ void test_fftools() {
             assert(results[i] == 0);
         }
         std::cout << "Multi-threaded concurrency test PASSED!" << std::endl;
+    }
+
+    // 8. 日志级别只在当次调用里生效：用了 -v 之后，下一次调用仍然回到默认级别
+    {
+        // 库的日志级别先设成默认的 INFO，后面的断言以此为准
+        mediaxx_set_log_level(AV_LOG_INFO);
+
+        // 只给 -i 不给输出文件：ffmpeg 会打印 Input #0（INFO）后再报错返回，
+        // 所以这里既能验证日志级别，又不需要编码器
+        std::string args = "[\"ffmpeg\", \"-hide_banner\", \"-v\", \"error\", \"-i\", \"" + inputFile + "\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "quiet input-only ret: " << ret << ", stderr bytes: " << (out_stderr ? strlen(out_stderr) : 0) << std::endl;
+        assert(ret != 0); // 没有输出文件，ffmpeg 必然报错返回
+        assert(out_stderr != nullptr);
+        assert(std::string(out_stderr).find("Input #0") == std::string::npos);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+
+        // 紧接着不带 -v 再跑一次：级别应已还原成进入前的值，stderr 里有 Input #0
+        args = "[\"ffmpeg\", \"-hide_banner\", \"-i\", \"" + inputFile + "\"]";
+        out_stdout = nullptr;
+        out_stderr = nullptr;
+        ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "default level input-only ret: " << ret << ", stderr bytes: " << (out_stderr ? strlen(out_stderr) : 0) << std::endl;
+        assert(ret != 0);
+        assert(out_stderr != nullptr);
+        assert(std::string(out_stderr).find("Input #0") != std::string::npos);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 9. 调过 -version 之后，后面调用的日志不会混进 stdout
+    {
+        std::string args = "[\"ffmpeg\", \"-version\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "ffmpeg -version ret: " << ret << std::endl;
+        assert(ret == 0);
+        assert(out_stdout != nullptr && std::string(out_stdout).find("ffmpeg version") != std::string::npos);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+
+        // -version 这类选项会把日志回调换成写 stdout 的版本，这里用 ffprobe 输出 JSON，
+        // 验证它没有再留到后面的调用里（留下的话 stdout 里会先出现 banner，JSON 就解析不了）
+        args = "[\"ffprobe\", \"-v\", \"error\", \"-print_format\", \"json\", \"-show_format\", \"-i\", \"" + inputFile + "\"]";
+        out_stdout = nullptr;
+        out_stderr = nullptr;
+        ret = mediaxx_execute_ffprobe(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "after -version ffprobe ret: " << ret << ", stdout bytes: " << (out_stdout ? strlen(out_stdout) : 0) << std::endl;
+        assert(ret == 0);
+        assert(out_stdout != nullptr);
+        simdjson::dom::parser p;
+        simdjson::dom::element doc;
+        simdjson::padded_string padded(out_stdout, strlen(out_stdout));
+        assert(p.parse(padded).get(doc) == simdjson::SUCCESS);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
     }
 
     std::cout << "======= FFTools Tests PASSED! =======\n" << std::endl;
