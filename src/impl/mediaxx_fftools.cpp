@@ -128,6 +128,9 @@ private:
 /// 不合规、编码线程里失败）只在那里打，按线程过滤会漏掉。呼叫期间宿主其它组件（比如
 /// 同时在放的 mpv）的 libav 日志也会被一同收进来，量很少，不影响使用。
 ///
+/// 每行用 av_log_format_line2 拼，和默认回调一样会带上 `[组件名 @ 0x地址] ` 前缀、
+/// 也会合并连续重复的日志。这一点不能省：切片任务靠 `[silencedetect ...]` 前缀解析日志。
+///
 /// 结束时只能恢复成 av_log_default_callback：libav 没有提供读当前回调的接口。
 /// 宿主如果自己装过回调（mpv 就会），它的转发在这一次调用后会失效，和 ffmpeg 上游
 /// 在处理 `-h` 时的做法一样，不影响本库自己的功能。
@@ -164,25 +167,43 @@ private:
         if (level > av_log_get_level()) {
             return;
         }
+        // 用 av_log_format_line2 而不是 vsnprintf：它会像默认回调一样补上
+        // `[组件名 @ 0x地址] ` 前缀，也负责合并“上一条重复了 N 次”。
+        // 少了前缀，靠 `[silencedetect ...]` 之类开头做解析的调用方就认不出日志了。
         char stackBuffer[1024];
+        int  printPrefix = self->m_printPrefix;
         va_list copy;
         va_copy(copy, vl);
-        const int len = vsnprintf(stackBuffer, sizeof(stackBuffer), fmt, vl);
-        if (len > 0) {
-            if (static_cast<size_t>(len) < sizeof(stackBuffer)) {
-                self->m_out.append(stackBuffer, static_cast<size_t>(len));
-            } else {
-                std::string big(static_cast<size_t>(len) + 1, '\0');
-                vsnprintf(&big[0], big.size(), fmt, copy);
-                self->m_out.append(big.data(), static_cast<size_t>(len));
-            }
-        }
+        const int len = av_log_format_line2(
+            ptr, level, fmt, copy, stackBuffer, sizeof(stackBuffer), &printPrefix
+        );
         va_end(copy);
+        if (len <= 0) {
+            return;
+        }
+        if (static_cast<size_t>(len) < sizeof(stackBuffer)) {
+            self->m_printPrefix = printPrefix;
+            self->m_out.append(stackBuffer, static_cast<size_t>(len));
+            return;
+        }
+        // 一行放不下，按需要的大小再来一次
+        std::string big(static_cast<size_t>(len) + 1, '\0');
+        int printPrefixBig = self->m_printPrefix;
+        va_list copyBig;
+        va_copy(copyBig, vl);
+        av_log_format_line2(
+            ptr, level, fmt, copyBig, &big[0], big.size(), &printPrefixBig
+        );
+        va_end(copyBig);
+        self->m_printPrefix = printPrefixBig;
+        self->m_out.append(big.data(), static_cast<size_t>(len));
     }
 
     static LogCapture* s_self;
 
     int           m_saved_level;
+    /// 下一条日志是否需要打 `[组件 @ 地址]` 前缀，由 av_log_format_line2 维护
+    int           m_printPrefix = 1;
     CaptureBuffer m_out;
 };
 

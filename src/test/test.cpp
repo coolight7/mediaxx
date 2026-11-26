@@ -827,6 +827,22 @@ void test_fftools() {
         mediaxx_free(out_stderr);
     }
 
+    // 15. 捕获的日志要带 `[组件 @ 地址]` 前缀，靠前缀解析日志的调用方（比如自动切片里
+    //     的 silencedetect）才知道哪一行是自己的
+    {
+        std::string args = "[\"ffmpeg\", \"-hide_banner\", \"-i\", \"" + inputFile + "\", "
+                           "\"-c\", \"copy\", \"-f\", \"null\", \"/dev/null\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        const bool hasPrefix = (nullptr != out_stderr) && (nullptr != strstr(out_stderr, " @ 0x"));
+        std::cout << "log prefix ret: " << ret << ", has prefix: " << hasPrefix << std::endl;
+        assert(ret == 0);
+        assert(hasPrefix);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
     std::cout << "======= FFTools Tests PASSED! =======\n" << std::endl;
 }
 
