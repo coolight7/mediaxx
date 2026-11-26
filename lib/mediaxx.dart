@@ -245,6 +245,49 @@ Future<String?> mediaxx_convert_char_encoding(List<int> data) async {
   return result.str;
 }
 
+/// 执行 ffmpeg 命令行功能（等同调用 ffmpeg 命令）。
+///
+/// - [args] 参数数组，如 `["-y", "-i", "in.mp3", "out.wav"]`；首项以 `-` 开头时
+///   会自动补上程序名 `ffmpeg`
+/// - 返回 (退出码, stdout, stderr)，退出码 0 表示成功
+/// - 在专门跑 ffmpeg / ffprobe 的 isolate 里执行，不阻塞 UI 线程，也不占用
+///   [mediaxx_get_media_info_malloc] 这些接口所用的 isolate
+/// - 输出要等调用结束才一次性返回，没有流式进度，也不能中途取消
+/// - 覆盖已有文件时记得自己带 `-y`（或 `-n`）：不带的话 ffmpeg 会在 stderr 上等
+///   用户输入，而 App 里没有 stdin 可读
+/// - 输出目标不要写 `-`（管道输出）：这部分走 avio 的 fd 1，不经过这里的捕获
+Future<(int ret, String? stdoutText, String? stderrText)>
+mediaxx_execute_ffmpeg(List<String> args) {
+  return _requestExecuteFftools(isFfmpeg: true, args: args);
+}
+
+/// 执行 ffprobe 命令行功能（等同调用 ffprobe 命令）。
+///
+/// 参数与返回值说明见 [mediaxx_execute_ffmpeg]。
+Future<(int ret, String? stdoutText, String? stderrText)>
+mediaxx_execute_ffprobe(List<String> args) {
+  return _requestExecuteFftools(isFfmpeg: false, args: args);
+}
+
+Future<(int ret, String? stdoutText, String? stderrText)>
+_requestExecuteFftools({
+  required final bool isFfmpeg,
+  required final List<String> args,
+}) async {
+  final SendPort fftoolsIsolateSendPort = await _fftoolsIsolateSendPort;
+  final int requestId = _nextAsyncxxRequestId++;
+  final request = _AsyncxxRequestExecuteFftools(
+    requestId,
+    isFfmpeg: isFfmpeg,
+    argsJson: jsonEncode(args),
+  );
+  final completer = Completer<_AsyncxxResponseExecuteFftools>();
+  _asyncxxRequests[requestId] = completer;
+  fftoolsIsolateSendPort.send(request);
+  final result = await completer.future;
+  return (result.ret, result.stdoutText, result.stderrText);
+}
+
 String mediaxx_get_available_hwcodec_list() {
   final result = _bindings.mediaxx_get_available_hwcodec_list();
   final str = result.cast<Utf8>().tryToDartString();
@@ -731,6 +774,36 @@ class _AsyncxxResponseDefault {
   _AsyncxxResponseDefault(this.id, {required this.result, this.logPtr});
 }
 
+class _AsyncxxRequestExecuteFftools {
+  final int id;
+  final bool isFfmpeg;
+
+  /// 参数数组的 JSON 序列化字符串，由 ffmpeg / ffprobe 的 isolate 转成原生字符串
+  final String argsJson;
+
+  bool isDispose = false;
+
+  _AsyncxxRequestExecuteFftools(
+    this.id, {
+    required this.isFfmpeg,
+    required this.argsJson,
+  });
+}
+
+class _AsyncxxResponseExecuteFftools {
+  final int id;
+  final int ret;
+  final String? stdoutText;
+  final String? stderrText;
+
+  _AsyncxxResponseExecuteFftools(
+    this.id, {
+    required this.ret,
+    this.stdoutText,
+    this.stderrText,
+  });
+}
+
 /// Counter to identify [_SumRequest]s and [_SumResponse]s.
 int _nextAsyncxxRequestId = 0;
 
@@ -1109,5 +1182,118 @@ Future<SendPort> _helperIsolateSendPort = () async {
 
   // Wait until the helper isolate has sent us back the SendPort on which we
   // can start sending requests.
+  return sendCompleter.future;
+}();
+
+/// 专门跑 ffmpeg / ffprobe 的 isolate。
+///
+/// 为什么不和 [_helperIsolateSendPort] 共用：
+/// - 一次转码可能跑几分钟，放在同一个 isolate 里，取媒体信息、取封面这些调用
+///   会一直排在它后面；分开之后两边才能真正并行
+/// - 两者都不在 UI isolate 上，所以都不会卡界面
+///
+/// 为什么不每次调用再开一个新 isolate：
+/// - C 侧对 ffmpeg / ffprobe 调用有一把全局锁（还要临时接管进程的 stdout、stderr），
+///   就算开多个 isolate 同时调，实际也只能一个一个跑，多开只会白占内存
+Future<SendPort> _fftoolsIsolateSendPort = () async {
+  final Completer<SendPort> sendCompleter = Completer<SendPort>();
+
+  /// App
+  final ReceivePort receivePort = ReceivePort()
+    ..listen((dynamic data) {
+      if (data is SendPort) {
+        sendCompleter.complete(data);
+        return;
+      }
+
+      if (data is _AsyncxxResponseExecuteFftools) {
+        final completer = _asyncxxRequests[data.id];
+        _asyncxxRequests.remove(data.id);
+        if (null == completer) {
+          return;
+        }
+        completer.complete(data);
+        return;
+      }
+      throw UnsupportedError('Unsupported message type: ${data.runtimeType}');
+    });
+
+  /// Isolate
+  await Isolate.spawn((SendPort sendPort) async {
+    final ReceivePort fftoolsReceivePort = ReceivePort()
+      ..listen((dynamic data) {
+        if (data is! _AsyncxxRequestExecuteFftools) {
+          throw UnsupportedError(
+            'Unsupported message type: ${data.runtimeType}',
+          );
+        }
+        assert(false == data.isDispose);
+
+        // C 侧要一个以 0 结尾的 UTF-8 参数串，长度另外传
+        final List<int> argsBytes = utf8.encode(data.argsJson);
+        final Pointer<Uint8> argsPtr = malloc<Uint8>(argsBytes.length + 1);
+        argsPtr.asTypedList(argsBytes.length + 1)
+          ..setAll(0, argsBytes)
+          ..[argsBytes.length] = 0;
+
+        final Pointer<Pointer<Char>> outStdout = malloc<Pointer<Char>>();
+        outStdout.value = nullptr;
+        final Pointer<Pointer<Char>> outStderr = malloc<Pointer<Char>>();
+        outStderr.value = nullptr;
+        final Pointer<Pointer<Char>> outLog = malloc<Pointer<Char>>();
+        outLog.value = nullptr;
+
+        int ret = -1;
+        String? stdoutText;
+        String? stderrText;
+        try {
+          ret = data.isFfmpeg
+              ? _bindings.mediaxx_execute_ffmpeg(
+                  argsPtr.cast<Char>(),
+                  argsBytes.length,
+                  outStdout,
+                  outStderr,
+                  outLog,
+                )
+              : _bindings.mediaxx_execute_ffprobe(
+                  argsPtr.cast<Char>(),
+                  argsBytes.length,
+                  outStdout,
+                  outStderr,
+                  outLog,
+                );
+          // 输出由 C 侧分配，转成 Dart 字符串后立即释放
+          stdoutText = _takeOwnedString(outStdout.value);
+          stderrText = _takeOwnedString(outStderr.value);
+          _takeOwnedString(outLog.value);
+        } catch (e) {
+          // 动态库还是旧版本（没有这两个符号）之类的问题：转成 stderr 文本传回
+          // 主线程，避免调用方的 Future 一直等不到结果
+          ret = -1;
+          stderrText = 'mediaxx_execute_fftools: $e';
+        } finally {
+          malloc.free(argsPtr);
+          malloc.free(outStdout);
+          malloc.free(outStderr);
+          malloc.free(outLog);
+        }
+
+        data.isDispose = true;
+        sendPort.send(
+          _AsyncxxResponseExecuteFftools(
+            data.id,
+            ret: ret,
+            stdoutText: stdoutText,
+            stderrText: stderrText,
+          ),
+        );
+      });
+
+    // Send the port to the main isolate on which we can receive requests.
+    sendPort.send(fftoolsReceivePort.sendPort);
+  }, receivePort.sendPort);
+
+  // Wait until the isolate has sent us back the SendPort on which we can start
+  // sending requests.
   return sendCompleter.future;
 }();

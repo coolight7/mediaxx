@@ -784,4 +784,116 @@ class MediaxxBindings {
           ffi.Pointer<ffi.Pointer<ffi.Char>>,
         )
       >();
+
+  /// # 执行 ffmpeg 命令行功能
+  ///
+  /// 等同于调用 ffmpeg 命令。支持多线程并发安全调用与可重复调用。
+  ///
+  /// ## Args:
+  /// - [args] 参数数组的 JSON 序列化字符串，如 `["-version"]` 或 `["ffmpeg", "-i", "in.mp3", "out.wav"]`
+  /// - [argsSize] args 字符串的长度
+  /// - [stdout] 输出标准输出内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
+  /// - [stderr] 输出标准错误内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
+  /// - [outLog] 保留供未来使用自定义日志出参；可传 NULL
+  ///
+  /// ## 日志状态:
+  /// 调用结束会把 libav 的日志回调恢复成默认回调，并还原进入前的日志级别：
+  /// - `-v` / `-loglevel` 只对当次调用生效
+  /// - `-version` / `-h` 这类打印后就退出的选项不会影响后续调用的 stdout
+  ///
+  /// ## Return:
+  /// - 退出码（0 表示成功，非 0 表示失败）
+  int mediaxx_execute_ffmpeg(
+    ffi.Pointer<ffi.Char> args,
+    int argsSize,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outStdout,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outStderr,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
+  ) {
+    return _mediaxx_execute_ffmpeg(
+      args,
+      argsSize,
+      outStdout,
+      outStderr,
+      outLog,
+    );
+  }
+
+  late final _mediaxx_execute_ffmpegPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Size,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+          )
+        >
+      >('mediaxx_execute_ffmpeg');
+  late final _mediaxx_execute_ffmpeg = _mediaxx_execute_ffmpegPtr.asFunction<
+    int Function(
+      ffi.Pointer<ffi.Char>,
+      int,
+      ffi.Pointer<ffi.Pointer<ffi.Char>>,
+      ffi.Pointer<ffi.Pointer<ffi.Char>>,
+      ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    )
+  >();
+
+  /// # 执行 ffprobe 命令行功能
+  ///
+  /// 等同于调用 ffprobe 命令。支持多线程并发安全调用与可重复调用。
+  ///
+  /// ## Args:
+  /// - [args] 参数数组的 JSON 序列化字符串，如 `["-version"]` 或 `["ffprobe", "-show_format", "in.mp3"]`
+  /// - [argsSize] args 字符串的长度
+  /// - [stdout] 输出标准输出内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
+  /// - [stderr] 输出标准错误内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
+  /// - [outLog] 保留供未来使用自定义日志出参；可传 NULL
+  ///
+  /// ## 日志状态:
+  /// 调用结束会把 libav 的日志回调恢复成默认回调，并还原进入前的日志级别：
+  /// - `-v` / `-loglevel` 只对当次调用生效
+  /// - `-version` / `-h` 这类打印后就退出的选项不会影响后续调用的 stdout
+  ///
+  /// ## Return:
+  /// - 退出码（0 表示成功，非 0 表示失败）
+  int mediaxx_execute_ffprobe(
+    ffi.Pointer<ffi.Char> args,
+    int argsSize,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outStdout,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outStderr,
+    ffi.Pointer<ffi.Pointer<ffi.Char>> outLog,
+  ) {
+    return _mediaxx_execute_ffprobe(
+      args,
+      argsSize,
+      outStdout,
+      outStderr,
+      outLog,
+    );
+  }
+
+  late final _mediaxx_execute_ffprobePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Int Function(
+            ffi.Pointer<ffi.Char>,
+            ffi.Size,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+            ffi.Pointer<ffi.Pointer<ffi.Char>>,
+          )
+        >
+      >('mediaxx_execute_ffprobe');
+  late final _mediaxx_execute_ffprobe = _mediaxx_execute_ffprobePtr.asFunction<
+    int Function(
+      ffi.Pointer<ffi.Char>,
+      int,
+      ffi.Pointer<ffi.Pointer<ffi.Char>>,
+      ffi.Pointer<ffi.Pointer<ffi.Char>>,
+      ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    )
+  >();
 }
