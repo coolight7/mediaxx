@@ -53,6 +53,44 @@ void fftools_exit(int ret);
 FILE *fftools_stdout_get(void);
 void fftools_stdout_set(FILE *file);
 
+/**
+ * mediaxx: 请求取消当前正在跑的 ffmpeg / ffprobe 调用。
+ *
+ * 由宿主在另一个线程调用，这里只记一个标志，具体处理在各自的工具里：
+ * - ffmpeg 会把它转成"收到信号"的两个标志，主循环和 avio 的中断回调都会看它们
+ * - ffprobe 靠 fftools_interrupt_cb 打断打开文件和读包
+ *
+ * 只影响当前这次调用：没在跑的时候请求没有效果，下次调用开始时会被清掉。
+ */
+void fftools_cancel_request(void);
+int  fftools_cancel_requested(void);
+void fftools_cancel_reset(void);
+
+/// 给 avformat 用的中断回调，内容见 fftools_cancel_request()
+int fftools_interrupt_cb(void *ctx);
+
+/**
+ * mediaxx: 这次的 AVERROR_EXIT 是不是 `-h` / `-version` / `-buildconf` 这类
+ * "打印完就退出"的选项造成的。
+ *
+ * 新版 ffmpeg 把这类选项改成返回 AVERROR_EXIT，和"目标已存在、没做事就退出"用的是
+ * 同一个值。对进程内调用来说前者算成功（内容已经在 stdout 里），后者要让宿主知道
+ * 什么都没做，得分开。
+ */
+int  fftools_exit_by_info_option(void);
+void fftools_exit_info_reset(void);
+
+/**
+ * mediaxx: fftools 里所有"打印到标准输出"的地方都走 fftools_stdout_get()。
+ *
+ * 进程内调用时不能写宿主进程的 stdout：那些内容会混进宿主自己的输出里，调用方也
+ * 拿不到。这里直接替换 printf，省得逐个调用点去改（和下面替换 exit 的做法一样）。
+ */
+#ifdef printf
+#undef printf
+#endif
+#define printf(...) fprintf(fftools_stdout_get(), __VA_ARGS__)
+
 #ifdef exit
 #undef exit
 #endif

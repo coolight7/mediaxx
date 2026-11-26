@@ -818,7 +818,8 @@ int assert_file_overwrite(const char *filename)
     const char *proto_name = avio_find_protocol_name(filename);
 
     if (file_overwrite && no_file_overwrite) {
-        fprintf(stderr, "Error, both -y and -n supplied. Exiting.\n");
+        /* mediaxx：原来直接写 stderr，进程内调用时调用方拿不到 */
+        av_log(NULL, AV_LOG_FATAL, "Error, both -y and -n supplied. Exiting.\n");
         return AVERROR(EINVAL);
     }
 

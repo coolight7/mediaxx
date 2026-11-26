@@ -2,6 +2,8 @@
 #include <vector>
 #include <cassert>
 #include <filesystem>
+#include <atomic>
+#include <chrono>
 extern "C" {
 #include "libavcodec/codec.h"
 #include "libavutil/log.h"
@@ -699,6 +701,128 @@ void test_fftools() {
         simdjson::dom::element doc;
         simdjson::padded_string padded(out_stdout, strlen(out_stdout));
         assert(p.parse(padded).get(doc) == simdjson::SUCCESS);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 10. -h 这种帮助输出要完整收进 stdout（以前有一部分走 printf，直接写到了宿主的 stdout）
+    {
+        std::string args = "[\"ffmpeg\", \"-hide_banner\", \"-h\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        const size_t stdoutBytes = (nullptr != out_stdout) ? strlen(out_stdout) : 0;
+        std::cout << "ffmpeg -h ret: " << ret << ", stdout bytes: " << stdoutBytes << std::endl;
+        assert(ret == 0);
+        assert(out_stdout != nullptr);
+        // 选项表是靠 show_help_options 里的 printf 打的，收不到的话内容会少一大截
+        assert(std::string(out_stdout).find("Print help / information / capabilities") != std::string::npos);
+        assert(std::string(out_stdout).find("-encoders") != std::string::npos);
+        assert(stdoutBytes > 2000);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 11. -y 和 -n 同时给：错误信息要能在 stderr 里拿到，返回执行失败
+    {
+        // 用 image2 输出：Linux 侧这份 ffmpeg 是精简构建，只有 image2/mjpeg/null 几个封装器
+        std::string args = "[\"ffmpeg\", \"-y\", \"-n\", \"-i\", \"" + inputFile + "\", "
+                           "\"-map\", \"0:v\", \"-c:v\", \"copy\", \"-f\", \"image2\", \"/tmp/mediaxx_abort.jpg\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        const bool hasMsg = (nullptr != out_stderr) && (nullptr != strstr(out_stderr, "both -y and -n"));
+        std::cout << "ffmpeg -y -n ret: " << ret << ", has conflict message: " << hasMsg << std::endl;
+        assert(ret == MEDIAXX_FFTOOLS_ERROR);
+        assert(out_stderr != nullptr);
+        assert(hasMsg);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+    }
+
+    // 12. 目标已存在又没给 -y：属于"没做事就退出"，要能用 2 和真正的失败区分开
+    {
+        const std::string outFile = "/tmp/mediaxx_abort_exist.jpg";
+        std::filesystem::remove(outFile);
+        std::string args = "[\"ffmpeg\", \"-hide_banner\", \"-y\", \"-i\", \"" + inputFile + "\", "
+                           "\"-map\", \"0:v\", \"-c:v\", \"copy\", \"-f\", \"image2\", \"" + outFile + "\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "create target ret: " << ret << std::endl;
+        assert(ret == MEDIAXX_FFTOOLS_OK);
+        assert(std::filesystem::exists(outFile));
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+
+        // 这一次不带 -y，目标已经存在
+        args = "[\"ffmpeg\", \"-hide_banner\", \"-i\", \"" + inputFile + "\", "
+               "\"-map\", \"0:v\", \"-c:v\", \"copy\", \"-f\", \"image2\", \"" + outFile + "\"]";
+        out_stdout = nullptr;
+        out_stderr = nullptr;
+        ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        const bool hasMsg = (nullptr != out_stderr) && (nullptr != strstr(out_stderr, "already exists"));
+        std::cout << "overwrite without -y ret: " << ret << ", has exists message: " << hasMsg << std::endl;
+        assert(ret == MEDIAXX_FFTOOLS_ABORTED);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+        std::filesystem::remove(outFile);
+    }
+
+    // 13. 取消：长任务跑到一半被取消，返回 255 并且很快结束
+    {
+        std::atomic<int> cancelRet{1};
+        std::thread canceller([&cancelRet]() {
+            std::this_thread::sleep_for(std::chrono::milliseconds(700));
+            cancelRet.store(mediaxx_execute_fftools_cancel());
+        });
+
+        const auto begin = std::chrono::steady_clock::now();
+        // -re 让 lavfi 按实时速度出数据，30 秒素材足够跑过一次取消；null 封装器不落文件，
+        // anull 编码器是这份精简构建里启用的那个（默认的 pcm_s16le 编码器没编进来）
+        std::string args = "[\"ffmpeg\", \"-hide_banner\", \"-y\", \"-re\", \"-f\", \"lavfi\", "
+                           "\"-i\", \"sine=frequency=440:duration=30\", \"-c:a\", \"anull\", "
+                           "\"-f\", \"null\", \"/dev/null\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        canceller.join();
+        const auto cost = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - begin).count();
+        const std::string errText = (nullptr != out_stderr) ? std::string(out_stderr) : std::string();
+        const std::string errTail = (errText.size() > 600) ? errText.substr(errText.size() - 600) : errText;
+        std::cout << "cancel test ret: " << ret << ", cost: " << cost << "ms" << std::endl;
+        std::cout << "cancel stderr tail: " << errTail << std::endl;
+        assert(0 == cancelRet.load());
+        assert(ret == MEDIAXX_FFTOOLS_CANCELED);
+        // 取消要能真正打断转码，不能等素材放完
+        assert(cost < 10000);
+        mediaxx_free(out_stdout);
+        mediaxx_free(out_stderr);
+
+        // 取消之后库还要能正常用
+        const char* afterOut = nullptr;
+        const char* afterErr = nullptr;
+        const std::string afterArgs = "[\"ffmpeg\", \"-version\"]";
+        const int afterRet = mediaxx_execute_ffmpeg(
+            afterArgs.data(), afterArgs.size(), &afterOut, &afterErr, nullptr);
+        std::cout << "after cancel -version ret: " << afterRet << std::endl;
+        assert(afterRet == MEDIAXX_FFTOOLS_OK);
+        assert(nullptr != afterOut && nullptr != strstr(afterOut, "ffmpeg version"));
+        mediaxx_free(afterOut);
+        mediaxx_free(afterErr);
+    }
+
+    // 14. 单独的 - 是管道，进程内调用拿不到，直接按参数错误拒掉
+    {
+        std::string args = "[\"ffmpeg\", \"-y\", \"-i\", \"" + inputFile + "\", \"-\"]";
+        const char* out_stdout = nullptr;
+        const char* out_stderr = nullptr;
+        int ret = mediaxx_execute_ffmpeg(args.data(), args.size(), &out_stdout, &out_stderr, nullptr);
+        std::cout << "pipe output ret: " << ret << std::endl;
+        assert(ret == MEDIAXX_FFTOOLS_BAD_ARGS);
+        assert(out_stderr != nullptr);
+        assert(std::string(out_stderr).find("pipe") != std::string::npos);
         mediaxx_free(out_stdout);
         mediaxx_free(out_stderr);
     }

@@ -96,6 +96,43 @@ void fftools_stdout_set(FILE *file)
     s_fftools_stdout = file;
 }
 
+/* mediaxx: 见 cmdutils.h 里的说明 */
+static volatile int s_cancel_requested = 0;
+
+void fftools_cancel_request(void)
+{
+    s_cancel_requested = 1;
+}
+
+int fftools_cancel_requested(void)
+{
+    return s_cancel_requested;
+}
+
+void fftools_cancel_reset(void)
+{
+    s_cancel_requested = 0;
+}
+
+int fftools_interrupt_cb(void *ctx)
+{
+    (void) ctx;
+    return s_cancel_requested;
+}
+
+/* mediaxx: 见 cmdutils.h 里的说明 */
+static volatile int s_exit_by_info_option = 0;
+
+int fftools_exit_by_info_option(void)
+{
+    return s_exit_by_info_option;
+}
+
+void fftools_exit_info_reset(void)
+{
+    s_exit_by_info_option = 0;
+}
+
 void log_callback_help(void *ptr, int level, const char *fmt, va_list vl)
 {
     vfprintf(fftools_stdout_get(), fmt, vl);
@@ -337,6 +374,8 @@ static int write_option(void *optctx, const OptionDef *po, const char *opt,
         }
     }
     if (po->flags & OPT_EXIT) {
+        /* mediaxx: 这类选项已经把内容打到 stdout 了，标记一下，调用方按成功处理 */
+        s_exit_by_info_option = 1;
         ret = AVERROR_EXIT;
         goto finish;
     }

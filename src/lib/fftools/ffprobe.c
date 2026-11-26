@@ -2568,6 +2568,9 @@ static int open_input_file(InputFile *ifile, const char *filename,
     if (!fmt_ctx)
         return AVERROR(ENOMEM);
 
+    /* mediaxx：挂上中断回调，取消请求才能打断打开文件和读取分析（大文件、网络流） */
+    fmt_ctx->interrupt_callback.callback = fftools_interrupt_cb;
+
     err = set_decoders(fmt_ctx);
     if (err < 0)
         return err;
@@ -3366,6 +3369,9 @@ static inline int check_section_show_entries(int section_id)
 
 static void ffprobe_reset(void)
 {
+    fftools_cancel_reset();
+    fftools_exit_info_reset();
+
     do_analyze_frames = 0;
     do_bitexact = 0;
     do_count_frames = 0;
@@ -3644,7 +3650,9 @@ end:
     fftools_exit_jmp_active = 0;
     ffprobe_cleanup();
 
+    /* mediaxx：与 ffmpeg 保持一致的返回码约定：`-h` / `-version` 这类打印完就退出的
+     * 选项算成功；其余 AVERROR_EXIT（没做事就退出、被取消）都不算 */
     if (ret == AVERROR_EXIT)
-        return 0;
-    return ret < 0 ? (ret == AVERROR_EXIT ? 0 : 1) : ret;
+        return fftools_exit_by_info_option() ? 0 : (fftools_cancel_requested() ? 255 : 2);
+    return ret < 0 ? 1 : ret;
 }

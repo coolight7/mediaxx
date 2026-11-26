@@ -308,6 +308,15 @@ FFI_PLUGIN_EXPORT int
 #define MEDIAXX_RESTORE_STDERR_MACRO
 #endif
 
+/// # mediaxx_execute_ffmpeg / mediaxx_execute_ffprobe 的返回值约定
+///
+/// 返回值只有下面几种，宿主可以直接按它决定提示文案。
+#define MEDIAXX_FFTOOLS_OK       0    ///< 成功
+#define MEDIAXX_FFTOOLS_ERROR    1    ///< 执行失败（打不开文件、编码失败、参数被 ffmpeg 拒绝）
+#define MEDIAXX_FFTOOLS_ABORTED  2    ///< 没有执行（目标已存在又没给 -y、同时给了 -y 和 -n 等）
+#define MEDIAXX_FFTOOLS_CANCELED 255  ///< 被 mediaxx_execute_fftools_cancel() 取消
+#define MEDIAXX_FFTOOLS_BAD_ARGS (-1) ///< 参数没通过本地检查，ffmpeg 根本没启动；原因在 stderr
+
 /// # 执行 ffmpeg 命令行功能
 ///
 /// 等同于调用 ffmpeg 命令。支持多线程并发安全调用与可重复调用。
@@ -319,13 +328,26 @@ FFI_PLUGIN_EXPORT int
 /// - [stderr] 输出标准错误内容的指针，用 mediaxx_free 释放；可传 NULL 忽略
 /// - [outLog] 保留供未来使用自定义日志出参；可传 NULL
 ///
+/// ## 使用注意事项:
+/// - 要覆盖已有文件请自己带 `-y`：不带时 ffmpeg 会按"目标已存在"直接退出，返回
+///   [MEDIAXX_FFTOOLS_ABORTED]
+/// - 参数里不能出现单独的 `-`（管道）：进程内调用拿不到那头，会返回 [MEDIAXX_FFTOOLS_BAD_ARGS]
+/// - 输入输出都给真实路径，不支持交互式命令（stdin 交互在库内已经关掉）
+/// - ffmpeg 和 ffprobe 共用一把锁，一次只能跑一个，后来的会排队
+/// - [stdout] 和 [stderr] 各自上限 4MB，超过的部分丢弃，并在末尾加一句说明
+/// - 想看进度就自己传 `-progress <文件路径>`，库不解析进度，只把输出原样返回
+///
 /// ## 日志状态:
 /// 调用结束会把 libav 的日志回调恢复成默认回调，并还原进入前的日志级别：
 /// - `-v` / `-loglevel` 只对当次调用生效
 /// - `-version` / `-h` 这类打印后就退出的选项不会影响后续调用的 stdout
 ///
 /// ## Return:
-/// - 退出码（0 表示成功，非 0 表示失败）
+/// - [MEDIAXX_FFTOOLS_OK] 成功
+/// - [MEDIAXX_FFTOOLS_ERROR] 执行失败
+/// - [MEDIAXX_FFTOOLS_ABORTED] 没有执行
+/// - [MEDIAXX_FFTOOLS_CANCELED] 被取消
+/// - [MEDIAXX_FFTOOLS_BAD_ARGS] 参数没通过本地检查
 FFI_PLUGIN_EXPORT int mediaxx_execute_ffmpeg(
     const char* args,
     size_t argsSize,
@@ -351,7 +373,8 @@ FFI_PLUGIN_EXPORT int mediaxx_execute_ffmpeg(
 /// - `-version` / `-h` 这类打印后就退出的选项不会影响后续调用的 stdout
 ///
 /// ## Return:
-/// - 退出码（0 表示成功，非 0 表示失败）
+/// - 返回值含义与 mediaxx_execute_ffmpeg 相同；ffprobe 被取消时同样返回
+///   [MEDIAXX_FFTOOLS_CANCELED]
 FFI_PLUGIN_EXPORT int mediaxx_execute_ffprobe(
     const char* args,
     size_t argsSize,
@@ -359,6 +382,17 @@ FFI_PLUGIN_EXPORT int mediaxx_execute_ffprobe(
     const char** stderr,
     const char** outLog
 );
+
+/// # 请求取消当前正在跑的 ffmpeg / ffprobe 调用
+///
+/// 从另一个线程调用（比如宿主 UI 线程），不用等调用返回。被取消的那一次会以
+/// [MEDIAXX_FFTOOLS_CANCELED] 结束；已经写出一半的文件不会自动删，要宿主自己处理。
+///
+/// 没在跑的时候调用没有效果，下次调用开始时取消请求会被清掉。
+///
+/// ## Return:
+/// - 0：已记录请求
+FFI_PLUGIN_EXPORT int mediaxx_execute_fftools_cancel(void);
 
 #if defined(MEDIAXX_RESTORE_STDOUT_MACRO)
 #pragma pop_macro("stdout")

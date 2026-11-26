@@ -775,6 +775,9 @@ extern FILE *vstats_file;
 void term_init(void);
 void term_exit(void);
 
+/// mediaxx: 进程内调用时的取消入口，把步骤落在"收到信号"的那两个标志上
+void ffmpeg_request_cancel(void);
+
 void ffmpeg_opt_reset(void);
 void ffmpeg_show_help_default(const char *opt, const char *arg);
 int ffmpeg_exec(int argc, char **argv);

@@ -335,10 +335,20 @@ static int read_key(void)
 
 static int decode_interrupt_cb(void *ctx)
 {
-    return received_nb_signals > atomic_load(&transcode_init_done);
+    return received_nb_signals > atomic_load(&transcode_init_done) ||
+           fftools_cancel_requested();
 }
 
 const AVIOInterruptCB int_cb = { decode_interrupt_cb, NULL };
+
+/* mediaxx：进程内调用没有真信号，取消请求直接落到下面这两个标志上。
+ * 主循环靠 received_nb_signals 退出，avio 的中断回调靠它加上 transcode_init_done
+ * 判断，所以取 2（初始化完成后 2 > 1 就成立）。 */
+void ffmpeg_request_cancel(void)
+{
+    received_sigterm = 1;
+    received_nb_signals = 2;
+}
 
 static void ffmpeg_cleanup(int ret)
 {
@@ -427,6 +437,8 @@ static void ffmpeg_reset(void)
     atomic_store(&transcode_init_done, 0);
     received_sigterm = 0;
     received_nb_signals = 0;
+    fftools_cancel_reset();
+    fftools_exit_info_reset();
     ffmpeg_exited = 0;
     copy_ts_first_pts = AV_NOPTS_VALUE;
     filter_hw_device = NULL;
@@ -775,10 +787,10 @@ static void print_report(int is_last_report, int64_t timer_start, int64_t cur_ti
 
     if (print_stats || is_last_report) {
         const char end = is_last_report ? '\n' : '\r';
-        if (print_stats==1 && AV_LOG_INFO > av_log_get_level()) {
-            fprintf(stderr, "%s    %c", buf.str, end);
-        } else
-            av_log(NULL, AV_LOG_INFO, "%s    %c", buf.str, end);
+        /* mediaxx：原来这里有一条直接写进程 stderr 的分支，进程内调用时那行会漏到
+         * 宿主的 stderr 上（调用方拿不到）。统一走 av_log，日志级别压到 info 以下时
+         * 就不输出，需要进度请用 -progress。 */
+        av_log(NULL, AV_LOG_INFO, "%s    %c", buf.str, end);
 
         fflush(stderr);
     }
@@ -1129,8 +1141,15 @@ int ffmpeg_exec(int argc, char **argv)
 finish:
     fftools_exit_jmp_active = 0;
 
-    if (ret == AVERROR_EXIT)
-        ret = 0;
+    /* mediaxx：返回码要能让宿主区分三种情况
+     * - 255：被 fftools_cancel_request() 取消
+     * - 0：`-h` / `-version` 这类打印完就退出的选项，内容已经在 stdout 里，算成功
+     * - 2：没做事就退出了（目标已存在又没给 -y、给了 -n 之类），不能当成功
+     * 上游原来把 AVERROR_EXIT 一律归一成 0，那是给交互式终端用的，进程内调用会误导调用方 */
+    if (received_nb_signals)
+        ret = 255;
+    else if (ret == AVERROR_EXIT)
+        ret = fftools_exit_by_info_option() ? 0 : 2;
 
     ffmpeg_cleanup(ret);
 
