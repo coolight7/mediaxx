@@ -138,6 +138,11 @@ static struct sigaction old_sigquit_act;
 static int sigs_saved = 0;
 #endif
 
+#if HAVE_SETCONSOLECTRLHANDLER
+/* term_exit() 在下面引用它，而定义在文件后面，先声明一次，Windows 下才编得过 */
+static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType);
+#endif
+
 void term_exit(void)
 {
     av_log(NULL, AV_LOG_QUIET, "%s", "");
