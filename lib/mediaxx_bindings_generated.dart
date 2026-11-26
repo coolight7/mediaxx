@@ -896,4 +896,16 @@ class MediaxxBindings {
       ffi.Pointer<ffi.Pointer<ffi.Char>>,
     )
   >();
+
+  /// 请求取消当前正在跑的 ffmpeg / ffprobe 调用，返回 0 表示已记录请求
+  int mediaxx_execute_fftools_cancel() {
+    return _mediaxx_execute_fftools_cancel();
+  }
+
+  late final _mediaxx_execute_fftools_cancelPtr =
+      _lookup<ffi.NativeFunction<ffi.Int Function()>>(
+        'mediaxx_execute_fftools_cancel',
+      );
+  late final _mediaxx_execute_fftools_cancel = _mediaxx_execute_fftools_cancelPtr
+      .asFunction<int Function()>();
 }

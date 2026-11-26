@@ -1,3 +1,19 @@
+## 0.0.4
+
+* ffmpeg / ffprobe 调用的返回值固定成几种：0 成功、1 失败、2 没做事（目标已存在又没给 `-y`、
+  `-y` 和 `-n` 同时给）、255 被取消、-1 参数不合法；`-h` / `-version` 这类打印完就退出的
+  选项仍然是 0，内容在 stdout 里
+* 新增 `mediaxx_execute_fftools_cancel`：从另一个线程取消正在跑的调用，约 1 秒内生效；
+  ffprobe 通过输入上下文的 avformat 中断回调一起支持
+* 日志捕获不再按线程过滤：ffmpeg 自己开的复用器 / 编码器线程打的报错也能拿到
+* 直接写进程标准输出的地方全部改走捕获流（`printf` / `fprintf(stderr)`）：`-h` 的选项表、
+  `-y -n` 的冲突提示、`-stats` 的进度行不会再漏到宿主的 stdout / stderr
+* stdout / stderr 单次最多收 4MB，超过部分丢弃并在末尾加一句说明，截断不会切开 UTF-8 字符
+* 参数里出现单独的 `-`（管道）直接按参数错误返回，不再读写宿主的标准输入输出
+* Dart 侧：`mediaxx_execute_ffmpeg` / `mediaxx_execute_ffprobe` 增加可选进度回调（内部用
+  `-progress` 写临时文件再读回，不改 C 接口），新增 `MediaxxFftoolsExit` 返回码常量与
+  `mediaxx_execute_fftools_cancel`
+
 ## 0.0.3
 
 * 工具函数改为使用公共基础库：日志、字符串 / UTF-8 / 编码转换、UTF-16 互转、base64 来自

@@ -245,47 +245,271 @@ Future<String?> mediaxx_convert_char_encoding(List<int> data) async {
   return result.str;
 }
 
+/// [mediaxx_execute_ffmpeg] / [mediaxx_execute_ffprobe] 的返回码。
+///
+/// 只有这几种取值，业务可以直接按它决定提示文案。
+class MediaxxFftoolsExit {
+  MediaxxFftoolsExit._();
+
+  /// 成功
+  static const int ok = 0;
+
+  /// 执行失败（打不开文件、编码失败、参数被 ffmpeg 拒绝）
+  static const int error = 1;
+
+  /// 没有执行：目标已存在又没给 `-y`、同时给了 `-y` 和 `-n` 之类
+  static const int aborted = 2;
+
+  /// 被 [mediaxx_execute_fftools_cancel] 取消
+  static const int canceled = 255;
+
+  /// 参数没通过本地检查，ffmpeg 根本没启动（原因在 stderr 里）
+  static const int badArgs = -1;
+
+  /// 取一个便于打日志的名字
+  static String toName(int code) {
+    switch (code) {
+      case ok:
+        return 'ok';
+      case error:
+        return 'error';
+      case aborted:
+        return 'aborted';
+      case canceled:
+        return 'canceled';
+      case badArgs:
+        return 'badArgs';
+    }
+    return 'unknown($code)';
+  }
+}
+
+/// 一次 ffmpeg 调用的进度，内容来自 ffmpeg 自己写的 `-progress` 输出。
+///
+/// 每次回调给的是一份累积快照（ffmpeg 每 0.5 秒报一段），缺字段时对应的 getter
+/// 返回 null。
+class MediaxxFftoolsProgress {
+  MediaxxFftoolsProgress(this.values);
+
+  /// 这一段进度里的全部键值对，键就是 ffmpeg 的字段名
+  /// （`out_time_us`、`total_size`、`speed`、`progress` 等）
+  final Map<String, String> values;
+
+  /// 已经处理到的时间点，ffmpeg 没给出时为 null
+  Duration? get outTime {
+    final int? micros = int.tryParse(values['out_time_us'] ?? '');
+    return (null == micros || micros < 0) ? null : Duration(microseconds: micros);
+  }
+
+  /// 已经写出的字节数，ffmpeg 没给出时为 null
+  int? get totalSize {
+    final int? size = int.tryParse(values['total_size'] ?? '');
+    return (null == size || size < 0) ? null : size;
+  }
+
+  /// 处理速度，形如 `2.5x`；ffmpeg 还没算出速度时为 null
+  String? get speed => values['speed'];
+
+  /// 这一段是不是最后一段（ffmpeg 收尾时会写 `progress=end`）
+  bool get isEnd => 'end' == values['progress'];
+}
+
 /// 执行 ffmpeg 命令行功能（等同调用 ffmpeg 命令）。
 ///
 /// - [args] 参数数组，如 `["-y", "-i", "in.mp3", "out.wav"]`；首项以 `-` 开头时
 ///   会自动补上程序名 `ffmpeg`
-/// - 返回 (退出码, stdout, stderr)，退出码 0 表示成功
+/// - [onProgress] 传了就定期收到进度（读 ffmpeg 的 `-progress` 输出；[args] 里已经给了
+///   文件形式的 `-progress` 就直接读那个文件，给的是 `pipe:` 之类则收不到）
+/// - 返回 (退出码, stdout, stderr)，退出码含义见 [MediaxxFftoolsExit]
 /// - 在专门跑 ffmpeg / ffprobe 的 isolate 里执行，不阻塞 UI 线程，也不占用
 ///   [mediaxx_get_media_info_malloc] 这些接口所用的 isolate
-/// - 输出要等调用结束才一次性返回，没有流式进度，也不能中途取消
-/// - 覆盖已有文件时记得自己带 `-y`（或 `-n`）：不带的话 ffmpeg 会在 stderr 上等
-///   用户输入，而 App 里没有 stdin 可读
-/// - 输出目标不要写 `-`（管道输出）：这部分走 avio 的 fd 1，不经过这里的捕获
-Future<(int ret, String? stdoutText, String? stderrText)>
-mediaxx_execute_ffmpeg(List<String> args) {
-  return _requestExecuteFftools(isFfmpeg: true, args: args);
+/// - 要覆盖已有文件请自己带 `-y`：不带时 ffmpeg 会按"目标已存在"直接退出，
+///   返回 [MediaxxFftoolsExit.aborted]，不会卡住等输入
+/// - 参数里不能出现单独的 `-`（管道），否则返回 [MediaxxFftoolsExit.badArgs]
+/// - 想中途停止就调 [mediaxx_execute_fftools_cancel]
+/// - stdout / stderr 各自最多 4MB，超过部分会被丢掉并在末尾加一句说明
+Future<(int ret, String? stdoutText, String? stderrText)> mediaxx_execute_ffmpeg(
+  List<String> args, {
+  void Function(MediaxxFftoolsProgress progress)? onProgress,
+}) {
+  return _requestExecuteFftools(
+    isFfmpeg: true,
+    args: args,
+    onProgress: onProgress,
+  );
 }
 
 /// 执行 ffprobe 命令行功能（等同调用 ffprobe 命令）。
 ///
 /// 参数与返回值说明见 [mediaxx_execute_ffmpeg]。
-Future<(int ret, String? stdoutText, String? stderrText)>
-mediaxx_execute_ffprobe(List<String> args) {
-  return _requestExecuteFftools(isFfmpeg: false, args: args);
+Future<(int ret, String? stdoutText, String? stderrText)> mediaxx_execute_ffprobe(
+  List<String> args, {
+  void Function(MediaxxFftoolsProgress progress)? onProgress,
+}) {
+  return _requestExecuteFftools(
+    isFfmpeg: false,
+    args: args,
+    onProgress: onProgress,
+  );
+}
+
+/// 请求取消当前正在跑的 ffmpeg / ffprobe 调用。
+///
+/// 直接同步调用即可，不需要经过跑任务的 isolate；被取消的那一次会以
+/// [MediaxxFftoolsExit.canceled] 结束，已经写出一半的文件不会自动删。
+/// 没在跑的时候调用没有效果，下次调用开始时取消请求会被清掉。
+void mediaxx_execute_fftools_cancel() {
+  _bindings.mediaxx_execute_fftools_cancel();
 }
 
 Future<(int ret, String? stdoutText, String? stderrText)>
 _requestExecuteFftools({
   required final bool isFfmpeg,
   required final List<String> args,
+  final void Function(MediaxxFftoolsProgress progress)? onProgress,
 }) async {
   final SendPort fftoolsIsolateSendPort = await _fftoolsIsolateSendPort;
-  final int requestId = _nextAsyncxxRequestId++;
-  final request = _AsyncxxRequestExecuteFftools(
-    requestId,
-    isFfmpeg: isFfmpeg,
-    argsJson: jsonEncode(args),
-  );
-  final completer = Completer<_AsyncxxResponseExecuteFftools>();
-  _asyncxxRequests[requestId] = completer;
-  fftoolsIsolateSendPort.send(request);
-  final result = await completer.future;
-  return (result.ret, result.stdoutText, result.stderrText);
+
+  // 要进度就读 ffmpeg 的 -progress 输出：调用方自己传了就用它的文件，否则插一个到临时文件
+  List<String> realArgs = args;
+  _FftoolsProgressReader? progressReader;
+  Directory? progressDir;
+  if (null != onProgress) {
+    String? progressPath;
+    final int progressIndex = args.indexOf('-progress');
+    if (progressIndex >= 0 && progressIndex + 1 < args.length) {
+      final String given = args[progressIndex + 1];
+      // pipe: 之类不是文件，读不了，这种就只当没传
+      if (!given.startsWith('pipe:')) {
+        progressPath = given;
+      }
+    } else {
+      progressDir = Directory.systemTemp.createTempSync('mediaxx_progress_');
+      progressPath =
+          '${progressDir.path}${Platform.pathSeparator}progress.txt';
+      realArgs = List<String>.of(args);
+      // 首项可能是程序名（不以 - 开头），-progress 属于全局选项，放在最前面
+      final int insertIndex =
+          (realArgs.isNotEmpty && !realArgs.first.startsWith('-')) ? 1 : 0;
+      realArgs.insertAll(insertIndex, <String>['-progress', progressPath]);
+    }
+    if (null != progressPath) {
+      progressReader =
+          _FftoolsProgressReader(File(progressPath), onProgress)..start();
+    }
+  }
+
+  try {
+    final int requestId = _nextAsyncxxRequestId++;
+    final request = _AsyncxxRequestExecuteFftools(
+      requestId,
+      isFfmpeg: isFfmpeg,
+      argsJson: jsonEncode(realArgs),
+    );
+    final completer = Completer<_AsyncxxResponseExecuteFftools>();
+    _asyncxxRequests[requestId] = completer;
+    fftoolsIsolateSendPort.send(request);
+    final result = await completer.future;
+    return (result.ret, result.stdoutText, result.stderrText);
+  } finally {
+    // 收尾要把最后一段（progress=end）也读出来，再删临时文件
+    await progressReader?.stop();
+    if (null != progressDir) {
+      try {
+        progressDir.deleteSync(recursive: true);
+      } catch (_) {
+        // 目录被占用之类的情况忽略即可，临时目录会被系统清理
+      }
+    }
+  }
+}
+
+/// 定时读 ffmpeg 写的 `-progress` 文件，把新出现的完整键值对交给调用方。
+///
+/// 用累积的方式读：每次从上次的读取位置往后读，只处理到最后一个换行为止，
+/// 剩下半行留到下次，避免读到写了一半的行。只在文件里出现 `progress=` 时回调，
+/// 也就是 ffmpeg 每写完一段才通知一次。
+class _FftoolsProgressReader {
+  _FftoolsProgressReader(this.file, this.onProgress);
+
+  final File file;
+  final void Function(MediaxxFftoolsProgress progress) onProgress;
+
+  static const Duration checkInterval = Duration(milliseconds: 300);
+
+  Timer? _timer;
+  RandomAccessFile? _raf;
+  String _pending = '';
+  final Map<String, String> _values = <String, String>{};
+  bool _stopped = false;
+  bool _polling = false;
+
+  void start() {
+    _timer = Timer.periodic(checkInterval, (_) => _poll());
+  }
+
+  /// 停掉定时器，并把剩下的内容读完（ffmpeg 收尾的那一段在这里）
+  Future<void> stop() async {
+    _stopped = true;
+    _timer?.cancel();
+    _timer = null;
+    await _poll(force: true);
+    try {
+      await _raf?.close();
+    } catch (_) {
+      // 关文件失败没有影响
+    }
+    _raf = null;
+  }
+
+  Future<void> _poll({bool force = false}) async {
+    if (_polling || (_stopped && !force)) {
+      return;
+    }
+    _polling = true;
+    try {
+      final RandomAccessFile? raf = _raf ?? await _openIfExists();
+      if (null == raf) {
+        return;
+      }
+      _raf = raf;
+      final Uint8List bytes = await raf.read(64 * 1024);
+      if (bytes.isEmpty) {
+        return;
+      }
+      _pending += utf8.decode(bytes, allowMalformed: true);
+      final List<String> lines = _pending.split('\n');
+      // 最后一段可能还没写完，留到下次
+      _pending = lines.removeLast();
+      bool hasBlock = false;
+      for (final String line in lines) {
+        final int split = line.indexOf('=');
+        if (split <= 0) {
+          continue;
+        }
+        final String key = line.substring(0, split).trim();
+        final String value = line.substring(split + 1).trim();
+        _values[key] = value;
+        if ('progress' == key) {
+          hasBlock = true;
+        }
+      }
+      if (hasBlock) {
+        onProgress(MediaxxFftoolsProgress(Map<String, String>.of(_values)));
+      }
+    } catch (_) {
+      // 读进度失败不影响转码本身，下一次再试
+    } finally {
+      _polling = false;
+    }
+  }
+
+  Future<RandomAccessFile?> _openIfExists() async {
+    if (!file.existsSync()) {
+      return null;
+    }
+    return file.open();
+  }
 }
 
 String mediaxx_get_available_hwcodec_list() {
